@@ -1246,7 +1246,8 @@
   var saved = loadSaved();
 
   var state = {
-    role: 'landing', bizId: 'soweto-bakery',
+    /* Opening /entrepreneur or /funder goes straight into that side. */
+    role: roleFromPath(), bizId: 'soweto-bakery',
     entTab: 'overview', funderView: 'portfolio', profileId: null, profileReturn: 'funder', profileTab: 'overview',
     filterTier: 'all', query: '', sortKey: 'score',
     businesses: saved ? saved.businesses : makeSeed(),
@@ -1532,7 +1533,7 @@
           '</svg></div>' : '');
     }).join('');
     return '<div class="landing">' +
-      '<a class="to-launch" href="index.html">Back to the launch page</a>' +
+      '<a class="to-launch" href="/">Back to the launch page</a>' +
       '<div class="mark"><img src="assets/logo_only__1_-removebg-preview.png" alt="Proven logo" /></div>' +
       '<div class="brandname">PROVEN</div>' +
       '<div class="brandtag">Turning Potential into Proof</div>' +
@@ -2673,8 +2674,49 @@
     if (state.role === 'entrepreneur') return state.bizId;
     return null;
   }
+  /* -------------------------------------------------------------------------
+     URL routing. The platform is one file, so the path is kept in step with
+     the role by hand: /platform is the picker, /entrepreneur and /funder open
+     straight into a side. That makes each view linkable and the back button
+     behave the way a visitor expects.
+     ------------------------------------------------------------------------- */
+  var ROUTES = { landing: '/platform', entrepreneur: '/entrepreneur', funder: '/funder' };
+  var lastRenderedRole = null;
+
+  function roleFromPath() {
+    var p;
+    try {
+      p = location.pathname.replace(/\/+$/, '').toLowerCase();
+    } catch (e) { return 'landing'; }
+    if (p === '/entrepreneur') return 'entrepreneur';
+    if (p === '/funder') return 'funder';
+    return 'landing';
+  }
+
+  function syncUrl(replace) {
+    try {
+      if (!window.history || !history.pushState) return;
+      var want = ROUTES[state.role] || '/platform';
+      if (location.pathname.replace(/\/+$/, '') === want) return;
+      history[replace ? 'replaceState' : 'pushState']({ role: state.role }, '', want);
+    } catch (e) { /* file:// blocks pushState — the app still works */ }
+  }
+
+  window.addEventListener('popstate', function () {
+    var r = roleFromPath();
+    if (r === state.role) return;
+    state.role = r;
+    if (r === 'entrepreneur') state.entTab = 'overview';
+    if (r === 'funder') state.funderView = 'portfolio';
+    render();
+  });
+
   function render() {
     saveState(); /* every change reaches here, so this keeps the save current */
+    /* Entering or leaving a role is a navigation, so it gets a history entry;
+       everything else just keeps the address bar honest. */
+    syncUrl(state.role === lastRenderedRole);
+    lastRenderedRole = state.role;
     var html = state.role === 'landing' ? renderLanding() : state.role === 'entrepreneur' ? renderEntrepreneur() : renderFunder();
     document.getElementById('root').innerHTML = html;
     window.scrollTo({ top: 0, behavior: 'smooth' });
