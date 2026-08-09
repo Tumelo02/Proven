@@ -1,5 +1,4 @@
 {
-  "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
     { "source": "/platform", "destination": "/dashboard.html" },
@@ -7,6 +6,7 @@
     { "source": "/funder", "destination": "/dashboard.html" }
   ],
   "redirects": [
+    { "source": "/dashboard", "destination": "/platform", "permanent": false },
     { "source": "/dashboard.html", "destination": "/platform", "permanent": false },
     { "source": "/index.html", "destination": "/", "permanent": false }
   ],
