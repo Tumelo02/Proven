@@ -1,0 +1,3093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Proven</title>
+<link rel="icon" type="image/png" href="assets/logo_only__1_-removebg-preview.png" />
+<style>
+  :root {
+    --navy: #0a2540; --navy-2: #123a63; --navy-3: #1d5490;
+    /* Brand accent, drawn from the logo's cyan but darkened to pass contrast on
+       white. Kept distinct from --red so brand styling never reads as an alarm. */
+    --accent: #0b7c8c; --accent-soft: #e4f6f9;
+    --accent-ink: #096975; /* darker teal for small text on --accent-soft (5.7:1) */
+    --cyan: #22dff5; /* raw logo cyan — large shapes on navy only, fails contrast on white */
+    --bg: #eef2f8; --card: #ffffff; --ink: #0a2540;
+    --muted: #5d6f88; --faint: #8b9bb0;
+    --green: #12805c; --green-soft: #e3f6ee;
+    --yellow: #a86a00; --yellow-soft: #fdf1dc;
+    --red: #c0322b; --red-soft: #fdeae8;
+    --blue: #1d5490; --blue-soft: #e6eefb;
+    --grey: #5d6f88; --grey-soft: #eef1f6;
+    --line: #dde5f0; --line-2: #eaeff6;
+    --shadow: 0 1px 2px rgba(10,37,64,.06), 0 8px 24px rgba(10,37,64,.08);
+    --shadow-lg: 0 2px 4px rgba(10,37,64,.06), 0 16px 40px rgba(10,37,64,.12);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; font-family: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3,h4 { margin: 0; font-weight: 750; letter-spacing: -0.01em; }
+  p { margin: 0; }
+  button { font-family: inherit; }
+  a { color: inherit; }
+
+  /* ---------- Landing / Journey ---------- */
+  /* Sized to fit a standard viewport without scrolling: the column is centred in
+     the leftover space and every vertical gap is clamped against viewport height. */
+  .landing {
+    min-height: 100vh; background: var(--navy); color: #fff; display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 16px 24px clamp(18px, 3vh, 32px); position: relative;
+  }
+  .landing .mark { margin-bottom: clamp(6px, 1.2vh, 12px); }
+  /* Halo keeps the dark leaf readable against the navy landing background. */
+  .landing .mark img {
+    display: block; height: clamp(46px, 7vh, 66px); width: auto;
+    filter: drop-shadow(0 0 1px rgba(255,255,255,.5)) drop-shadow(0 0 9px rgba(34,223,245,.22));
+  }
+  .landing .brandname { font-size: clamp(18px, 2.4vh, 22px); font-weight: 800; letter-spacing: .08em; color: #fff; }
+  .landing .brandtag { font-size: clamp(10.5px, 1.5vh, 12.5px); font-weight: 700; letter-spacing: .05em; color: var(--cyan); text-transform: uppercase; margin-top: 3px; margin-bottom: clamp(10px, 1.8vh, 18px); }
+  .landing h1 { font-size: clamp(24px, 3.8vh, 34px); text-align: center; max-width: 720px; line-height: 1.18; }
+  .landing .tagline { color: #b9cbe0; font-size: clamp(13.5px, 1.9vh, 16px); text-align: center; max-width: 620px; margin-top: clamp(8px, 1.5vh, 16px); line-height: 1.5; }
+  .landing .twosided-line { color: #9fb6d1; font-size: clamp(12px, 1.6vh, 13.5px); font-weight: 700; text-align: center; margin-top: clamp(12px, 2.2vh, 24px); }
+  .journey { display: flex; gap: 0; margin: clamp(20px, 3.6vh, 46px) 0 4px; max-width: 1040px; width: 100%; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+  .journey .step { display: flex; flex-direction: column; align-items: center; width: 116px; text-align: center; position: relative; }
+  .journey .step .dot {
+    position: relative; width: 46px; height: 46px; border-radius: 50%;
+    background: rgba(255,255,255,.07); border: 1.5px solid rgba(255,255,255,.28);
+    display: grid; place-items: center; color: var(--cyan);
+  }
+  .journey .step .dot .ico { width: 22px; height: 22px; display: block; }
+  /* Small ordinal badge keeps the sequence readable now the circle holds an icon. */
+  .journey .step .dot .no {
+    position: absolute; top: -3px; right: -3px; width: 17px; height: 17px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: 9.5px; font-weight: 800;
+    display: grid; place-items: center; border: 1.5px solid var(--navy); letter-spacing: 0;
+  }
+  .journey .step .lbl { font-size: 11.5px; font-weight: 700; margin-top: 11px; color: #cbd8e8; line-height: 1.3; }
+
+  /* ---- Per-step hover behaviour ------------------------------------------
+     Each step animates in the way its own idea behaves: the eye blinks, the
+     alert flashes, the compass needle settles, and so on. One short gesture
+     each, triggered on hover or keyboard focus. */
+  .journey .step { cursor: default; outline: none; }
+  .journey .step .dot { transition: border-color .25s ease, background .25s ease, transform .25s ease; }
+  .journey .step:hover .dot, .journey .step:focus-visible .dot {
+    border-color: rgba(34,223,245,.7); background: rgba(34,223,245,.1); transform: translateY(-2px);
+  }
+  .journey .step:focus-visible .dot { box-shadow: 0 0 0 3px rgba(34,223,245,.25); }
+  .journey .step .ico * { transform-box: fill-box; transform-origin: center; }
+
+  /* 1 Funding — the coin gives a small confident nudge. */
+  .journey .step[data-step="funding"]:hover .ico,
+  .journey .step[data-step="funding"]:focus-visible .ico { animation: st-nudge .5s ease; }
+  @keyframes st-nudge { 40% { transform: translateY(-2.5px); } 100% { transform: none; } }
+
+  /* 2 Visibility — the eye closes and opens. */
+  .journey .step[data-step="visibility"] .eye-pupil { transition: opacity .12s; }
+  .journey .step[data-step="visibility"]:hover .eye-outline,
+  .journey .step[data-step="visibility"]:focus-visible .eye-outline { animation: st-blink .75s ease; }
+  .journey .step[data-step="visibility"]:hover .eye-pupil,
+  .journey .step[data-step="visibility"]:focus-visible .eye-pupil { animation: st-pupil .75s ease; }
+  @keyframes st-blink { 45% { transform: scaleY(.08); } 70% { transform: scaleY(1); } }
+  @keyframes st-pupil { 35%, 62% { opacity: 0; } }
+
+  /* 3 Early Detection — the warning blinks, the way an alert would. */
+  .journey .step[data-step="detection"]:hover .alert,
+  .journey .step[data-step="detection"]:focus-visible .alert { animation: st-alert .85s ease; }
+  @keyframes st-alert {
+    0%, 100% { opacity: 1; }
+    20%, 60% { opacity: .15; }
+    40%, 80% { opacity: 1; }
+  }
+
+  /* 4 Guidance — the needle swings and settles, like a compass finding north. */
+  .journey .step[data-step="guidance"]:hover .needle,
+  .journey .step[data-step="guidance"]:focus-visible .needle { animation: st-compass 1.1s cubic-bezier(.3,1.4,.5,1); }
+  @keyframes st-compass {
+    0% { transform: rotate(0deg); }
+    35% { transform: rotate(200deg); }
+    65% { transform: rotate(320deg); }
+    85% { transform: rotate(350deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* 5 Stronger Performance — the trend line pops upward. */
+  .journey .step[data-step="growth"]:hover .trend,
+  .journey .step[data-step="growth"]:focus-visible .trend { animation: st-pop .55s cubic-bezier(.3,1.5,.5,1); }
+  @keyframes st-pop {
+    45% { transform: translate(1.5px, -2.5px) scale(1.12); }
+    100% { transform: none; }
+  }
+
+  /* 6 Verified Track Record — the tick clears and redraws itself. */
+  .journey .step[data-step="record"] .tick { stroke-dasharray: 12; }
+  .journey .step[data-step="record"]:hover .tick,
+  .journey .step[data-step="record"]:focus-visible .tick { animation: st-tick .7s ease forwards; }
+  @keyframes st-tick {
+    0% { stroke-dashoffset: 0; }
+    35% { stroke-dashoffset: 12; }
+    100% { stroke-dashoffset: 0; }
+  }
+
+  /* 7 Greater Financial Readiness — a small burst of confetti. */
+  .journey .step .spark { position: absolute; inset: 0; pointer-events: none; }
+  .journey .step .spark i {
+    position: absolute; top: 50%; left: 50%; width: 3px; height: 3px; border-radius: 1px;
+    background: var(--cyan); opacity: 0;
+  }
+  .journey .step .spark i:nth-child(2) { background: #ffd166; }
+  .journey .step .spark i:nth-child(4) { background: #4ade80; }
+  .journey .step .spark i:nth-child(6) { background: #fff; }
+  .journey .step[data-step="readiness"]:hover .spark i,
+  .journey .step[data-step="readiness"]:focus-visible .spark i { animation: st-confetti .75s ease-out forwards; }
+  .journey .step .spark i:nth-child(1) { --tx: -17px; --ty: -15px; animation-delay: 0s !important; }
+  .journey .step .spark i:nth-child(2) { --tx:   0px; --ty: -21px; animation-delay: .04s !important; }
+  .journey .step .spark i:nth-child(3) { --tx:  17px; --ty: -15px; animation-delay: .02s !important; }
+  .journey .step .spark i:nth-child(4) { --tx: -20px; --ty:   3px; animation-delay: .07s !important; }
+  .journey .step .spark i:nth-child(5) { --tx:  20px; --ty:   3px; animation-delay: .05s !important; }
+  .journey .step .spark i:nth-child(6) { --tx:   0px; --ty:  15px; animation-delay: .09s !important; }
+  @keyframes st-confetti {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(.4); }
+    25%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .journey .step * { animation: none !important; }
+  }
+  /* Arrow sits level with the icon circle, not the centre of the taller label block. */
+  .journey .arrow { flex: 0 0 auto; color: #5f79a0; height: 46px; display: grid; place-items: center; margin: 0 -4px; }
+  .journey .arrow svg { width: 30px; height: 11px; display: block; }
+  .role-picks { display: flex; gap: 16px; margin-top: clamp(18px, 3.2vh, 36px); flex-wrap: wrap; justify-content: center; }
+  .saved-note { margin-top: 16px; font-size: 12px; color: #9fb6d1; text-align: center; }
+  .saved-note button {
+    background: none; border: 0; color: var(--cyan); font-weight: 700; font-size: 12px;
+    cursor: pointer; text-decoration: underline; padding: 0; font-family: inherit;
+  }
+  /* Pinned to the corner rather than sitting in the flow, so it costs the
+     centred column no vertical space. */
+  .to-launch {
+    position: absolute; top: 18px; left: 20px; z-index: 5;
+    display: inline-flex; align-items: center; gap: 9px; padding: 9px 16px;
+    border-radius: 10px; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.05);
+    color: #cbd8e8; font-size: 13px; font-weight: 700; text-decoration: none;
+  }
+  .to-launch:hover { background: rgba(255,255,255,.11); color: #fff; border-color: rgba(255,255,255,.45); }
+  .role-btn {
+    background: #fff; color: var(--navy); border: 0; border-radius: 13px;
+    padding: clamp(13px, 2.2vh, 20px) 24px; width: 250px;
+    cursor: pointer; box-shadow: var(--shadow-lg); text-align: left; transition: transform .1s;
+  }
+  .role-btn:hover { transform: translateY(-2px); }
+  .role-btn .rb-ico { font-size: 20px; line-height: 0; }
+  .role-btn .rb-ico svg { width: 24px; height: 24px; display: block; }
+  .role-btn .rb-title { font-weight: 800; font-size: 16px; margin-top: 8px; }
+  .role-btn .rb-sub { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .role-btn.accent { background: var(--accent); color: #fff; }
+  .role-btn.accent .rb-sub { color: #e4f6f9; }
+
+  /* ---------- App shell ---------- */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 236px; flex: 0 0 236px; background: var(--navy); color: #fff; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+  .brand { padding: 20px 18px 16px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .brand .logo { display: flex; align-items: center; gap: 9px; }
+  .brand .mark {
+    width: 30px; height: 30px; display: block; object-fit: contain; flex: 0 0 auto;
+    filter: drop-shadow(0 0 1px rgba(255,255,255,.5)) drop-shadow(0 0 6px rgba(255,255,255,.25));
+  }
+  .brand h1 { font-size: 16px; letter-spacing: -0.02em; }
+  .role-badge { margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.1); padding: 4px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #cbd8e8; }
+  .switch-role { margin-top: 8px; }
+  .switch-role button { background: none; border: 0; color: #9fb6d1; font-size: 11.5px; font-weight: 700; cursor: pointer; padding: 0; transition: color .2s ease; }
+  .switch-role button:hover { color: #fff; }
+  .biz-picker { padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .biz-picker label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: #7d94b3; font-weight: 700; }
+  .biz-picker select { width: 100%; margin-top: 6px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); color: #fff; border-radius: 8px; padding: 7px 8px; font-size: 12.5px; font-weight: 600; }
+  .biz-picker select option { color: #0a2540; }
+
+  .nav { padding: 10px; display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px;
+    color: #cbd8e8; cursor: pointer; border: 0; background: transparent; width: 100%;
+    text-align: left; font-weight: 650; font-size: 13px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,.14); color: #fff; }
+  .nav-item .count {
+    margin-left: auto; background: rgba(255,255,255,.16); border-radius: 999px;
+    min-width: 19px; height: 19px; padding: 0 6px; display: inline-flex; align-items: center;
+    justify-content: center; font-size: 10.5px; font-weight: 800;
+  }
+  /* Outstanding suggestions read as something needing attention, so the badge is
+     red rather than the brand colour. */
+  .nav-item .count.alarm { background: #d64541; color: #fff; box-shadow: 0 0 0 3px rgba(214,69,65,.18); }
+  .sidebar-foot { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,.1); color: #7d94b3; font-size: 10.5px; }
+  /* Always reachable, so a demo that has drifted can be put back at any point. */
+  .reset-inline {
+    display: block; margin-top: 8px; background: none; border: 0; padding: 0;
+    color: var(--cyan); font-size: 10.5px; font-weight: 700; cursor: pointer;
+    text-decoration: underline; font-family: inherit;
+  }
+
+  .main { flex: 1; min-width: 0; }
+  .topbar { background: #fff; border-bottom: 1px solid var(--line); padding: 14px 26px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 20; flex-wrap: wrap; }
+  .topbar .title h2 { font-size: 18px; }
+  .topbar .title p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+  .topbar .spacer { flex: 1; }
+  .btn { border: 0; padding: 9px 15px; border-radius: 9px; font-weight: 650; cursor: pointer; background: var(--accent); color: #fff; font-size: 12.5px; }
+  .btn.ghost { background: #fff; color: var(--navy); border: 1px solid var(--line); }
+  .btn.sm { padding: 6px 11px; font-size: 11.5px; }
+  .view { padding: 22px 26px 50px; }
+
+  /* ---------- Generic ---------- */
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .panel-head { padding: 14px 17px; border-bottom: 1px solid var(--line-2); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .panel-head h3 { font-size: 14px; }
+  .panel-head .hint { color: var(--muted); font-size: 11.5px; font-weight: 500; }
+  .panel-body { padding: 17px; }
+  .muted { color: var(--muted); }
+  .tiny { font-size: 11px; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .grid2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; align-items: start; }
+  .stack { display: grid; gap: 16px; }
+
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 750; white-space: nowrap; }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .chip.green { background: var(--green-soft); color: var(--green); }
+  .chip.yellow { background: var(--yellow-soft); color: var(--yellow); }
+  .chip.red { background: var(--red-soft); color: var(--red); }
+  .chip.blue { background: var(--blue-soft); color: var(--blue); }
+  .chip.grey { background: var(--grey-soft); color: var(--grey); }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
+  .kpis.k4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .kpi {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 13px 15px; box-shadow: var(--shadow); text-align: left; font-family: inherit; width: 100%;
+  }
+  .kpi .label { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+  .kpi .value { font-size: 23px; font-weight: 750; margin-top: 4px; }
+  .kpi .foot { font-size: 11px; color: var(--faint); margin-top: 2px; }
+  /* "Needs attention" is a shortcut into the filtered list, so it behaves like
+     a control rather than a read-only figure. */
+  .kpi.act { cursor: pointer; transition: border-color .18s ease, transform .06s ease; }
+  .kpi.act:hover { border-color: var(--navy-3); }
+  .kpi.act:active { transform: translateY(1px); }
+  .kpi.alarm .value { color: var(--red); }
+  .kpi.alarm.act:hover { border-color: var(--red); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; padding: 9px 12px; border-bottom: 1px solid var(--line); background: #fafcfe; white-space: nowrap; }
+  tbody td { padding: 11px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+  tbody tr[data-biz]:hover { background: #f7fafd; cursor: pointer; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .biz-cell { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 32px; height: 32px; border-radius: 9px; flex: 0 0 32px; display: grid; place-items: center; font-weight: 750; font-size: 11.5px; color: #fff; background: var(--navy-3); }
+  .biz-cell .nm { font-weight: 700; font-size: 13px; }
+  .biz-cell .sc { color: var(--muted); font-size: 11px; }
+  .scorebox { display: flex; align-items: center; gap: 8px; }
+  .scorenum { font-weight: 750; font-size: 14px; min-width: 28px; }
+  .minibar { width: 46px; height: 5px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .minibar i { display: block; height: 100%; }
+  .minibar i.green { background: var(--green); } .minibar i.yellow { background: var(--yellow); } .minibar i.red { background: var(--red); }
+  .trend { font-weight: 700; font-size: 12px; }
+  .trend.up { color: var(--green); } .trend.down { color: var(--red); } .trend.flat { color: var(--faint); }
+  .toolbar { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; margin-bottom: 13px; }
+  .seg { display: flex; background: #fff; border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: transparent; padding: 6px 11px; border-radius: 6px; cursor: pointer; font-weight: 650; color: var(--muted); font-size: 12px; }
+  .seg button.on { background: var(--navy); color: #fff; }
+  .field { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 9px; padding: 6px 10px; }
+  .field label { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+  .field select, .field input { border: 0; background: transparent; color: var(--ink); font-weight: 650; outline: none; font-size: 12px; }
+  .empty { padding: 34px 18px; text-align: center; color: var(--muted); }
+  .empty .big { font-size: 26px; opacity: .35; margin-bottom: 6px; }
+  .back { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; color: var(--muted); font-weight: 650; padding: 0; margin-bottom: 13px; font-size: 12.5px; }
+  .back:hover { color: var(--navy); }
+
+  /* ---------- Score / decision ---------- */
+  .score-hero { display: flex; align-items: center; gap: 20px; padding: 18px; flex-wrap: wrap; }
+  .ring { width: 96px; height: 96px; flex: 0 0 96px; border-radius: 50%; display: grid; place-items: center; }
+  .ring > div { width: 78px; height: 78px; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: var(--shadow); }
+  .ring .n { font-size: 26px; font-weight: 800; }
+  .ring .u { font-size: 8.5px; color: var(--muted); font-weight: 700; letter-spacing: .05em; }
+  .decision { border-radius: var(--radius); padding: 15px 17px; display: flex; gap: 13px; align-items: flex-start; border: 1px solid; }
+  .decision.release { background: var(--green-soft); border-color: #b5e3d0; }
+  .decision.hold { background: var(--yellow-soft); border-color: #f0d59b; }
+  .decision.escalate { background: var(--red-soft); border-color: #f3c0bb; }
+  .decision .glyph { font-size: 19px; }
+  .decision .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 750; opacity: .8; }
+  .decision .act { font-size: 15.5px; font-weight: 750; margin: 2px 0 4px; }
+  .decision.release .act { color: var(--green); } .decision.hold .act { color: var(--yellow); } .decision.escalate .act { color: var(--red); }
+  .decision .why { font-size: 12.5px; color: #38495e; }
+
+  .factor { padding: 11px 0; border-bottom: 1px solid var(--line-2); }
+  .factor:last-child { border-bottom: 0; padding-bottom: 0; }
+  .factor .top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+  .factor .fname { font-weight: 650; font-size: 12.5px; }
+  .factor .wt { color: var(--faint); font-size: 10.5px; font-weight: 600; }
+  .factor .contrib { margin-left: auto; font-weight: 750; font-size: 12.5px; }
+  .bar { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .bar i { display: block; height: 100%; }
+  .bar i.green { background: var(--green); } .bar i.yellow { background: var(--yellow); } .bar i.red { background: var(--red); }
+  .factor .expl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ---------- Recommendation / guidance cards ---------- */
+  .rec-card { border-radius: 12px; padding: 13px 15px; border: 1px solid; margin-bottom: 10px; }
+  .rec-card:last-child { margin-bottom: 0; }
+  .rec-card.red { background: var(--red-soft); border-color: #f3c0bb; }
+  .rec-card.yellow { background: var(--yellow-soft); border-color: #f0d59b; }
+  .rec-card.green { background: var(--green-soft); border-color: #b5e3d0; }
+  .rec-card .issue { font-weight: 700; font-size: 13px; }
+  .rec-card.red .issue { color: var(--red); } .rec-card.yellow .issue { color: var(--yellow); } .rec-card.green .issue { color: var(--green); }
+  .rec-card .rec { font-size: 12.5px; color: #38495e; margin-top: 5px; }
+  .rec-card .rec b { font-weight: 700; }
+
+  /* ---------- Milestones ---------- */
+  .milestone-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-2); }
+  .milestone-row:last-child { border-bottom: 0; }
+  /* Chart takes the width it needs; the stage list fills the rest. Both panels
+     are stretched to the same height so the row ends level rather than one
+     column running far past the other. */
+  .perf-split { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(240px, 1fr); gap: 16px; align-items: stretch; }
+  .perf-split > .panel { display: flex; flex-direction: column; }
+  .perf-split > .panel > .panel-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  @media (max-width: 900px) { .perf-split { grid-template-columns: 1fr; } }
+  .milestone-row .mnum { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 750; font-size: 11.5px; flex: 0 0 26px; background: var(--grey-soft); color: var(--muted); }
+  .milestone-row.done .mnum { background: var(--green); color: #fff; }
+  .milestone-row.current .mnum { background: var(--navy); color: #fff; }
+  .milestone-row.delayed .mnum { background: var(--red); color: #fff; }
+  .milestone-row .mlabel { font-weight: 650; font-size: 13px; flex: 1; }
+  .milestone-row .mactions { display: flex; gap: 6px; }
+  .progress-track { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .progress-track i { display: block; height: 100%; background: var(--navy-3); }
+
+  /* ---------- Transactions ---------- */
+  .txn-form { display: grid; grid-template-columns: 1.4fr 1fr 1fr .9fr auto; gap: 8px; align-items: end; }
+  .txn-form .f { display: flex; flex-direction: column; gap: 4px; }
+  .txn-form label { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .txn-form input, .txn-form select { border: 1px solid var(--line); border-radius: 8px; padding: 8px 9px; font-size: 12.5px; font-family: inherit; }
+  .draft-summary { display: flex; gap: 20px; padding: 13px 15px; background: var(--bg); border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .draft-summary .d { min-width: 100px; }
+  .draft-summary .d .l { font-size: 10px; text-transform: uppercase; color: var(--muted); font-weight: 700; letter-spacing: .05em; }
+  .draft-summary .d .v { font-size: 17px; font-weight: 750; margin-top: 2px; }
+  .draft-summary .draft-hint { flex: 1 1 220px; align-self: center; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+
+  .due-pill { display: inline-block; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: var(--grey-soft); color: var(--muted); white-space: nowrap; }
+  .due-pill.due-soon { background: var(--yellow-soft); color: var(--yellow); }
+  .due-pill.overdue { background: var(--red-soft); color: var(--red); }
+
+  .actioned-note { margin-top: 9px; font-size: 12px; font-weight: 700; color: var(--green); }
+  .exports { margin-left: auto; display: flex; gap: 7px; }
+  .exports .btn svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; }
+
+  /* ---------- Health mix donut ---------- */
+  .donut-wrap { position: relative; flex: 0 0 auto; }
+  .donut { display: block; overflow: visible; }
+  .donut .dnum { font-size: 26px; font-weight: 800; fill: var(--ink); }
+  .donut .dlbl { font-size: 9.5px; font-weight: 700; fill: var(--muted); letter-spacing: .04em; }
+  .donut .dslice {
+    cursor: pointer; transform-origin: center;
+    transition: transform .22s cubic-bezier(.3,1.4,.5,1), opacity .2s ease;
+  }
+  /* Hovering one slice lifts it outward and pushes the others back. */
+  .dslices:hover .dslice { opacity: .38; }
+  .dslices .dslice:hover,
+  .dslices .dslice.on { opacity: 1; transform: translate(var(--mx), var(--my)) scale(1.04); }
+  @media (prefers-reduced-motion: reduce) {
+    .donut .dslice { transition: opacity .2s ease; }
+    .dslices .dslice:hover, .dslices .dslice.on { transform: none; }
+  }
+
+  /* Legend doubles as the hover target and the filter. */
+  .mix-legend { display: flex; flex-direction: column; gap: 6px; }
+  .mix-legend button {
+    display: flex; align-items: center; gap: 9px; background: none; border: 0; padding: 7px 11px;
+    border-radius: 9px; cursor: pointer; font-family: inherit; font-size: 12.5px; font-weight: 650;
+    color: var(--ink); text-align: left; transition: background .16s ease;
+  }
+  .mix-legend button:hover, .mix-legend button.on { background: var(--bg); }
+  .mix-legend i { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+  .mix-legend .n { margin-left: auto; font-weight: 800; color: var(--muted); }
+  .mix-hint { font-size: 11px; color: var(--faint); margin-top: 8px; font-style: italic; }
+
+  /* ---------- Needs attention ---------- */
+  .att-list { display: flex; flex-direction: column; gap: 14px; }
+  .att-card {
+    background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px;
+  }
+  .att-card.red { border-left-color: var(--red); }
+  .att-card.yellow { border-left-color: var(--yellow); }
+  .att-head { display: flex; align-items: center; gap: 12px; }
+  .att-who { flex: 1; min-width: 0; }
+  .att-who .nm { font-weight: 800; font-size: 15px; cursor: pointer; }
+  .att-who .nm:hover { color: var(--accent); text-decoration: underline; }
+  .att-score { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+  .att-score .scorenum { font-size: 21px; font-weight: 800; }
+  .att-score .scorenum.red { color: var(--red); }
+  .att-score .scorenum.yellow { color: var(--yellow); }
+
+  .att-why { list-style: none; margin: 13px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .att-why li { padding: 10px 13px; border-radius: 10px; background: var(--bg); font-size: 12.5px; line-height: 1.5; }
+  .att-why li.red { background: var(--red-soft); }
+  .att-why li.yellow { background: var(--yellow-soft); }
+  .att-why li b { display: block; color: var(--ink); }
+  .att-why li span { color: var(--muted); }
+
+  .att-foot { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line-2); flex-wrap: wrap; }
+  .att-foot .btn { margin-left: 0; }
+  .att-foot .btn[data-att-action] { margin-left: auto; }
+  .att-done { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--green); }
+
+  /* ---------- Business profile tabs ---------- */
+  .ptabs { display: flex; gap: 4px; margin: 16px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .ptab {
+    background: none; border: 0; padding: 10px 15px; cursor: pointer; font-family: inherit;
+    font-size: 13px; font-weight: 700; color: var(--muted); border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: color .18s ease, border-color .18s ease;
+  }
+  .ptab:hover { color: var(--ink); }
+  .ptab.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Facts about the business, laid out so each reads on its own. */
+  .about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+  .about-grid .ab .l { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .about-grid .ab .v { font-size: 15px; font-weight: 800; margin-top: 3px; }
+  .about-grid .ab .s { font-size: 11px; color: var(--faint); margin-top: 2px; line-height: 1.4; }
+
+  /* ---------- Credit readiness, beside the score ---------- */
+  .cr-side {
+    margin-left: auto; flex: 0 0 auto; min-width: 210px; max-width: 260px;
+    padding: 13px 15px; border-radius: 11px; background: var(--bg); border: 1px solid var(--line);
+  }
+  .cr-side .crs-label { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .cr-side .crs-status { font-size: 15px; font-weight: 800; margin-top: 3px; line-height: 1.25; }
+  .cr-side .crs-plain { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+  .cr-side .crs-dots { display: flex; align-items: center; gap: 5px; margin-top: 10px; }
+  .cr-side .crs-dot { width: 22px; height: 5px; border-radius: 3px; background: var(--line); }
+  .cr-side .crs-of { font-size: 10px; font-weight: 700; color: var(--muted); margin-left: 4px; }
+  .cr-side.green .crs-status { color: var(--green); }
+  .cr-side.green .crs-dot.on { background: var(--green); }
+  .cr-side.blue .crs-status { color: var(--blue); }
+  .cr-side.blue .crs-dot.on { background: var(--blue); }
+  .cr-side.yellow .crs-status { color: var(--yellow); }
+  .cr-side.yellow .crs-dot.on { background: var(--yellow); }
+  .cr-side.grey .crs-dot.on { background: var(--grey); }
+  @media (max-width: 860px) { .cr-side { margin-left: 0; max-width: 100%; width: 100%; } }
+
+  /* ---------- Reporting due bar ---------- */
+  .duebar {
+    display: flex; align-items: center; gap: 13px; padding: 13px 16px; border-radius: 12px;
+    margin-bottom: 16px; border: 1px solid var(--line); background: var(--card);
+  }
+  .duebar .dueicon { flex: 0 0 auto; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--bg); color: var(--navy-3); }
+  .duebar .dueicon svg { width: 18px; height: 18px; }
+  .duebar .duetitle { font-weight: 800; font-size: 13.5px; }
+  .duebar .duesub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .duebar .duesub b { color: var(--ink); }
+  .duebar .duebtn { margin-left: auto; flex: 0 0 auto; }
+  .duebar.sent { background: var(--green-soft); border-color: #b5e3d0; }
+  .duebar.sent .dueicon { background: #cdeddf; color: var(--green); }
+  .duebar.sent .duetitle { color: var(--green); }
+  .duebar.due-soon { background: var(--yellow-soft); border-color: #f0dcb4; }
+  .duebar.due-soon .dueicon { background: #fbe7c4; color: var(--yellow); }
+  .duebar.overdue { background: var(--red-soft); border-color: #f3c0bb; }
+  .duebar.overdue .dueicon { background: #f8d2ce; color: var(--red); }
+  .duebar.overdue .duetitle { color: var(--red); }
+  @media (max-width: 640px) {
+    .duebar { flex-wrap: wrap; }
+    .duebar .duebtn { margin-left: 0; width: 100%; }
+  }
+
+  /* ---------- Chart ---------- */
+  .chart-wrap { position: relative; }
+  /* Width-driven: the panel sets the width and the aspect ratio sets the
+     height, so the drawing always fills the panel edge to edge. */
+  /* Width-driven: the panel sets the width, the viewBox ratio sets the height. */
+  .chart { display: block; width: 100%; height: auto; overflow: visible; }
+  /* Lines draw themselves in, areas fade up beneath them. */
+  /* Dash length must exceed the longest path in the 1000-wide viewBox, or the
+     line reappears in segments partway through the draw. */
+  .chart .ln { stroke-dasharray: 1600; stroke-dashoffset: 1600; animation: draw 1.1s cubic-bezier(.3,.8,.3,1) forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .chart .fill { opacity: 0; animation: fillIn .7s ease .45s forwards; }
+  @keyframes fillIn { to { opacity: 1; } }
+  .chart .pt { opacity: 0; animation: ptIn .3s ease forwards; }
+  @keyframes ptIn { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+  .chart .pt { transform-box: fill-box; transform-origin: center; }
+  .chart .hot { cursor: crosshair; }
+  .chart .marker, .chart .crosshair { transition: opacity .15s ease; pointer-events: none; }
+
+  .chart-tip {
+    position: absolute; z-index: 6; pointer-events: none; opacity: 0; transform: translateY(4px);
+    transition: opacity .15s ease, transform .15s ease;
+    background: var(--navy); color: #fff; border-radius: 10px; padding: 10px 12px;
+    font-size: 12px; line-height: 1.5; box-shadow: var(--shadow-lg); min-width: 156px;
+  }
+  .chart-tip.on { opacity: 1; transform: translateY(0); }
+  .chart-tip .tt { font-weight: 800; font-size: 12.5px; margin-bottom: 6px; }
+  .chart-tip .tr { display: flex; gap: 10px; align-items: baseline; }
+  .chart-tip .tr span:first-child { color: #9fb6d1; flex: 1; }
+  .chart-tip .tr b { font-weight: 700; }
+  .chart-tip .tsub { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.16); color: #9fb6d1; font-size: 11px; }
+  .chart-key { display: flex; gap: 16px; align-items: center; margin-top: 10px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); font-weight: 700; }
+  .chart-key span { display: inline-flex; align-items: center; gap: 6px; }
+  .chart-key i { width: 9px; height: 9px; border-radius: 2px; display: block; }
+  .chart-key .hint { margin-left: auto; font-weight: 600; font-style: italic; }
+
+  /* ---------- Month-by-month ---------- */
+  .msum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .msum .ms { background: var(--bg); border-radius: 10px; padding: 11px 13px; }
+  .msum .ms .l { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .msum .ms .v { font-size: 16px; font-weight: 800; margin-top: 3px; letter-spacing: -0.01em; }
+  .mrow { transition: background .15s ease; }
+  .mrow:hover { background: var(--accent-soft); }
+  .mchange { font-weight: 700; font-size: 10.5px; }
+  .mchange.up { color: var(--green); }
+  .mchange.down { color: var(--red); }
+  .mchange.flat { color: var(--faint); }
+  .stat-pill {
+    display: inline-block; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px;
+  }
+  .stat-pill.on-time { background: var(--green-soft); color: var(--green); }
+  .stat-pill.late { background: var(--yellow-soft); color: var(--yellow); }
+  .stat-pill.missed { background: var(--red-soft); color: var(--red); }
+  @media (max-width: 760px) { .msum { grid-template-columns: repeat(2, 1fr); } }
+  @media (prefers-reduced-motion: reduce) {
+    .chart .ln { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
+    .chart .fill, .chart .pt { opacity: 1; animation: none; }
+  }
+
+  /* Names the real-world channel this form stands in for. */
+  .wa-note {
+    display: flex; align-items: flex-start; gap: 9px; margin-top: 14px; padding: 11px 13px;
+    background: #eaf7ef; border: 1px solid #cbe9d6; border-radius: 10px;
+    font-size: 12px; color: #2c5c42; line-height: 1.5;
+  }
+  .wa-note svg { width: 16px; height: 16px; flex: 0 0 auto; color: #25a05a; margin-top: 1px; }
+  .wa-note b { color: #1d7a44; }
+
+  /* ---------- Proof of transaction ---------- */
+  .txn-proof { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+  .proof-pick {
+    display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 9px;
+    border: 1px dashed var(--line); background: var(--bg); cursor: pointer;
+    font-size: 12.5px; font-weight: 700; color: var(--navy-3); transition: all .18s ease;
+  }
+  .proof-pick:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .proof-pick svg { width: 15px; height: 15px; flex: 0 0 auto; }
+  .proof-pick.ready { border-style: solid; border-color: var(--green); color: var(--green); background: var(--green-soft); }
+
+  .cov-head { display: flex; align-items: flex-start; gap: 14px; }
+  .cov-title { font-weight: 800; font-size: 14.5px; }
+  .cov-pct { margin-left: auto; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+  .cov-bar { height: 7px; border-radius: 4px; background: var(--bg); margin-top: 12px; overflow: hidden; }
+  .cov-bar span { display: block; height: 100%; border-radius: 4px; transition: width .5s cubic-bezier(.3,.8,.3,1), background .3s; }
+  .cov-note { font-size: 12px; color: var(--muted); margin-top: 11px; line-height: 1.5; }
+  .cov-note b { color: var(--ink); }
+
+  .proof-chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 800; cursor: pointer; border: 1px solid transparent; font-family: inherit;
+    transition: all .18s ease;
+  }
+  .proof-chip svg { width: 12px; height: 12px; flex: 0 0 auto; }
+  .proof-chip.has { background: var(--green-soft); color: var(--green); border-color: #b5e3d0; }
+  .proof-chip.has:hover { background: #d3f0e4; }
+  .proof-chip.add { background: var(--bg); color: var(--muted); border-color: var(--line); border-style: dashed; }
+  .proof-chip.add:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+  /* Receipt viewer */
+  .proof-modal {
+    position: fixed; inset: 0; z-index: 200; background: rgba(10,37,64,.55);
+    display: grid; place-items: center; padding: 24px;
+  }
+  .proof-modal .box {
+    background: var(--card); border-radius: 14px; box-shadow: var(--shadow-lg);
+    max-width: 620px; width: 100%; max-height: 86vh; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .proof-modal .bh { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  .proof-modal .bh h3 { font-size: 15px; }
+  .proof-modal .bh .tiny { margin-top: 2px; }
+  .proof-modal .bb { padding: 16px 18px; overflow: auto; background: var(--bg); text-align: center; }
+  .proof-modal .bb img { max-width: 100%; border-radius: 10px; box-shadow: var(--shadow); }
+  .proof-modal .bf { padding: 13px 18px; border-top: 1px solid var(--line); display: flex; gap: 9px; justify-content: flex-end; }
+  .proof-modal .nofile { padding: 34px 10px; color: var(--muted); font-size: 13px; }
+  .pending-tag {
+    display: inline-block; margin-left: auto; font-size: 10px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .06em; padding: 4px 10px; border-radius: 999px; background: var(--yellow-soft); color: var(--yellow);
+  }
+
+  /* ---------- Credit readiness ---------- */
+  .credit-badge.grey { background: var(--grey-soft); color: var(--grey); }
+  .credit-badge.yellow { background: var(--yellow-soft); color: var(--yellow); }
+  .credit-badge.blue { background: var(--blue-soft); color: var(--blue); }
+  .credit-badge.green { background: var(--green-soft); color: var(--green); }
+  .cr-hero { background: linear-gradient(135deg, var(--navy), var(--navy-3)); color: #fff; border-radius: var(--radius); padding: 20px; }
+  .cr-hero .status { font-size: 19px; font-weight: 800; margin-top: 6px; }
+  .cr-hero ul { margin: 12px 0 0; padding-left: 18px; color: #cbd8e8; font-size: 12.5px; line-height: 1.8; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(160%); background: var(--navy); color: #fff; padding: 11px 18px; border-radius: 10px; box-shadow: var(--shadow-lg); font-weight: 600; z-index: 99; transition: transform .3s; font-size: 12.5px; max-width: 90vw; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .tl { list-style: none; padding: 0; margin: 0; }
+  .tl li { position: relative; padding: 0 0 14px 18px; border-left: 2px solid var(--line); }
+  .tl li:last-child { padding-bottom: 0; border-left-color: transparent; }
+  .tl li::before { content: ''; position: absolute; left: -5px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: #fff; border: 2px solid var(--navy-3); }
+  .tl .t-title { font-weight: 650; font-size: 12.5px; }
+  .tl .t-detail { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .tl .t-date { color: var(--faint); font-size: 10.5px; margin-top: 2px; }
+
+  @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, minmax(0,1fr)); } .grid2 { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) {
+    .app { flex-direction: column; } .sidebar { width: 100%; flex: none; height: auto; position: relative; }
+    .nav { flex-direction: row; overflow-x: auto; } .sidebar-foot { display: none; }
+    .txn-form { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================================
+     1. SCORING ENGINE — rules-based, fully explainable.
+     ========================================================================= */
+  var WEIGHTS = { revenue: 0.35, expense: 0.25, consistency: 0.20, customers: 0.20 };
+  var CREDIT_WEIGHTS = { trend: 0.40, stability: 0.35, discipline: 0.25 };
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function round1(v) { return Math.round(v * 10) / 10; }
+  function tierOf(score) { return score >= 80 ? 'green' : score >= 50 ? 'yellow' : 'red'; }
+  function tierLabel(t) { return t === 'green' ? 'Healthy' : t === 'yellow' ? 'Watch' : 'At Risk'; }
+  function statusPoints(s) { return s === 'on-time' ? 1 : s === 'late' ? 0.5 : 0; }
+
+  function windowGrowth(history, key) {
+    var n = history.length, recent = history.slice(-3), prior = history.slice(Math.max(0, n - 6), Math.max(0, n - 3));
+    if (!prior.length || !recent.length) return 0;
+    function avg(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i][key]; return s / a.length; }
+    var p = avg(prior); return p === 0 ? 0 : (avg(recent) - p) / p;
+  }
+
+  function revenueFactor(g) { return clamp(55 + g * 300, 0, 100); }
+  function expenseFactor(ratio) { return clamp(100 - Math.max(0, ratio - 0.6) * 200, 0, 100); }
+  function consistencyFactor(hist) {
+    var w = hist.slice(-6), s = 0;
+    for (var i = 0; i < w.length; i++) s += statusPoints(w[i].status);
+    return w.length ? (s / w.length) * 100 : 0;
+  }
+  function customerFactor(g) { return clamp(55 + g * 300, 0, 100); }
+
+  function computeHealth(biz) {
+    var h = biz.history;
+    var revGrowth = windowGrowth(h, 'revenue'), custGrowth = windowGrowth(h, 'customers'), expGrowth = windowGrowth(h, 'expenses');
+    var last3 = h.slice(-3), rev = 0, exp = 0;
+    for (var i = 0; i < last3.length; i++) { rev += last3[i].revenue; exp += last3[i].expenses; }
+    rev /= last3.length; exp /= last3.length;
+    var ratio = rev === 0 ? 2 : exp / rev;
+    var f = { revenue: revenueFactor(revGrowth), expense: expenseFactor(ratio), consistency: consistencyFactor(h), customers: customerFactor(custGrowth) };
+    var score = round1(f.revenue * WEIGHTS.revenue + f.expense * WEIGHTS.expense + f.consistency * WEIGHTS.consistency + f.customers * WEIGHTS.customers);
+    var w6 = h.slice(-6), onTime = 0, late = 0, missed = 0;
+    for (var j = 0; j < w6.length; j++) { if (w6[j].status === 'on-time') onTime++; else if (w6[j].status === 'late') late++; else missed++; }
+    return { score: score, tier: tierOf(score), factors: f, revGrowth: revGrowth, expGrowth: expGrowth, custGrowth: custGrowth, ratio: ratio, onTime: onTime, late: late, missed: missed, periods: w6.length, avgRevenue: rev, avgExpenses: exp };
+  }
+  function healthAt(biz, endIndex) { return computeHealth({ history: biz.history.slice(0, endIndex + 1) }); }
+  function scoreDelta(biz) { if (biz.history.length < 2) return 0; return round1(computeHealth(biz).score - healthAt(biz, biz.history.length - 2).score); }
+  function trendOf(biz) { var d = scoreDelta(biz); return d > 1.5 ? 'up' : d < -1.5 ? 'down' : 'flat'; }
+
+  function computeCredit(biz) {
+    var h = biz.history, growths = [];
+    for (var i = 1; i < h.length; i++) { var p = h[i - 1].revenue || 1; growths.push((h[i].revenue - p) / p); }
+    var avgG = growths.length ? growths.reduce(function (a, b) { return a + b; }, 0) / growths.length : 0;
+    var trend = clamp(40 + avgG * 1500, 0, 100);
+    var ratios = h.map(function (x) { return x.expenses / (x.revenue || 1); });
+    var meanR = ratios.reduce(function (a, b) { return a + b; }, 0) / ratios.length;
+    var varR = Math.sqrt(ratios.reduce(function (s, r) { return s + Math.pow(r - meanR, 2); }, 0) / ratios.length);
+    var stability = clamp(100 - Math.max(0, meanR - 0.6) * 200 - varR * 300, 0, 100);
+    var pts = h.reduce(function (s, x) { return s + statusPoints(x.status); }, 0);
+    var discipline = (pts / h.length) * 100;
+    var score = round1(trend * CREDIT_WEIGHTS.trend + stability * CREDIT_WEIGHTS.stability + discipline * CREDIT_WEIGHTS.discipline);
+    return { score: score, factors: { trend: trend, stability: stability, discipline: discipline }, avgGrowth: avgG, meanRatio: meanR, volatility: varR, periods: h.length };
+  }
+
+  /* The four bands in order — named exactly as the pitch deck defines them. */
+  var CR_BANDS = ['Building Track Record', 'Developing', 'Strong Evidence', 'Credit-Ready Candidate'];
+
+  function creditReadiness(biz) {
+    var cr = computeCredit(biz), periods = biz.history.length;
+    var done = biz.milestones.filter(function (m) { return m.status === 'done'; }).length;
+    var last = biz.history[biz.history.length - 1];
+    var cashPositive = (last.revenue - last.expenses) > 0;
+    var reasons = [];
+    reasons.push(periods + ' month' + (periods === 1 ? '' : 's') + ' of numbers on record');
+    reasons.push(cr.avgGrowth > 0.005 ? 'Sales growing by about ' + pct(cr.avgGrowth, 1) + ' a month' : 'Sales are not growing steadily yet');
+    reasons.push(cr.meanRatio <= 0.75 ? 'Spending has stayed under control' : 'Spending is high compared with what comes in');
+    reasons.push(done + ' of ' + biz.milestones.length + ' stages finished');
+    reasons.push(cashPositive ? 'Earning more than it spends' : 'Spending more than it earns right now');
+    var status;
+    /* Band names match the pitch deck exactly, each paired with a plain-English
+       line so the meaning is clear without needing the deck to hand. */
+    var plain;
+    if (periods < 4 || cr.score < 45) { status = 'Building Track Record'; plain = 'Still early — not enough history yet'; }
+    else if (cr.score < 62) { status = 'Developing'; plain = 'Coming along, with more to prove'; }
+    else if (cr.score < 80) { status = 'Strong Evidence'; plain = 'A solid record is building up'; }
+    else { status = 'Credit-Ready Candidate'; plain = 'Ready for a funding conversation'; }
+    var color = status === 'Building Track Record' ? 'grey' : status === 'Developing' ? 'yellow' : status === 'Strong Evidence' ? 'blue' : 'green';
+    return { status: status, plain: plain, score: cr.score, reasons: reasons, color: color };
+  }
+
+  function decisionFor(biz) {
+    var health = computeHealth(biz);
+    if (health.tier === 'green') return { kind: 'release', action: 'Doing well — keep going', why: 'A score of ' + health.score + ' is healthy. Sales and customers are both moving in the right direction.' };
+    if (health.tier === 'yellow') return { kind: 'hold', action: 'Needs a check-in', why: 'A score of ' + health.score + ' means keep an eye on this one. ' + weakestFactorPhrase(health) };
+    return { kind: 'escalate', action: 'Needs attention now', why: 'A score of ' + health.score + ' is low. ' + weakestFactorPhrase(health) };
+  }
+  function weakestFactorPhrase(health) {
+    var names = { revenue: 'Sales are the biggest problem', expense: 'Spending is the biggest problem', consistency: 'Late or missed updates are the biggest problem', customers: 'Losing customers is the biggest problem' };
+    var worst = null, worstVal = Infinity;
+    for (var k in health.factors) { if (health.factors[k] < worstVal) { worstVal = health.factors[k]; worst = k; } }
+    return names[worst] + ' at ' + Math.round(worstVal) + '/100.';
+  }
+
+  /* =========================================================================
+     2. GUIDANCE ENGINE — explains the problem, gives a practical next step.
+     ========================================================================= */
+  /* Advice quotes the business's own figures, so two businesses with the same
+     underlying problem never read as the same generic note. */
+  function getGuidance(biz) {
+    var h = computeHealth(biz), out = [];
+    var last = biz.history[biz.history.length - 1];
+    var prev = biz.history[biz.history.length - 2] || last;
+    var ratio = last.revenue ? last.expenses / last.revenue : 1;
+    /* Biggest expense line this month, named so the advice points somewhere. */
+    var topCost = biz.ledger.filter(function (t) { return t.type === 'expense'; })
+      .sort(function (a, b) { return b.amount - a.amount; })[0];
+
+    if (h.revGrowth <= -0.15) {
+      out.push({ sev: 'red',
+        issue: 'Your sales have dropped sharply — down ' + Math.abs(Math.round(h.revGrowth * 100)) + '% on the months before.',
+        rec: 'Sales fell from ' + money(prev.revenue) + ' to ' + money(last.revenue) + '. Look at which customers or products brought in less than usual, and start there.' });
+    }
+
+    if (h.expGrowth > h.revGrowth && h.expGrowth > 0.02) {
+      /* Same rule, but the wording and urgency follow how tight it actually is. */
+      if (ratio >= 0.95) {
+        out.push({ sev: 'red',
+          issue: 'Costs have caught up with your sales — you are spending R' + ratio.toFixed(2) + ' for every R1 you earn.',
+          rec: topCost ? 'Your biggest cost this month was ' + topCost.desc.toLowerCase() + ' at ' + money(topCost.amount) + '. That is the first one to bring down.'
+                       : 'Bring your largest cost down before it overtakes what you earn.' });
+      } else {
+        out.push({ sev: 'yellow',
+          issue: 'Your costs are creeping up faster than your sales.',
+          rec: 'You keep about ' + money(last.revenue - last.expenses) + ' of every month right now. ' +
+               (topCost ? 'Check ' + topCost.desc.toLowerCase() + ' at ' + money(topCost.amount) + ' first — it is your largest cost.' : 'Review your largest costs first.') });
+      }
+    }
+
+    if ((last.revenue - last.expenses) < 0) {
+      out.push({ sev: 'red',
+        issue: 'You spent ' + money(Math.abs(last.revenue - last.expenses)) + ' more than you brought in this month.',
+        rec: 'List what still has to be paid and cover only what the business cannot run without until sales recover.' });
+    }
+    var delayedStage = biz.milestones.filter(function (m) { return m.status === 'delayed'; })[0];
+    if (delayedStage) {
+      out.push({ sev: 'yellow',
+        issue: 'You are behind on "' + delayedStage.label + '".',
+        rec: 'Work out what is holding this stage up, then set a new date you can realistically meet. Your funder can see it is running late.' });
+    }
+
+    if (h.missed > 0) {
+      out.push({ sev: 'yellow',
+        issue: 'You have missed ' + h.missed + ' monthly update' + (h.missed === 1 ? '' : 's') + '.',
+        rec: 'Sending your numbers on time is a fifth of your score. Catching up is the quickest improvement available to you.' });
+    }
+
+    if (!out.length && h.tier === 'green') {
+      out.push({ sev: 'green',
+        issue: 'Steady month — you kept ' + money(last.revenue - last.expenses) + ' after costs.',
+        rec: 'You are ' + biz.milestones.filter(function (m) { return m.status === 'done'; }).length + ' of ' + biz.milestones.length +
+             ' stages in with ' + biz.history.length + ' months on record. Keep sending your numbers — this history is what your next funding conversation rests on.' });
+    }
+    if (!out.length) out.push({ sev: 'yellow', issue: 'Nothing serious this month, but a few things are worth watching.', rec: 'Keep sending your numbers on time so any problem shows up early.' });
+    return out;
+  }
+
+  /* =========================================================================
+     3. DEMO DATA — 10 fictional South African SMEs.
+     ========================================================================= */
+  /* Reporting months are generated relative to today so the demo never looks
+     stale: the most recent month is always last month, and the next update is
+     always genuinely due soon. Fixed dates would read as months overdue to
+     anyone opening this later. */
+  var PERIOD_DATES = (function () {
+    var out = [], now = new Date();
+    /* Month 6 of the seed is last month; count back five from there. */
+    for (var i = 5; i >= 0; i--) {
+      var d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1 - i, 15));
+      out.push(d.toISOString().slice(0, 10));
+    }
+    /* Room for months submitted during the demo. */
+    for (var j = 0; j < 6; j++) {
+      var f = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + j, 15));
+      out.push(f.toISOString().slice(0, 10));
+    }
+    return out;
+  })();
+  /* Plain-language stage names — anyone should understand these without a
+     glossary. "Onboarding & Setup" became "Getting set up", and so on. */
+  var MSTAGES = ['Getting set up', 'Open and trading', 'Growing the business', 'Standing on its own'];
+  var EXP_CATEGORIES = ['Stock & Inventory', 'Rent', 'Wages', 'Transport', 'Marketing', 'Utilities', 'Other'];
+
+  function milestoneSet(doneCount, activeStatus) {
+    return MSTAGES.map(function (label, i) {
+      if (i < doneCount) return { label: label, status: 'done' };
+      if (i === doneCount) return { label: label, status: activeStatus || 'current' };
+      return { label: label, status: 'pending' };
+    });
+  }
+
+  /* Three businesses, one per situation, so the difference is obvious at a
+     glance: one doing well, one in the middle, one in trouble. */
+  var DEFS = [
+    /* Figures are sized for AYEF-scale youth grants: R100k–R150k of funding, and
+       monthly trading in the tens of thousands. A business turning over R240k a
+       month would not be applying for a R150k start-up grant, so revenue is kept
+       proportionate to the funding it received. */
+
+    /* DOING WELL — growing sales, costs under control, always reports on time. */
+    { id: 'nandi-beauty', name: 'Nandi Beauty Studio', industry: 'Beauty & Wellness', owner: 'Nandi Mahlangu', region: 'Tembisa, GP', fundingAmount: 150000,
+      milestones: milestoneSet(3, 'current'), model: { rev: 0.038, exp: 0.022, cust: 0.035, vol: 0.008, miss: 0.02 }, base: { revenue: 48000, expenses: 27500, customers: 145 }, reporting: 'sent',
+      team: { staff: 3, roles: 'Two stylists and a receptionist' }, started: '2024-03' },
+
+    /* IN THE MIDDLE — sales growing slowly, costs rising faster, one late report. */
+    { id: 'soweto-bakery', name: 'Soweto Sunrise Bakery', industry: 'Food & Beverage', owner: 'Palesa Dlamini', region: 'Soweto, GP', fundingAmount: 120000,
+      milestones: milestoneSet(2, 'current'), model: { rev: 0.012, exp: 0.030, cust: 0.009, vol: 0.012, miss: 0.05 }, base: { revenue: 36000, expenses: 24500, customers: 160 }, lateAt: [3], reporting: 'due',
+      team: { staff: 4, roles: 'A baker, two counter staff and a driver' }, started: '2024-08' },
+
+    /* IN TROUBLE — sales falling, spending more than it earns, reports missed.
+       Also carries the scripted bad month used by the "log a rough month" demo. */
+    { id: 'zola-deliveries', name: 'Zola Deliveries', industry: 'Transport', owner: 'Zola Mokoena', region: 'Pretoria, GP', fundingAmount: 100000,
+      milestones: milestoneSet(1, 'delayed'), model: { rev: -0.018, exp: 0.026, cust: -0.016, vol: 0.014, miss: 0.10 }, base: { revenue: 32000, expenses: 26500, customers: 95 }, lateAt: [1, 4], reporting: 'late',
+      team: { staff: 2, roles: 'Two drivers' }, started: '2025-01',
+      script: [{ rev: -0.46, exp: 0.20, cust: -0.40, status: 'missed' }] }
+  ];
+
+  function buildHistory(def) {
+    var h = [], rev = def.base.revenue, exp = def.base.expenses, cust = def.base.customers;
+    /* A business that reports late is genuinely a month behind, so its whole
+       record is shifted back one month and ends a month earlier than the
+       businesses that are up to date. */
+    var lag = def.reporting === 'late' ? 1 : 0;
+    for (var i = 0; i < 6; i++) {
+      if (i > 0) { rev *= (1 + def.model.rev); exp *= (1 + def.model.exp); cust *= (1 + def.model.cust); }
+      var d = new Date(PERIOD_DATES[i] + 'T00:00:00Z');
+      d.setUTCMonth(d.getUTCMonth() - lag);
+      h.push({ period: 'P' + (i + 1), date: d.toISOString().slice(0, 10), revenue: Math.round(rev / 100) * 100, expenses: Math.round(exp / 100) * 100, customers: Math.round(cust), status: (def.lateAt && def.lateAt.indexOf(i) !== -1) ? 'late' : 'on-time' });
+    }
+    return h;
+  }
+  /* Recent transactions for the latest month only — a short, readable list
+     rather than pages of rows. Descriptions are written per trade so they read
+     like a real business's books, not generic category names. */
+  var LEDGER_LINES = {
+    'nandi-beauty': [
+      { desc: 'Salon takings for the month', category: 'Sales', type: 'revenue', share: 1 },
+      { desc: 'Hair products and colour stock', category: 'Stock & Inventory', type: 'expense', share: 0.34 },
+      { desc: 'Assistant stylist wages', category: 'Wages', type: 'expense', share: 0.30 },
+      { desc: 'Salon rent', category: 'Rent', type: 'expense', share: 0.22 },
+      { desc: 'Electricity and water', category: 'Utilities', type: 'expense', share: 0.08 },
+      { desc: 'Instagram promotion', category: 'Marketing', type: 'expense', share: 0.06 }
+    ],
+    'soweto-bakery': [
+      { desc: 'Bread and cake sales', category: 'Sales', type: 'revenue', share: 1 },
+      { desc: 'Flour, sugar and yeast', category: 'Stock & Inventory', type: 'expense', share: 0.38 },
+      { desc: 'Baker and counter staff', category: 'Wages', type: 'expense', share: 0.27 },
+      { desc: 'Shop rent', category: 'Rent', type: 'expense', share: 0.18 },
+      { desc: 'Gas for the ovens', category: 'Utilities', type: 'expense', share: 0.11 },
+      { desc: 'Delivery fuel', category: 'Transport', type: 'expense', share: 0.06 }
+    ],
+    'zola-deliveries': [
+      { desc: 'Delivery fees collected', category: 'Sales', type: 'revenue', share: 1 },
+      { desc: 'Petrol for the bakkie', category: 'Transport', type: 'expense', share: 0.36 },
+      { desc: 'Driver wages', category: 'Wages', type: 'expense', share: 0.30 },
+      { desc: 'Vehicle service and repairs', category: 'Transport', type: 'expense', share: 0.18 },
+      { desc: 'Insurance premium', category: 'Other', type: 'expense', share: 0.10 },
+      { desc: 'Airtime and data', category: 'Utilities', type: 'expense', share: 0.06 }
+    ]
+  };
+
+  function buildLedger(def, history) {
+    var p = history[history.length - 1];
+    var lines = LEDGER_LINES[def.id] || LEDGER_LINES['soweto-bakery'];
+    return lines.map(function (l, i) {
+      var base = l.type === 'revenue' ? p.revenue : p.expenses;
+      /* Spread the entries across the month so dates are not all identical. */
+      var day = new Date(p.date + 'T00:00:00Z');
+      day.setUTCDate(day.getUTCDate() - (lines.length - 1 - i) * 3);
+      return {
+        date: day.toISOString().slice(0, 10), period: p.period,
+        desc: l.desc, category: l.category, type: l.type,
+        amount: Math.round(base * l.share / 10) * 10
+      };
+    });
+  }
+
+  function makeSeed() {
+    return DEFS.map(function (d) {
+      var history = buildHistory(d);
+      return {
+        id: d.id, name: d.name, industry: d.industry, owner: d.owner, region: d.region, fundingAmount: d.fundingAmount,
+        reporting: d.reporting || 'due',
+        team: d.team || { staff: 0, roles: '' }, started: d.started || '',
+        milestones: JSON.parse(JSON.stringify(d.milestones)),
+        model: d.model, script: d.script ? JSON.parse(JSON.stringify(d.script)) : null, scriptStep: 0,
+        history: history, ledger: buildLedger(d, history), notes: []
+      };
+    });
+  }
+
+  /* =========================================================================
+     4. STATE
+     ========================================================================= */
+  /* =========================================================================
+     4b. PROOF STORE — real file storage, no server
+     -------------------------------------------------------------------------
+     Receipts are held as Blobs in IndexedDB, so an uploaded file survives a
+     refresh and a browser restart and can be reopened or downloaded. Nothing
+     leaves the machine and nothing needs installing — the prototype still runs
+     by opening the file directly. A real deployment would post these to object
+     storage instead; the calling code below would not change.
+     ========================================================================= */
+  var ProofStore = (function () {
+    var DB = 'provenProofs', STORE = 'proofs', VERSION = 1, dbp = null;
+
+    function open() {
+      if (dbp) return dbp;
+      dbp = new Promise(function (resolve, reject) {
+        if (!window.indexedDB) { reject(new Error('IndexedDB unavailable')); return; }
+        var req = indexedDB.open(DB, VERSION);
+        req.onupgradeneeded = function (e) {
+          var db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE)) {
+            var os = db.createObjectStore(STORE, { keyPath: 'id' });
+            os.createIndex('bizId', 'bizId', { unique: false });
+          }
+        };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error); };
+      });
+      return dbp;
+    }
+
+    function tx(mode) {
+      return open().then(function (db) { return db.transaction(STORE, mode).objectStore(STORE); });
+    }
+
+    return {
+      available: function () { return !!window.indexedDB; },
+
+      /* Store a File against a business + transaction reference. */
+      put: function (bizId, txnRef, file) {
+        return tx('readwrite').then(function (os) {
+          return new Promise(function (resolve, reject) {
+            var rec = {
+              id: bizId + '::' + txnRef,
+              bizId: bizId, txnRef: txnRef,
+              name: file.name, size: file.size, type: file.type || 'application/octet-stream',
+              uploadedAt: new Date().toISOString(), blob: file
+            };
+            var r = os.put(rec);
+            r.onsuccess = function () { resolve(rec); };
+            r.onerror = function () { reject(r.error); };
+          });
+        });
+      },
+
+      /* Every proof for one business, keyed by transaction ref. */
+      listFor: function (bizId) {
+        return tx('readonly').then(function (os) {
+          return new Promise(function (resolve, reject) {
+            var out = {};
+            var req = os.index('bizId').openCursor(IDBKeyRange.only(bizId));
+            req.onsuccess = function (e) {
+              var c = e.target.result;
+              if (!c) { resolve(out); return; }
+              var v = c.value;
+              out[v.txnRef] = { name: v.name, size: v.size, type: v.type, uploadedAt: v.uploadedAt };
+              c.continue();
+            };
+            req.onerror = function () { reject(req.error); };
+          });
+        }).catch(function () { return {}; });
+      },
+
+      get: function (bizId, txnRef) {
+        return tx('readonly').then(function (os) {
+          return new Promise(function (resolve, reject) {
+            var r = os.get(bizId + '::' + txnRef);
+            r.onsuccess = function () { resolve(r.result || null); };
+            r.onerror = function () { reject(r.error); };
+          });
+        });
+      },
+
+      /* Drop everything for one business — used when the demo's dates move on
+         and the stored refs no longer match any transaction. */
+      clearFor: function (bizId) {
+        return tx('readwrite').then(function (os) {
+          return new Promise(function (resolve) {
+            var req = os.index('bizId').openCursor(IDBKeyRange.only(bizId));
+            req.onsuccess = function (e) {
+              var c = e.target.result;
+              if (!c) { resolve(); return; }
+              c.delete(); c.continue();
+            };
+            req.onerror = function () { resolve(); };
+          });
+        }).catch(function () {});
+      },
+
+      remove: function (bizId, txnRef) {
+        return tx('readwrite').then(function (os) {
+          return new Promise(function (resolve, reject) {
+            var r = os.delete(bizId + '::' + txnRef);
+            r.onsuccess = function () { resolve(); };
+            r.onerror = function () { reject(r.error); };
+          });
+        });
+      }
+    };
+  })();
+
+  /* Proof metadata for the business on screen, mirrored here so render stays
+     synchronous. Refreshed from IndexedDB whenever the business changes. */
+  var proofIndex = {};
+
+  /* Portfolio-wide evidence coverage. Rendering is synchronous, so the figure
+     is computed once after the proofs load and cached here; null means "not
+     counted yet" and the card shows a dash rather than a wrong 0%. */
+  var portfolioCoverage = null;
+
+  function refreshPortfolioCoverage() {
+    if (!ProofStore.available()) return Promise.resolve(null);
+    return Promise.all(state.businesses.map(function (b) {
+      return ProofStore.listFor(b.id).then(function (map) {
+        var total = 0, backed = 0;
+        b.ledger.forEach(function (t, i) {
+          total += t.amount;
+          if (map[txnRef(t, i)]) backed += t.amount;
+        });
+        return { total: total, backed: backed };
+      });
+    })).then(function (list) {
+      var t = 0, k = 0;
+      list.forEach(function (r) { t += r.total; k += r.backed; });
+      portfolioCoverage = t > 0 ? Math.round(k / t * 100) : 0;
+      return portfolioCoverage;
+    }).catch(function () { return null; });
+  }
+
+  /* Guard rails: keep the store to sensible receipt-sized files. */
+  var MAX_PROOF = 8 * 1024 * 1024;
+  var pendingProof = null;
+
+  function refreshProofs(bizId) {
+    if (!ProofStore.available()) return Promise.resolve({});
+    return ProofStore.listFor(bizId).then(function (map) {
+      proofIndex = map;
+      proofsLoadedForBiz = bizId;
+      /* Attaching or removing a document moves the portfolio figure too. */
+      refreshPortfolioCoverage();
+      return map;
+    });
+  }
+  /* Which business proofIndex currently holds, regardless of who is looking. */
+  var proofsLoadedForBiz = null;
+
+  /* -------------------------------------------------------------------------
+     Sample receipts. So the demo opens with evidence coverage already showing
+     something real, a simple receipt is drawn for most expense entries and
+     stored like any uploaded file — openable, downloadable, and counted in the
+     coverage figure. Runs once; anything attached by hand is left alone.
+     ------------------------------------------------------------------------- */
+  function receiptSvg(biz, t) {
+    var income = t.type === 'revenue';
+    var vat = Math.round(t.amount * 0.15 / 1.15);
+    var line = function (y, l, r, bold) {
+      return '<text x="24" y="' + y + '" font-family="Segoe UI, Arial" font-size="12" fill="#0a2540"' +
+             (bold ? ' font-weight="700"' : '') + '>' + esc(l) + '</text>' +
+             '<text x="336" y="' + y + '" text-anchor="end" font-family="Segoe UI, Arial" font-size="12" fill="#0a2540"' +
+             (bold ? ' font-weight="700"' : '') + '>' + esc(r) + '</text>';
+    };
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="300" viewBox="0 0 360 300">' +
+      '<rect width="360" height="300" fill="#ffffff"/>' +
+      '<rect x="0" y="0" width="360" height="56" fill="#0a2540"/>' +
+      '<text x="24" y="34" font-family="Segoe UI, Arial" font-size="15" font-weight="700" fill="#ffffff">' +
+        (income ? 'Sales summary' : esc(t.category) + ' receipt') + '</text>' +
+      '<line x1="24" y1="84" x2="336" y2="84" stroke="#dde5f0"/>' +
+      line(76, esc(biz.name), fmtDate(t.date), true) +
+      line(112, income ? 'Takings' : 'Item', 'Amount', true) +
+      '<line x1="24" y1="122" x2="336" y2="122" stroke="#dde5f0"/>' +
+      line(146, t.desc.length > 30 ? t.desc.slice(0, 29) + '…' : t.desc, money(t.amount - vat)) +
+      line(170, 'VAT at 15%', money(vat)) +
+      '<line x1="24" y1="186" x2="336" y2="186" stroke="#dde5f0"/>' +
+      line(210, income ? 'Total banked' : 'Total paid', money(t.amount), true) +
+      '<text x="24" y="248" font-family="Segoe UI, Arial" font-size="10.5" fill="#5d6f88">Reference ' +
+        esc((biz.id.slice(0, 3) + t.period + Math.round(t.amount)).toUpperCase()) + '</text>' +
+      '<text x="24" y="266" font-family="Segoe UI, Arial" font-size="10.5" fill="#8b9bb0">Sample document included with the demo</text>' +
+      '</svg>';
+  }
+
+  function seedProofs() {
+    if (!ProofStore.available()) return Promise.resolve();
+    /* Transaction refs contain the entry date, and the demo's dates are
+       generated relative to today — so a save made in a previous month points
+       at refs that no longer exist and coverage silently reads 0%. Stamp the
+       flag with the current period so the receipts are rebuilt when it moves. */
+    var stamp = PERIOD_DATES[5] || '';
+    try { if (localStorage.getItem('provenProofsSeeded') === stamp) return Promise.resolve(); } catch (e) {}
+    /* How many expenses are left undocumented, per business. The well-run
+       business has everything; the struggling one has gaps — its paperwork
+       slips for the same reasons its numbers do. */
+    var SKIP = { 'nandi-beauty': [], 'soweto-bakery': [4], 'zola-deliveries': [0, 2, 4, 5] };
+    /* Clear first — receipts written against a previous period's dates are
+       orphaned — then write the current set. The clear must finish before the
+       puts, or it would delete the very records being added. */
+    return Promise.all(state.businesses.map(function (b) { return ProofStore.clearFor(b.id); }))
+      .then(function () {
+        var jobs = [];
+        state.businesses.forEach(function (biz) {
+          var skip = SKIP[biz.id] || [];
+          biz.ledger.forEach(function (t, i) {
+            if (skip.indexOf(i) !== -1) return;
+            var svg = receiptSvg(biz, t);
+            var name = (t.type === 'revenue' ? 'sales-summary' : t.category.toLowerCase().replace(/[^a-z]+/g, '-')) + '-' + t.date + '.svg';
+            var file;
+            try {
+              file = new File([svg], name, { type: 'image/svg+xml' });
+            } catch (e) {
+              /* Older browsers without the File constructor still store a Blob;
+                 ProofStore keeps the name separately, so nothing is lost. */
+              file = new Blob([svg], { type: 'image/svg+xml' });
+              file.name = name;
+            }
+            jobs.push(ProofStore.put(biz.id, txnRef(t, i), file));
+          });
+        });
+        return Promise.all(jobs);
+      })
+      .then(function () {
+        try { localStorage.setItem('provenProofsSeeded', stamp); } catch (e) {}
+      }).catch(function () {});
+  }
+
+  /* Stable reference for a ledger entry — proofs survive re-renders and sorting. */
+  function txnRef(t, i) {
+    return [t.period, t.date, t.type, t.category, Math.round(t.amount), i].join('|');
+  }
+
+  /* =========================================================================
+     4c. SAVED WORK — changes stay put across refreshes
+     -------------------------------------------------------------------------
+     Transactions, submitted months and stage decisions are written to
+     localStorage so anything done during a demo is still there after a
+     reload. "Start the demo over" on the landing screen clears it.
+     ========================================================================= */
+  /* Bump this whenever the seed's shape changes, so a save written by an older
+     version is discarded rather than loaded back over the new data. */
+  var SAVE_KEY = 'provenState.v2';
+
+  function saveState() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        businesses: state.businesses, draft: state.draft, savedAt: new Date().toISOString()
+      }));
+    } catch (e) { /* storage full or blocked — demo still works, just unsaved */ }
+  }
+
+  function loadSaved() {
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      /* Only accept a shape that matches the current seed, so an old save from
+         a previous version cannot half-load and corrupt the screen. */
+      if (!data || !Array.isArray(data.businesses) || !data.businesses.length) return null;
+      var seedIds = makeSeed().map(function (b) { return b.id; }).sort().join(',');
+      var savedIds = data.businesses.map(function (b) { return b.id; }).sort().join(',');
+      if (seedIds !== savedIds) return null;
+      /* Matching ids are not enough — a save written before a field was added
+         passes that check and then renders wrong (missing teams showed every
+         business as 1 job). Require every field the UI reads. */
+      var NEEDED = ['team', 'reporting', 'history', 'ledger', 'milestones'];
+      var complete = data.businesses.every(function (b) {
+        return NEEDED.every(function (k) { return b[k] != null; });
+      });
+      if (!complete) return null;
+      return data;
+    } catch (e) { return null; }
+  }
+
+  function clearSaved() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  }
+
+  var saved = loadSaved();
+
+  var state = {
+    role: 'landing', bizId: 'soweto-bakery',
+    entTab: 'overview', funderView: 'portfolio', profileId: null, profileReturn: 'funder', profileTab: 'overview',
+    filterTier: 'all', query: '', sortKey: 'score',
+    businesses: saved ? saved.businesses : makeSeed(),
+    draft: saved && saved.draft ? saved.draft : {}
+  };
+  function byId(id) { for (var i = 0; i < state.businesses.length; i++) if (state.businesses[i].id === id) return state.businesses[i]; return null; }
+  function draftFor(id) { if (!state.draft[id]) state.draft[id] = { revenue: 0, expenses: 0 }; return state.draft[id]; }
+
+  /* =========================================================================
+     5. HELPERS
+     ========================================================================= */
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function money(n) { return 'R' + Math.round(n).toLocaleString('en-ZA'); }
+  function moneyShort(n) { if (n >= 1000000) return 'R' + (n / 1000000).toFixed(1) + 'm'; if (n >= 1000) return 'R' + Math.round(n / 1000) + 'k'; return 'R' + Math.round(n); }
+  function pct(n, d) { return (n >= 0 ? '+' : '') + (n * 100).toFixed(d === undefined ? 1 : d) + '%'; }
+  function fmtDate(iso) { return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); }
+  function fmtDateShort(iso) { return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', timeZone: 'UTC' }); }
+  function initials(name) { return name.split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase(); }
+  function trendGlyph(t) { return t === 'up' ? '▲' : t === 'down' ? '▼' : '—'; }
+  /* Share of the funding released so far. Money is drawn down as stages are
+     reached, so this tracks progress through the stages rather than totalling
+     every running cost — six months of trading expenses would exceed any grant
+     and pin every business at 100%. */
+  /* -------------------------------------------------------------------------
+     Reporting cycle. Numbers are due on the 15th of the month after the one
+     being reported, so both sides can always see when the next update is
+     expected and whether it is late.
+     ------------------------------------------------------------------------- */
+  function reportingStatus(biz) {
+    var last = biz.history[biz.history.length - 1];
+    var due = new Date(last.date + 'T00:00:00Z');
+    due.setUTCMonth(due.getUTCMonth() + 1);
+    var today = new Date();
+    var days = Math.round((due - today) / 86400000);
+    var dueIso = due.toISOString().slice(0, 10);
+
+    /* A business that is behind on its figures is behind on everything else
+       too, so the three demo businesses sit at different points in the cycle:
+       the well-run one has already sent this month's update, the middling one
+       has it coming up, and the struggling one has let it slip. */
+    var behaviour = biz.reporting || 'due';
+
+    /* Everything is in — nothing owed until next month's deadline. */
+    if (behaviour === 'sent') {
+      return { due: dueIso, days: days, state: 'sent', sent: true,
+        title: 'Everything is up to date',
+        detail: 'Your ' + monthLabel(last.date) + ' update is in. The next one is due ' + fmtDate(dueIso) + '.',
+        label: 'Up to date', covers: monthLabel(last.date) };
+    }
+
+    /* Behind: the deadline that has already passed is the one still owed, and
+       the month it covers is the month before that. */
+    if (behaviour === 'late') {
+      var lateDue = new Date(due);
+      while (lateDue > new Date()) lateDue.setUTCMonth(lateDue.getUTCMonth() - 1);
+      var lateIso = lateDue.toISOString().slice(0, 10);
+      var owedMonth = new Date(lateDue);
+      owedMonth.setUTCMonth(owedMonth.getUTCMonth() - 1);
+      var over = Math.max(1, Math.round((new Date() - lateDue) / 86400000));
+      return { due: lateIso, days: -over, state: 'overdue', sent: false,
+        title: 'Your ' + monthLabel(owedMonth.toISOString().slice(0, 10)) + ' update is still outstanding',
+        detail: 'It was due ' + fmtDate(lateIso) + ' — that is ' + over + ' day' + (over === 1 ? '' : 's') +
+                ' ago. Sending on time counts for 20% of your score.',
+        label: over + ' days late', covers: monthLabel(owedMonth.toISOString().slice(0, 10)) };
+    }
+
+    /* Up to date, with the next deadline approaching. */
+    var state = days < 0 ? 'overdue' : days <= 7 ? 'due-soon' : 'ok';
+    return {
+      due: dueIso, days: days, state: state, sent: false,
+      title: state === 'due-soon' ? 'Your next update is due soon'
+           : state === 'overdue' ? 'Your ' + monthLabel(last.date) + ' update is late'
+           : 'Everything is up to date',
+      detail: state === 'overdue'
+        ? 'It was due ' + fmtDate(dueIso) + '. Sending on time counts for 20% of your score.'
+        : 'Your ' + monthLabel(last.date) + ' update is in. The next one is due ' + fmtDate(dueIso) +
+          ' — ' + (days === 0 ? 'today' : 'in ' + days + ' day' + (days === 1 ? '' : 's')) + '.',
+      label: state === 'overdue' ? (Math.abs(days) + ' days late')
+           : days === 0 ? 'Due today'
+           : 'Due in ' + days + ' day' + (days === 1 ? '' : 's'),
+      covers: monthLabel(last.date)
+    };
+  }
+
+  function fundingUtilisation(biz) {
+    var total = biz.milestones.length;
+    var done = biz.milestones.filter(function (m) { return m.status === 'done'; }).length;
+    var inFlight = biz.milestones.some(function (m) { return m.status === 'current' || m.status === 'delayed'; }) ? 0.5 : 0;
+    return clamp(Math.round((done + inFlight) / total * 100), 0, 100);
+  }
+  function currentMilestone(biz) { var m = biz.milestones.filter(function (x) { return x.status === 'current' || x.status === 'delayed'; })[0]; return m ? m.label : 'All stages finished'; }
+  function milestoneProgress(biz) { var done = biz.milestones.filter(function (m) { return m.status === 'done'; }).length; return Math.round(done / biz.milestones.length * 100); }
+  function showToast(msg) { var el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove('show'); }, 3400); }
+  function counts() { var c = { green: 0, yellow: 0, red: 0 }; state.businesses.forEach(function (b) { c[computeHealth(b).tier]++; }); return c; }
+
+  /* =========================================================================
+     6. LINE CHART (dependency-free SVG)
+     ========================================================================= */
+  /* Month name for a period, e.g. "Feb 2026" — used instead of P1/P2 wherever
+     a person reads the chart or table. */
+  function monthLabel(iso) {
+    return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-ZA', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  }
+  function monthShort(iso) {
+    return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-ZA', { month: 'short', timeZone: 'UTC' });
+  }
+
+  function lineChart(biz) {
+    /* Roughly 4:1 — wide and low, so a full-width panel does not scale the
+       chart into a tall block that outgrows whatever sits beside it. */
+    var h = biz.history.slice(-8), W = 760, H = 190, P = { t: 12, r: 16, b: 30, l: 52 }, iw = W - P.l - P.r, ih = H - P.t - P.b;
+    var mx = Math.max.apply(null, h.map(function (x) { return Math.max(x.revenue, x.expenses); }));
+    var mn = Math.min.apply(null, h.map(function (x) { return Math.min(x.revenue, x.expenses); }));
+    var pad = (mx - mn) * 0.18 || mx * 0.1 || 1; mx += pad; mn = Math.max(0, mn - pad);
+    var n = h.length, x = function (i) { return P.l + (n === 1 ? iw / 2 : (i / (n - 1)) * iw); };
+    var y = function (v) { return P.t + ih - ((v - mn) / (mx - mn || 1)) * ih; };
+    function path(key) { return h.map(function (d, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(d[key]).toFixed(1); }).join(' '); }
+    /* Area under each line, closed along the baseline, for a soft fill. */
+    function area(key) {
+      return path(key) + ' L' + x(n - 1).toFixed(1) + ' ' + (P.t + ih) + ' L' + x(0).toFixed(1) + ' ' + (P.t + ih) + ' Z';
+    }
+    function dots(key, color) {
+      return h.map(function (d, i) {
+        return '<circle class="pt" cx="' + x(i).toFixed(1) + '" cy="' + y(d[key]).toFixed(1) + '" r="3.5" fill="#fff" stroke="' + color + '" stroke-width="2" style="animation-delay:' + (0.55 + i * 0.05).toFixed(2) + 's"/>';
+      }).join('');
+    }
+    var grid = '', ticks = 3;
+    for (var i = 0; i <= ticks; i++) {
+      var yy = P.t + (ih / ticks) * i, mv = mx - ((mx - mn) / ticks) * i;
+      grid += '<line x1="' + P.l + '" y1="' + yy.toFixed(1) + '" x2="' + (W - P.r) + '" y2="' + yy.toFixed(1) + '" stroke="#eaeff6"/>' +
+        '<text x="' + (P.l - 9) + '" y="' + (yy + 3.5).toFixed(1) + '" text-anchor="end" font-size="10" fill="#8b9bb0">' + moneyShort(mv) + '</text>';
+    }
+    /* Real month names on the axis instead of P1, P2, P3. */
+    var labels = h.map(function (d, i) {
+      return '<text x="' + x(i).toFixed(1) + '" y="' + (P.t + ih + 17) + '" text-anchor="middle" font-size="10" fill="#8b9bb0">' + monthShort(d.date) + '</text>';
+    }).join('');
+
+    /* One invisible column per month captures hover and drives the tooltip. */
+    var half = n > 1 ? (iw / (n - 1)) / 2 : iw / 2;
+    var hot = h.map(function (d, i) {
+      var cx = x(i), left = Math.max(P.l, cx - half), w = Math.min(W - P.r, cx + half) - left;
+      var profit = d.revenue - d.expenses;
+      var payload = [
+        monthLabel(d.date), fmtDate(d.date),
+        money(d.revenue), money(d.expenses),
+        (profit >= 0 ? '+' : '−') + money(Math.abs(profit)), profit >= 0 ? 'up' : 'down',
+        d.customers, d.status === 'on-time' ? 'Sent on time' : d.status === 'late' ? 'Sent late' : 'Not sent'
+      ].join('||');
+      return '<rect class="hot" x="' + left.toFixed(1) + '" y="' + P.t + '" width="' + Math.max(1, w).toFixed(1) + '" height="' + ih + '" fill="transparent" ' +
+        'data-cx="' + cx.toFixed(1) + '" data-rev-y="' + y(d.revenue).toFixed(1) + '" data-exp-y="' + y(d.expenses).toFixed(1) + '" ' +
+        'data-tip="' + esc(payload) + '"></rect>';
+    }).join('');
+
+    return '<div class="chart-wrap">' +
+      '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">' +
+        '<defs>' +
+          '<linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="#1d5490" stop-opacity=".20"/><stop offset="100%" stop-color="#1d5490" stop-opacity="0"/></linearGradient>' +
+          '<linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">' +
+            '<stop offset="0%" stop-color="#c0322b" stop-opacity=".16"/><stop offset="100%" stop-color="#c0322b" stop-opacity="0"/></linearGradient>' +
+        '</defs>' +
+        grid + labels +
+        '<path class="fill" d="' + area('revenue') + '" fill="url(#gRev)"/>' +
+        '<path class="fill" d="' + area('expenses') + '" fill="url(#gExp)"/>' +
+        '<line class="crosshair" id="chartCross" x1="0" y1="' + P.t + '" x2="0" y2="' + (P.t + ih) + '" stroke="#8b9bb0" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>' +
+        '<path class="ln" d="' + path('revenue') + '" fill="none" stroke="#1d5490" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path class="ln" d="' + path('expenses') + '" fill="none" stroke="#c0322b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation-delay:.15s"/>' +
+        dots('revenue', '#1d5490') + dots('expenses', '#c0322b') +
+        '<circle class="marker" id="markRev" r="5" fill="#1d5490" stroke="#fff" stroke-width="2" opacity="0"/>' +
+        '<circle class="marker" id="markExp" r="5" fill="#c0322b" stroke="#fff" stroke-width="2" opacity="0"/>' +
+        hot +
+      '</svg>' +
+      '<div class="chart-tip" id="chartTip"></div>' +
+      '<div class="chart-key">' +
+        '<span><i style="background:#1d5490"></i>Money in</span>' +
+        '<span><i style="background:#c0322b"></i>Money out</span>' +
+        '<span class="hint">Hover any month for the detail</span>' +
+      '</div></div>';
+  }
+  /* Donut of the health mix. Proportions are true — no perspective tilt, which
+     would make equal slices read as unequal. Depth comes from a soft shadow and
+     a gradient; the life comes from hover, where a slice lifts, brightens and
+     tells you what it is. Slices are also a filter for the table below. */
+  function donut(c) {
+    var BANDS = [
+      { k: 'green', v: c.green, col: '#12805c', lit: '#18a074', label: 'Healthy' },
+      { k: 'yellow', v: c.yellow, col: '#a86a00', lit: '#c98505', label: 'Watch' },
+      { k: 'red', v: c.red, col: '#c0322b', lit: '#dc4038', label: 'At risk' }
+    ].filter(function (b) { return b.v > 0; });
+
+    var total = c.green + c.yellow + c.red || 1;
+    var CX = 96, CY = 92, R = 62, IR = 38, GAP = 1.6;
+
+    function pt(cx, cy, r, deg) {
+      var a = (deg - 90) * Math.PI / 180;
+      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    }
+    /* Ring segment as a closed path, so it can be filled, lifted and glowed. */
+    function arc(cx, cy, from, to, rOut, rIn) {
+      var large = (to - from) > 180 ? 1 : 0;
+      var a = pt(cx, cy, rOut, from), b = pt(cx, cy, rOut, to);
+      var d = pt(cx, cy, rIn, to), e = pt(cx, cy, rIn, from);
+      return 'M' + a[0].toFixed(2) + ' ' + a[1].toFixed(2) +
+        ' A' + rOut + ' ' + rOut + ' 0 ' + large + ' 1 ' + b[0].toFixed(2) + ' ' + b[1].toFixed(2) +
+        ' L' + d[0].toFixed(2) + ' ' + d[1].toFixed(2) +
+        ' A' + rIn + ' ' + rIn + ' 0 ' + large + ' 0 ' + e[0].toFixed(2) + ' ' + e[1].toFixed(2) + ' Z';
+    }
+
+    var defs = '<defs>' +
+      '<filter id="dShadow" x="-40%" y="-40%" width="180%" height="180%">' +
+        '<feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0a2540" flood-opacity="0.20"/></filter>' +
+      BANDS.map(function (b) {
+        return '<filter id="glow-' + b.k + '" x="-50%" y="-50%" width="200%" height="200%">' +
+          '<feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="' + b.col + '" flood-opacity="0.75"/></filter>' +
+          '<linearGradient id="grad-' + b.k + '" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="' + b.lit + '"/><stop offset="100%" stop-color="' + b.col + '"/></linearGradient>';
+      }).join('') + '</defs>';
+
+    var at = 0;
+    var slices = BANDS.map(function (b) {
+      var sweep = (b.v / total) * 360;
+      var from = at + (BANDS.length > 1 ? GAP / 2 : 0);
+      var to = at + sweep - (BANDS.length > 1 ? GAP / 2 : 0);
+      var mid = at + sweep / 2;
+      at += sweep;
+      /* Direction the slice moves when hovered. */
+      var off = pt(0, 0, 5, mid);
+      return '<path class="dslice" d="' + arc(CX, CY, from, to, R, IR) + '" fill="url(#grad-' + b.k + ')" ' +
+        'data-band="' + b.k + '" data-filter="' + b.k + '" ' +
+        'data-label="' + esc(b.label) + '" data-count="' + b.v + '" ' +
+        'style="--mx:' + off[0].toFixed(2) + 'px; --my:' + off[1].toFixed(2) + 'px; ' +
+        'filter:url(#glow-' + b.k + ')"><title>' + esc(b.label) + ' — ' + b.v + '</title></path>';
+    }).join('');
+
+    return '<div class="donut-wrap">' +
+      '<svg class="donut" viewBox="0 0 192 184" width="192" height="184" role="img" aria-label="Portfolio health mix">' +
+      defs +
+      '<circle cx="' + CX + '" cy="' + CY + '" r="' + ((R + IR) / 2) + '" fill="none" stroke="#eaeff6" ' +
+        'stroke-width="' + (R - IR) + '" filter="url(#dShadow)"/>' +
+      '<g class="dslices">' + slices + '</g>' +
+      '<text class="dnum" x="' + CX + '" y="' + (CY - 2) + '" text-anchor="middle">' + total + '</text>' +
+      '<text class="dlbl" x="' + CX + '" y="' + (CY + 15) + '" text-anchor="middle">businesses</text>' +
+      '</svg></div>';
+  }
+
+  /* =========================================================================
+     7. RENDER — LANDING
+     ========================================================================= */
+  function renderLanding() {
+    /* Each journey step carries an icon that depicts the step itself: a coin for
+       funding, an eye for visibility, and so on through to the upward badge for
+       readiness. Inline SVG so there is no icon-font dependency. */
+    var ICON = {
+      funding:    '<circle cx="12" cy="12" r="8"/><path d="M12 8.5v7M10 10.5h3a1.5 1.5 0 0 1 0 3h-2a1.5 1.5 0 0 0 0 3h3"/>',
+      visibility: '<path class="eye-outline" d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"/><circle class="eye-pupil" cx="12" cy="12" r="2.6"/>',
+      detection:  '<g class="alert"><path d="M12 3.6 21 19.2H3L12 3.6Z"/><path d="M12 10v4"/><path d="M12 16.6h.01"/></g>',
+      guidance:   '<circle cx="12" cy="12" r="8.5"/><path class="needle" d="M15.2 8.8 13.4 13.4 8.8 15.2l1.8-4.6 4.6-1.8Z"/>',
+      growth:     '<g class="trend"><path d="M3 17.5 9 11l4 4 7.2-7.6"/><path d="M15.6 7.4h4.8v4.8"/></g>',
+      record:     '<path d="M6 3.5h9L19 7.5v13H6v-17Z"/><path d="M14.6 3.6v4.2h4.2"/><path class="tick" d="m9.2 14 2.1 2.1 4-4"/>',
+      readiness:  '<circle cx="12" cy="9.4" r="5.4"/><path d="m9.6 8.9 1.7 1.7 3-3"/><path d="m8.7 14.6-1.3 6 4.6-2.4 4.6 2.4-1.3-6"/>'
+    };
+    var steps = [
+      { key: 'funding',    label: 'Funding',                       icon: ICON.funding },
+      { key: 'visibility', label: 'Visibility',                    icon: ICON.visibility },
+      { key: 'detection',  label: 'Early Detection',               icon: ICON.detection },
+      { key: 'guidance',   label: 'Guidance',                      icon: ICON.guidance },
+      { key: 'growth',     label: 'Stronger Business Performance', icon: ICON.growth },
+      { key: 'record',     label: 'Verified Track Record',         icon: ICON.record },
+      { key: 'readiness',  label: 'Greater Financial Readiness',   icon: ICON.readiness }
+    ];
+    var stepsHtml = steps.map(function (s, i) {
+      var svg = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + s.icon + '</svg>';
+      var spark = s.key === 'readiness'
+        ? '<span class="spark">' + '<i></i><i></i><i></i><i></i><i></i><i></i>' + '</span>' : '';
+      return '<div class="step" data-step="' + s.key + '" tabindex="0">' +
+          '<div class="dot">' + svg + spark + '<span class="no">' + (i + 1) + '</span></div>' +
+          '<div class="lbl">' + s.label + '</div>' +
+        '</div>' +
+        (i < steps.length - 1 ? '<div class="arrow" aria-hidden="true">' +
+          '<svg viewBox="0 0 34 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M1 6h27" stroke-dasharray="3 3"/><path d="m26.5 1.8 4.8 4.2-4.8 4.2"/>' +
+          '</svg></div>' : '');
+    }).join('');
+    return '<div class="landing">' +
+      '<a class="to-launch" href="index.html">Back to the launch page</a>' +
+      '<div class="mark"><img src="assets/logo_only__1_-removebg-preview.png" alt="Proven logo" /></div>' +
+      '<div class="brandname">PROVEN</div>' +
+      '<div class="brandtag">Turning Potential into Proof</div>' +
+      '<h1>We don’t just track where funding went.</h1>' +
+      '<p class="tagline">We help determine whether the funding is helping build a sustainable business — and create the evidence to prove it.</p>' +
+      '<div class="journey">' + stepsHtml + '</div>' +
+      '<p class="twosided-line">Entrepreneurs see how to improve. Funders see whether improvement is happening.</p>' +
+      '<div class="role-picks">' +
+        '<button class="role-btn accent" data-enter="entrepreneur"><div class="rb-ico">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M3.6 9.4 5 4.6h14l1.4 4.8"/><path d="M4.6 9.4h14.8v9.8H4.6z"/><path d="M9.4 19.2v-5h5.2v5"/>' +
+          '</svg></div><div class="rb-title">Enter as Entrepreneur</div><div class="rb-sub">Track your business health, understand your risk, and build a verified track record.</div></button>' +
+        '<button class="role-btn" data-enter="funder"><div class="rb-ico">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M3.2 20.4h17.6"/><path d="M4.8 20.4v-6.2M9.6 20.4V9.4M14.4 20.4v-8.2M19.2 20.4V5.6"/>' +
+            '<path d="m4.8 11.2 4.8-4.4 4.8 2.6 5.4-5.2"/><path d="M15.6 3.9h4.2v4.2"/>' +
+          '</svg></div><div class="rb-title">Enter as Funder</div><div class="rb-sub">Monitor your full funded portfolio and see which businesses are ready for what’s next.</div></button>' +
+      '</div>' +
+      (loadSaved() ? '<div class="saved-note">Your earlier changes have been kept. ' +
+        '<button id="resetDemo">Start the demo over</button></div>' : '') +
+    '</div>';
+  }
+
+  /* =========================================================================
+     8. RENDER — SHELL (sidebar + topbar)
+     ========================================================================= */
+  function renderShell(navItems, activeKey, title, sub, bodyHtml, showBizPicker) {
+    var navHtml = navItems.map(function (it) {
+      var active = activeKey === it.key;
+      return '<button class="nav-item' + (active ? ' active' : '') + '" data-nav="' + it.key + '">' + it.label +
+        (it.count !== undefined ? '<span class="count' + (it.alarm ? ' alarm' : '') + '">' + it.count + '</span>' : '') + '</button>';
+    }).join('');
+    var bizPicker = '';
+    if (showBizPicker) {
+      bizPicker = '<div class="biz-picker"><label>Viewing as</label><select id="bizPick">' +
+        state.businesses.map(function (b) { return '<option value="' + b.id + '"' + (b.id === state.bizId ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') +
+        '</select></div>';
+    }
+    return '<div class="app"><aside class="sidebar">' +
+      '<div class="brand"><div class="logo"><img class="mark" src="assets/logo_only__1_-removebg-preview.png" alt="Proven logo" /><h1>Proven</h1></div>' +
+      '<div class="role-badge">' + (state.role === 'entrepreneur' ? 'Entrepreneur view' : 'Funder view') + '</div>' +
+      '<div class="switch-role"><button data-nav="home">Switch role</button></div></div>' +
+      bizPicker +
+      '<nav class="nav">' + navHtml + '</nav>' +
+      '<div class="sidebar-foot">Proven prototype<br/>Track &middot; Detect &middot; Guide &middot; Prove' +
+        (loadSaved() ? '<button class="reset-inline" id="resetDemo">Reset the demo data</button>' : '') +
+      '</div>' +
+      '</aside><main class="main">' +
+      '<div class="topbar"><div class="title"><h2>' + esc(title) + '</h2><p>' + esc(sub) + '</p></div><div class="spacer"></div></div>' +
+      '<div class="view">' + bodyHtml + '</div>' +
+      '</main></div>';
+  }
+
+  /* =========================================================================
+     9. RENDER — ENTREPRENEUR VIEW
+     ========================================================================= */
+  function renderEntrepreneur() {
+    var biz = byId(state.bizId);
+    var navItems = [
+      { key: 'overview', label: 'Overview' },
+      { key: 'transactions', label: 'Transactions' },
+      { key: 'milestones', label: 'Stages' },
+      /* Only flag red when there is a real problem to act on — a healthy business
+         still gets one "keep going" note, which should not look like an alert. */
+      { key: 'recommendations', label: 'What to do next', count: getGuidance(biz).length,
+        alarm: getGuidance(biz).some(function (g) { return g.sev === 'red' || g.sev === 'yellow'; }) },
+      { key: 'history', label: 'Month by month' }
+    ];
+    var body =
+      state.entTab === 'overview' ? entOverview(biz) :
+      state.entTab === 'transactions' ? entTransactions(biz) :
+      state.entTab === 'milestones' ? entMilestones(biz) :
+      state.entTab === 'recommendations' ? entRecommendations(biz) : entHistory(biz);
+    return renderShell(navItems, state.entTab, biz.name, biz.industry + ' · ' + biz.region, body, true);
+  }
+
+  /* Six months of score in a thumbnail — shows direction, which a single
+     number cannot. Deliberately small: it supports the ring, not competes. */
+  function scoreSpark(biz) {
+    var pts = biz.history.map(function (_, i) { return healthAt(biz, i).score; }).slice(-6);
+    if (pts.length < 2) return '';
+    var W = 108, H = 30, mn = Math.min.apply(null, pts), mx = Math.max.apply(null, pts);
+    var span = (mx - mn) || 1;
+    var x = function (i) { return (i / (pts.length - 1)) * (W - 4) + 2; };
+    var y = function (v) { return H - 3 - ((v - mn) / span) * (H - 8); };
+    var d = pts.map(function (v, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
+    var lastTier = tierOf(pts[pts.length - 1]);
+    var col = lastTier === 'green' ? '#12805c' : lastTier === 'yellow' ? '#a86a00' : '#c0322b';
+    return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-hidden="true">' +
+      '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<circle cx="' + x(pts.length - 1).toFixed(1) + '" cy="' + y(pts[pts.length - 1]).toFixed(1) + '" r="2.8" fill="' + col + '"/></svg>';
+  }
+
+  function scoreRingHtml(score, tier, label) {
+    var color = tier === 'green' ? '#12805c' : tier === 'yellow' ? '#a86a00' : '#c0322b';
+    var bg = tier === 'green' ? '#e3f6ee' : tier === 'yellow' ? '#fdf1dc' : '#fdeae8';
+    return '<div class="ring" style="background:' + bg + '"><div><div class="n" style="color:' + color + '">' + score + '</div><div class="u">' + esc(label) + '</div></div></div>';
+  }
+
+  function entOverview(biz) {
+    var h = computeHealth(biz), dec = decisionFor(biz), t = trendOf(biz), d = scoreDelta(biz);
+    var util = fundingUtilisation(biz), guidance = getGuidance(biz), cr = creditReadiness(biz);
+    var cash = biz.history[biz.history.length - 1].revenue - biz.history[biz.history.length - 1].expenses;
+    var rep = reportingStatus(biz);
+    /* Trends read better with a direction colour: rising sales and falling
+       costs are good, the reverse is not. */
+    var revTone = h.revGrowth > 0.005 ? 'var(--green)' : h.revGrowth < -0.005 ? 'var(--red)' : '';
+    var expTone = h.expGrowth > h.revGrowth ? 'var(--red)' : 'var(--green)';
+    var kpis = [
+      { l: 'Sales trend', v: pct(h.revGrowth), foot: 'last 3 months vs the 3 before', tone: revTone },
+      { l: 'Cost trend', v: pct(h.expGrowth), foot: 'last 3 months vs the 3 before', tone: expTone },
+      { l: 'Money left over', v: cash >= 0 ? 'Positive' : 'Negative',
+        foot: (cash >= 0 ? 'You kept ' : 'You were short ') + money(Math.abs(cash)) + ' last month',
+        tone: cash >= 0 ? 'var(--green)' : 'var(--red)' },
+      { l: 'Funding used', v: util + '%', foot: 'of the ' + money(biz.fundingAmount) + ' received' }
+    ];
+    return '<div class="panel score-hero" style="margin-bottom:16px">' + scoreRingHtml(h.score, h.tier, 'SCORE') +
+      '<div style="flex:1;min-width:220px"><span class="chip ' + h.tier + '"><span class="dot"></span>' + tierLabel(h.tier) + '</span>' +
+      '<div style="margin-top:8px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:12px;flex-wrap:wrap">' +
+        '<span>Trend <span class="trend ' + t + '">' + trendGlyph(t) + ' ' + (d > 0 ? '+' : '') + d.toFixed(1) + '</span> vs last month</span>' +
+        scoreSpark(biz) + '<span class="tiny muted">last 6 months</span></div>' +
+      '<div style="margin-top:10px"><div class="tiny muted">Progress through the stages</div><div class="progress-track" style="margin-top:5px"><i style="width:' + milestoneProgress(biz) + '%"></i></div>' +
+      '<div class="tiny muted" style="margin-top:5px">' + currentMilestone(biz) + ' &middot; ' + milestoneProgress(biz) + '% complete</div></div></div>' +
+
+      /* Credit readiness sits beside the score, so what the record is earning is
+         visible without scrolling — it is the entrepreneur's reason to keep going. */
+      '<div class="cr-side ' + cr.color + '">' +
+        '<div class="crs-label">Credit readiness</div>' +
+        '<div class="crs-status">' + esc(cr.status) + '</div>' +
+        '<div class="crs-plain">' + esc(cr.plain) + '</div>' +
+        '<div class="crs-dots">' + CR_BANDS.map(function (b, i) {
+          var reached = i <= CR_BANDS.indexOf(cr.status);
+          return '<span class="crs-dot' + (reached ? ' on' : '') + '" title="' + esc(b) + '"></span>';
+        }).join('') + '<span class="crs-of">' + (CR_BANDS.indexOf(cr.status) + 1) + ' of 4</span></div>' +
+      '</div></div>' +
+
+      '<div class="kpis">' + kpis.map(function (k) {
+        return '<div class="kpi"><div class="label">' + k.l + '</div>' +
+          '<div class="value"' + (k.tone ? ' style="color:' + k.tone + '"' : '') + '>' + k.v + '</div>' +
+          '<div class="foot">' + k.foot + '</div></div>';
+      }).join('') + '</div>' +
+
+      /* Where this business stands in its reporting cycle, stated plainly. */
+      '<div class="duebar ' + rep.state + '">' +
+        '<span class="dueicon">' +
+          (rep.sent
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+              '<rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>') +
+        '</span>' +
+        '<div><div class="duetitle">' + esc(rep.title) + '</div>' +
+        '<div class="duesub">' + esc(rep.detail) + '</div></div>' +
+        (rep.state === 'ok' || rep.sent ? '' : '<button class="btn sm duebtn" data-nav="transactions">Send update</button>') +
+      '</div>' +
+
+      '<div class="grid2">' +
+        '<div class="panel"><div class="panel-head"><h3>Where you stand</h3><span class="hint" style="margin-left:auto">What a funder would see right now</span></div><div class="panel-body">' +
+          '<div class="decision ' + dec.kind + '"><div class="glyph">' + (dec.kind === 'release' ? '✔' : dec.kind === 'hold' ? '⏸' : '⚠') + '</div>' +
+          '<div><div class="lbl">Status</div><div class="act">' + esc(dec.action) + '</div><div class="why">' + esc(dec.why) + '</div></div></div></div></div>' +
+        '<div class="panel"><div class="panel-head"><h3>Do this first</h3></div><div class="panel-body">' +
+          guidance.slice(0, 1).map(recCardHtml).join('') +
+          '<button class="btn ghost sm" style="margin-top:10px" data-nav="recommendations">See all recommendations</button></div></div>' +
+      '</div>';
+  }
+
+  function recCardHtml(g) {
+    return '<div class="rec-card ' + g.sev + '"><div class="issue">' + esc(g.issue) + '</div><div class="rec"><b>Try this:</b> ' + esc(g.rec) + '</div></div>';
+  }
+  function entRecommendations(biz) {
+    return '<div class="panel"><div class="panel-head"><h3>What to do next</h3><span class="hint" style="margin-left:auto">Based on how your business is doing right now</span></div>' +
+      '<div class="panel-body">' + getGuidance(biz).map(recCardHtml).join('') + '</div></div>';
+  }
+
+  function entMilestones(biz) {
+    var rows = biz.milestones.map(function (m, i) {
+      var actions = '';
+      if (m.status === 'current' || m.status === 'delayed') {
+        actions = '<div class="mactions"><button class="btn sm" data-milestone-action="complete" data-idx="' + i + '">Mark complete</button>' +
+          '<button class="btn ghost sm" data-milestone-action="delay" data-idx="' + i + '">Mark delayed</button></div>';
+      }
+      return '<div class="milestone-row ' + m.status + '"><div class="mnum">' + (m.status === 'done' ? '✔' : (i + 1)) + '</div>' +
+        '<div class="mlabel">' + esc(m.label) + '<div class="tiny muted" style="font-weight:500">' + (m.status === 'done' ? 'Completed' : m.status === 'delayed' ? 'Running late' : m.status === 'current' ? 'Working on it now' : 'Not started yet') + '</div></div>' + actions + '</div>';
+    }).join('');
+    return '<div class="panel"><div class="panel-head"><h3>Stages</h3><span class="hint" style="margin-left:auto">' + milestoneProgress(biz) + '% complete</span></div><div class="panel-body">' + rows + '</div></div>';
+  }
+
+  /* Share of transaction value that carries an attached document. */
+  /* Every entry needs backing, income included — a sales total is exactly the
+     figure a funder would most want evidence for, so income carries a till
+     summary or deposit slip just as spending carries a receipt. */
+  function evidenceCoverage(biz) {
+    var total = 0, backed = 0, n = 0, withProof = 0;
+    biz.ledger.forEach(function (t, i) {
+      total += t.amount; n++;
+      if (proofIndex[txnRef(t, i)]) { backed += t.amount; withProof++; }
+    });
+    return {
+      pct: total > 0 ? Math.round(backed / total * 100) : 0,
+      backed: backed, total: total, count: n, withProof: withProof
+    };
+  }
+
+  function entTransactions(biz) {
+    var draft = draftFor(biz.id);
+    var cov = evidenceCoverage(biz);
+    var covTone = cov.pct >= 70 ? 'var(--green)' : cov.pct >= 40 ? 'var(--yellow)' : 'var(--red)';
+
+    var rows = biz.ledger.map(function (t, i) { return { t: t, ref: txnRef(t, i) }; })
+      .reverse().slice(0, 12).map(function (o) {
+      var t = o.t, p = proofIndex[o.ref];
+      var proofCell = p
+        ? '<button class="proof-chip has" data-proof-view="' + esc(o.ref) + '" title="' + esc(p.name) + '">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>' +
+            'Attached</button>'
+        : '<label class="proof-chip add"><input type="file" accept="image/*,.pdf" data-proof-for="' + esc(o.ref) + '" hidden />' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>' +
+            'Attach</label>';
+      return '<tr><td>' + monthShort(t.date) + '<div class="tiny muted">' + fmtDateShort(t.date) + '</div></td><td>' + esc(t.desc) + '</td><td>' + esc(t.category) + '</td>' +
+        '<td style="color:' + (t.type === 'revenue' ? 'var(--green)' : 'var(--ink)') + '">' + (t.type === 'revenue' ? '+' : '−') + money(t.amount) + '</td>' +
+        '<td>' + proofCell + '</td></tr>';
+    }).join('');
+
+    var coveragePanel = '<div class="panel" style="margin-bottom:16px"><div class="panel-body">' +
+      '<div class="cov-head"><div><div class="cov-title">Evidence coverage</div>' +
+      '<div class="tiny muted">' + money(cov.backed) + ' of ' + money(cov.total) + ' backed by a document · ' + cov.withProof + ' of ' + cov.count + ' entries</div></div>' +
+      '<div class="cov-pct" style="color:' + covTone + '">' + cov.pct + '%</div></div>' +
+      '<div class="cov-bar"><span style="width:' + cov.pct + '%;background:' + covTone + '"></span></div>' +
+      '<div class="cov-note">This is the share of <b>everything you log</b> — money in and money out — that has a document behind it. Sales need a till summary or deposit slip; costs need a receipt or invoice. ' +
+      'Documents stay on this device and are marked <b>pending review</b> until a funder opens them.</div>' +
+      '</div></div>';
+    var catOptions = EXP_CATEGORIES.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+    return coveragePanel +
+      '<div class="panel" style="margin-bottom:16px"><div class="panel-head"><h3>Add a transaction</h3><span class="hint" style="margin-left:auto">Builds this period’s numbers below</span></div>' +
+      '<div class="panel-body"><div class="txn-form">' +
+        '<div class="f"><label>Description</label><input id="txnDesc" type="text" placeholder="e.g. Weekly stock order" /></div>' +
+        '<div class="f"><label>Type</label><select id="txnType"><option value="revenue">Revenue</option><option value="expense">Expense</option></select></div>' +
+        '<div class="f"><label>Category</label><select id="txnCat"><option value="Sales">Sales</option>' + catOptions + '</select></div>' +
+        '<div class="f"><label>Amount (R)</label><input id="txnAmt" type="number" min="0" placeholder="0" /></div>' +
+        '<button class="btn" id="addTxnBtn">Add</button>' +
+      '</div>' +
+      '<div class="txn-proof"><label class="proof-pick"><input type="file" id="txnProof" accept="image/*,.pdf" hidden />' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 16V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M4 16v3.2h16V16"/></svg>' +
+        '<span id="txnProofLabel">Attach receipt or invoice</span></label>' +
+        '<span class="tiny muted">Optional — you can also attach it later from the table below.</span></div>' +
+      '</div></div>' +
+
+      '<div class="panel" style="margin-bottom:16px"><div class="panel-head"><h3>Send this month&rsquo;s numbers</h3>' +
+      '<span class="hint" style="margin-left:auto">Due ' + fmtDate(reportingStatus(biz).due) + ' &middot; ' + reportingStatus(biz).label + '</span></div><div class="panel-body">' +
+        /* Totals of what has been added but not yet submitted. Shown only once
+           there is something in them — three zeros on arrival explained nothing
+           and sat in the wrong panel. */
+        (draft.revenue || draft.expenses
+          ? '<div class="draft-summary">' +
+              '<div class="d"><div class="l">Money in this month</div><div class="v" style="color:var(--green)">' + money(draft.revenue) + '</div></div>' +
+              '<div class="d"><div class="l">Money out this month</div><div class="v" style="color:var(--red)">' + money(draft.expenses) + '</div></div>' +
+              '<div class="d"><div class="l">Left over</div><div class="v" style="color:' + (draft.revenue - draft.expenses >= 0 ? 'var(--green)' : 'var(--red)') + '">' +
+                (draft.revenue - draft.expenses < 0 ? '−' : '') + money(Math.abs(draft.revenue - draft.expenses)) + '</div></div>' +
+              '<div class="draft-hint">From the transactions you have added. Submitting turns them into a finished month.</div>' +
+            '</div>'
+          : '') +
+        '<div class="txn-form" style="grid-template-columns:1fr 1fr 1fr auto">' +
+        '<div class="f"><label>Customers this period</label><input id="submitCust" type="number" min="0" value="' + biz.history[biz.history.length - 1].customers + '" /></div>' +
+        '<div class="f"><label>Stage update</label><select id="submitMilestone"><option value="unchanged">No change</option><option value="complete">Finished this stage</option><option value="delayed">Running late on this stage</option></select></div>' +
+        '<div class="f"><label>Short status update</label><input id="submitNote" type="text" placeholder="What happened this month?" /></div>' +
+        '<button class="btn" id="submitPeriodBtn">Submit update</button></div>' +
+        /* The deck describes WhatsApp as the entrepreneur's real check-in
+           channel. Naming it here keeps the prototype honest about what this
+           form stands in for. */
+        '<div class="wa-note">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+            '<path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.4-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.6 0a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.6-1.2a.4.4 0 0 0 0-.4c0-.1-.6-1.4-.8-1.9s-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.9 11.9 0 0 0 4.6 4c1.7.7 2.3.8 3.1.7a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .2-1.2c-.1-.1-.3-.2-.5-.3Z"/>' +
+          '</svg>' +
+          '<span>In production, entrepreneurs send this by <b>WhatsApp</b> — no app download, low data. ' +
+          'This form stands in for that check-in.</span>' +
+        '</div>' +
+        '<button class="btn ghost sm" id="quickDemoBtn" style="margin-top:12px">Quick demo: log a rough month</button>' +
+      '</div></div>' +
+
+      '<div class="panel"><div class="panel-head"><h3>Recent transactions</h3><span class="hint" style="margin-left:auto">Attach a document to any entry</span></div>' +
+      '<table><thead><tr><th>Month</th><th>Description</th><th>Category</th><th>Amount</th><th>Proof</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function entHistory(biz) {
+    var hist = biz.history;
+    var rows = hist.slice().reverse().map(function (p, ri) {
+      var idx = hist.length - 1 - ri, hh = healthAt(biz, idx);
+      var prev = idx > 0 ? hist[idx - 1] : null;
+      var left = p.revenue - p.expenses;
+      /* Change against the month before, so a trend is visible without maths. */
+      var delta = '';
+      if (prev) {
+        var dv = prev.revenue ? (p.revenue - prev.revenue) / prev.revenue : 0;
+        var dir = dv > 0.005 ? 'up' : dv < -0.005 ? 'down' : 'flat';
+        delta = '<span class="mchange ' + dir + '">' + (dir === 'up' ? '▲' : dir === 'down' ? '▼' : '■') + ' ' +
+          (dv >= 0 ? '+' : '') + (dv * 100).toFixed(0) + '%</span>';
+      } else {
+        delta = '<span class="mchange flat">first month</span>';
+      }
+      var statusLabel = p.status === 'on-time' ? 'On time' : p.status === 'late' ? 'Late' : 'Not sent';
+      return '<tr class="mrow" title="' + esc(monthLabel(p.date) + ' — sent ' + statusLabel.toLowerCase() + ' on ' + fmtDate(p.date)) + '">' +
+        '<td><b>' + monthLabel(p.date) + '</b><div class="tiny muted">' + fmtDate(p.date) + '</div></td>' +
+        '<td class="mono">' + moneyShort(p.revenue) + '<div class="tiny">' + delta + '</div></td>' +
+        '<td class="mono">' + moneyShort(p.expenses) + '</td>' +
+        '<td class="mono" style="color:' + (left >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (left >= 0 ? '+' : '−') + moneyShort(Math.abs(left)) + '</td>' +
+        '<td class="mono">' + p.customers + '</td>' +
+        '<td><span class="chip ' + hh.tier + '">' + hh.score + '</span></td>' +
+        '<td><span class="stat-pill ' + p.status + '">' + statusLabel + '</span></td></tr>';
+    }).join('');
+
+    var notes = biz.notes.slice().reverse().map(function (n) {
+      return '<li><div class="t-title">' + esc(n.title) + '</div><div class="t-detail">' + esc(n.detail) + '</div><div class="t-date">' + fmtDate(n.date) + '</div></li>';
+    }).join('') || '<li><div class="t-detail">You have not sent any updates yet.</div></li>';
+
+    /* Plain-language summary of how the money has been used overall. */
+    var totIn = hist.reduce(function (s, p) { return s + p.revenue; }, 0);
+    var totOut = hist.reduce(function (s, p) { return s + p.expenses; }, 0);
+    var kept = totIn - totOut;
+    var best = hist.reduce(function (a, b) { return b.revenue > a.revenue ? b : a; }, hist[0]);
+    var summary = '<div class="msum">' +
+      '<div class="ms"><div class="l">Money in, all months</div><div class="v" style="color:var(--green)">' + money(totIn) + '</div></div>' +
+      '<div class="ms"><div class="l">Money out, all months</div><div class="v">' + money(totOut) + '</div></div>' +
+      '<div class="ms"><div class="l">' + (kept >= 0 ? 'Kept after costs' : 'Short after costs') + '</div>' +
+        '<div class="v" style="color:' + (kept >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (kept >= 0 ? '' : '−') + money(Math.abs(kept)) + '</div></div>' +
+      '<div class="ms"><div class="l">Best month</div><div class="v">' + monthShort(best.date) + '</div>' +
+        '<div class="tiny muted">' + money(best.revenue) + ' in</div></div>' +
+      '</div>';
+
+    return '<div class="panel" style="margin-bottom:16px"><div class="panel-head"><h3>Money in and money out</h3>' +
+      '<span class="hint" style="margin-left:auto">Last ' + Math.min(hist.length, 8) + ' months</span></div>' +
+      '<div class="panel-body">' + summary + lineChart(biz) + '</div></div>' +
+      '<div class="grid2"><div class="panel"><div class="panel-head"><h3>Month-by-month record</h3>' +
+      '<span class="hint" style="margin-left:auto">Newest first</span></div>' +
+      '<table><thead><tr><th>Month</th><th>Money in</th><th>Money out</th><th>Left over</th><th>Customers</th><th>Score</th><th>Update</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<div class="panel"><div class="panel-head"><h3>Your updates</h3></div><div class="panel-body"><ul class="tl">' + notes + '</ul></div></div></div>';
+  }
+
+  /* =========================================================================
+     10. RENDER — FUNDER VIEW
+     ========================================================================= */
+  function renderFunder() {
+    /* Businesses that are flagged and not yet followed up — the count a funder
+       is actually working through. */
+    var open = state.businesses.filter(function (b) {
+      return computeHealth(b).tier !== 'green' && !b.actioned;
+    }).length;
+    var navItems = [
+      { key: 'portfolio', label: 'Portfolio' },
+      { key: 'attention', label: 'Needs attention', count: open, alarm: open > 0 }
+    ];
+
+    var view = state.funderView;
+    var body, title, sub, active;
+    if (view === 'profile') {
+      body = businessProfile(byId(state.profileId), state.profileReturn || 'funder');
+      title = byId(state.profileId).name;
+      sub = 'Full performance record';
+      active = state.profileReturn === 'attention' ? 'attention' : 'portfolio';
+    } else if (view === 'attention') {
+      body = funderAttention();
+      title = 'Needs attention';
+      sub = 'Everything flagged right now, with the reason and what the owner was told';
+      active = 'attention';
+    } else {
+      body = funderPortfolio();
+      title = 'Portfolio Overview';
+      sub = 'Worst first, so problems reach you — the same score the entrepreneur sees';
+      active = 'portfolio';
+    }
+    return renderShell(navItems, active, title, sub, body, false);
+  }
+
+  /* Triage screen: one card per flagged business carrying the reason, the
+     advice the owner already received, and the follow-up action — so a funder
+     can work the list without opening every profile in turn. */
+  function funderAttention() {
+    var flagged = state.businesses.filter(function (b) { return computeHealth(b).tier !== 'green'; })
+      .sort(function (a, b) { return computeHealth(a).score - computeHealth(b).score; });
+
+    if (!flagged.length) {
+      return '<div class="panel"><div class="panel-body"><div class="empty">' +
+        '<div class="big">&#10003;</div>Nothing needs attention right now. Every business is in the healthy band.' +
+        '</div></div></div>';
+    }
+
+    var cards = flagged.map(function (b) {
+      var h = computeHealth(b), rep = reportingStatus(b), g = getGuidance(b);
+      var top = g[0] || {};
+      var reasons = g.slice(0, 2).map(function (x) {
+        return '<li class="' + x.sev + '"><b>' + esc(x.issue) + '</b><span>' + esc(x.rec) + '</span></li>';
+      }).join('');
+      return '<div class="att-card ' + h.tier + '">' +
+        '<div class="att-head">' +
+          '<div class="avatar">' + initials(b.name) + '</div>' +
+          '<div class="att-who"><div class="nm" data-biz-att="' + b.id + '">' + esc(b.name) + '</div>' +
+            '<div class="tiny muted">' + esc(b.owner) + ' &middot; ' + esc(b.industry) + '</div></div>' +
+          '<div class="att-score"><span class="scorenum ' + h.tier + '">' + h.score + '</span>' +
+            '<span class="chip ' + h.tier + '"><span class="dot"></span>' + tierLabel(h.tier) + '</span></div>' +
+        '</div>' +
+        '<ul class="att-why">' + reasons + '</ul>' +
+        '<div class="att-foot">' +
+          '<span class="due-pill ' + rep.state + '">' + esc(rep.label) + '</span>' +
+          '<span class="tiny muted">' + money(b.fundingAmount) + ' granted &middot; ' + fundingUtilisation(b) + '% released</span>' +
+          (b.actioned
+            ? '<span class="att-done">&#10003; Followed up ' + fmtDate(b.actioned) + '</span>'
+            : '<button class="btn sm" data-att-action="' + b.id + '">Mark followed up</button>') +
+          '<button class="btn ghost sm" data-biz-att="' + b.id + '">Open record</button>' +
+        '</div></div>';
+    }).join('');
+
+    return '<div class="att-list">' + cards + '</div>';
+  }
+
+  function funderPortfolio() {
+    var c = counts(), total = state.businesses.length;
+    var totalFunding = state.businesses.reduce(function (s, b) { return s + b.fundingAmount; }, 0);
+    var avgUtil = Math.round(state.businesses.reduce(function (s, b) { return s + fundingUtilisation(b); }, 0) / total);
+    var avgScore = Math.round(state.businesses.reduce(function (s, b) { return s + computeHealth(b).score; }, 0) / total);
+    var needAttention = c.red + c.yellow;
+    var overdue = state.businesses.filter(function (b) { return reportingStatus(b).state === 'overdue'; }).length;
+    var rows = visibleBusinesses();
+
+    /* The portfolio's direction answers "is this working?" — a single score
+       cannot. */
+    var prevScores = state.businesses.map(function (b) {
+      return b.history.length > 1 ? healthAt(b, b.history.length - 2).score : computeHealth(b).score;
+    });
+    var prevAvg = Math.round(prevScores.reduce(function (s, v) { return s + v; }, 0) / total);
+    var trendDelta = avgScore - prevAvg;
+    var trendDir = trendDelta > 0 ? 'up' : trendDelta < 0 ? 'down' : 'flat';
+
+    /* Three figures, not seven. The counts per band are already shown by the
+       filter tabs and the chart beside the table, so repeating them here only
+       pushed the business list further down the page. */
+    return '<div class="kpis k4">' +
+        '<button class="kpi act' + (needAttention ? ' alarm' : '') + '" data-filter="' + (c.red ? 'red' : 'yellow') + '">' +
+          '<div class="label">Needs attention</div><div class="value">' + needAttention + '</div>' +
+          '<div class="foot">' + c.red + ' at risk · ' + c.yellow + ' on watch' + (overdue ? ' · ' + overdue + ' behind on updates' : '') + '</div></button>' +
+        '<div class="kpi"><div class="label">Portfolio health</div>' +
+          '<div class="value">' + avgScore + '/100 <span class="trend ' + trendDir + '" style="font-size:13px">' +
+            trendGlyph(trendDir) + ' ' + (trendDelta > 0 ? '+' : '') + trendDelta + '</span></div>' +
+          '<div class="foot">average score · ' + (trendDelta === 0 ? 'unchanged' : (trendDelta > 0 ? 'up' : 'down') + ' since last month') + '</div></div>' +
+        '<div class="kpi"><div class="label">Evidence coverage</div>' +
+          '<div class="value">' + (portfolioCoverage === null ? '—' : portfolioCoverage + '%') + '</div>' +
+          '<div class="foot">of logged value backed by a document</div></div>' +
+        '<div class="kpi"><div class="label">Funding at work</div><div class="value">' + moneyShort(totalFunding) + '</div>' +
+          '<div class="foot">' + avgUtil + '% released against stages reached</div></div>' +
+      '</div>' +
+
+      '<div class="toolbar"><div class="seg">' + ['all', 'green', 'yellow', 'red'].map(function (t) { var n = t === 'all' ? total : c[t]; return '<button data-filter="' + t + '" class="' + (state.filterTier === t ? 'on' : '') + '">' + (t === 'all' ? 'All' : tierLabel(t)) + ' (' + n + ')</button>'; }).join('') + '</div>' +
+      '<div class="field"><label>Search</label><input id="q" type="text" placeholder="Business, industry or owner…" value="' + esc(state.query) + '" /></div>' +
+      '<div class="field"><label>Sort</label><select id="sortSel">' + [['score', 'Health score (worst first)'], ['name', 'Name'], ['industry', 'Industry'], ['funding', 'Funding amount']].map(function (o) { return '<option value="' + o[0] + '"' + (state.sortKey === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="exports">' +
+        '<button class="btn ghost sm" id="exportExcel">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M12 3.5v11"/><path d="m7.5 10 4.5 4.5 4.5-4.5"/><path d="M4 16.5v4h16v-4"/></svg>Excel</button>' +
+        '<button class="btn ghost sm" id="exportPdf">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M12 3.5v11"/><path d="m7.5 10 4.5 4.5 4.5-4.5"/><path d="M4 16.5v4h16v-4"/></svg>PDF</button>' +
+      '</div></div>' +
+
+      '<div class="panel"><table><thead><tr><th>Business</th><th>Funding</th><th>Stage</th><th>Score</th><th>How it&rsquo;s doing</th><th class="hide-sm">Sales trend</th><th>Reporting</th><th>Credit readiness</th></tr></thead><tbody>' +
+      (rows.length ? rows.map(portfolioRow).join('') : '<tr><td colspan="8"><div class="empty"><div class="big">&#9679;</div>No businesses match this filter.</div></td></tr>') + '</tbody></table></div>' +
+
+      /* The mix chart and the positioning note sit below the list, where they
+         give context without delaying the thing a funder came to see. */
+      '<div class="grid2" style="margin-top:16px">' +
+        '<div class="panel"><div class="panel-head"><h3>How your businesses are doing</h3>' +
+          '<span class="hint" style="margin-left:auto">' +
+            (c.red || c.yellow
+              ? (c.red + c.yellow) + ' of ' + total + ' need a closer look'
+              : 'All ' + total + ' in the healthy band') + '</span></div>' +
+        '<div class="panel-body" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">' + donut(c) +
+          '<div style="flex:1;min-width:170px">' +
+            '<div class="mix-legend">' +
+              [['green', 'Healthy', c.green, '#12805c', 'score 80–100'],
+               ['yellow', 'Watch', c.yellow, '#a86a00', 'score 50–79'],
+               ['red', 'At risk', c.red, '#c0322b', 'below 50']].map(function (b) {
+                return '<button data-band-btn="' + b[0] + '" data-filter="' + b[0] + '"' +
+                  (state.filterTier === b[0] ? ' class="on"' : '') + '>' +
+                  '<i style="background:' + b[3] + '"></i>' + b[1] +
+                  '<span class="n">' + b[2] + '</span></button>';
+              }).join('') +
+            '</div>' +
+            '<div class="mix-hint">Hover a band to highlight it, click to filter the list.</div>' +
+          '</div></div></div>' +
+        '<div class="panel"><div class="panel-head"><h3>What this means</h3></div>' +
+        '<div class="panel-body" style="font-size:12.5px;color:var(--muted);line-height:1.7">Businesses on Watch or At Risk are flagged so support can reach them early. The same score, the same explanation and the same recommendation are visible to the entrepreneur — this is a shared evidence platform, not a surveillance tool.</div></div>' +
+      '</div>';
+  }
+
+  function visibleBusinesses() {
+    var q = state.query.trim().toLowerCase();
+    var list = state.businesses.filter(function (b) {
+      if (state.filterTier !== 'all' && computeHealth(b).tier !== state.filterTier) return false;
+      if (q && (b.name + ' ' + b.industry + ' ' + b.owner).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+    list.sort(function (a, b) {
+      if (state.sortKey === 'name') return a.name.localeCompare(b.name);
+      if (state.sortKey === 'industry') return a.industry.localeCompare(b.industry);
+      if (state.sortKey === 'funding') return b.fundingAmount - a.fundingAmount;
+      return computeHealth(a).score - computeHealth(b).score;
+    });
+    return list;
+  }
+
+  /* Portfolio as a spreadsheet, so a funder can report upward without
+     retyping. Built from the same figures shown on screen. */
+  /* Coverage for every business, not just the one on screen. proofIndex holds
+     a single business, so the export loads each in turn first. */
+  function allCoverage() {
+    if (!ProofStore.available()) return Promise.resolve({});
+    return Promise.all(state.businesses.map(function (b) {
+      return ProofStore.listFor(b.id).then(function (map) {
+        var total = 0, backed = 0;
+        b.ledger.forEach(function (t, i) {
+          total += t.amount;
+          if (map[txnRef(t, i)]) backed += t.amount;
+        });
+        return { id: b.id, pct: total > 0 ? Math.round(backed / total * 100) : 0 };
+      });
+    })).then(function (list) {
+      var out = {};
+      list.forEach(function (r) { out[r.id] = r.pct; });
+      return out;
+    }).catch(function () { return {}; });
+  }
+
+  /* Portfolio as a formatted workbook. SpreadsheetML is XML that Excel opens
+     natively — it carries fonts, fills, column widths, number formats and a
+     frozen header, none of which plain CSV can. It cannot hold images, so the
+     branding is a typographic title block; the PDF export carries the logo. */
+  function portfolioRows(covMap) {
+    return state.businesses.slice().sort(function (a, b) {
+      return computeHealth(a).score - computeHealth(b).score;
+    }).map(function (b) {
+      var h = computeHealth(b), cr = creditReadiness(b), rep = reportingStatus(b);
+      return {
+        biz: b, name: b.name, owner: b.owner, industry: b.industry, region: b.region,
+        grant: b.fundingAmount, released: fundingUtilisation(b),
+        score: h.score, tier: h.tier, band: tierLabel(h.tier), readiness: cr.status,
+        reporting: rep.label, reportState: rep.state,
+        coverage: covMap && covMap[b.id] != null ? covMap[b.id] : 0,
+        jobs: (b.team && b.team.staff ? b.team.staff : 0) + 1,
+        months: b.history.length,
+        followedUp: b.actioned ? fmtDate(b.actioned) : ''
+      };
+    });
+  }
+
+  function xmlEsc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c];
+    });
+  }
+
+  function exportExcel(covMap) {
+    var rows = portfolioRows(covMap);
+    var c = counts(), total = state.businesses.length;
+    var totalFunding = state.businesses.reduce(function (s, b) { return s + b.fundingAmount; }, 0);
+    var jobs = rows.reduce(function (s, r) { return s + r.jobs; }, 0);
+    var avgScore = Math.round(state.businesses.reduce(function (s, b) { return s + computeHealth(b).score; }, 0) / total);
+
+    var COLS = [
+      { w: 190, k: 'name' }, { w: 130, k: 'owner' }, { w: 120, k: 'industry' }, { w: 110, k: 'region' },
+      { w: 90, k: 'grant', money: true }, { w: 70, k: 'released', num: true },
+      { w: 60, k: 'score', num: true }, { w: 70, k: 'band', band: true },
+      { w: 150, k: 'readiness' }, { w: 100, k: 'reporting' },
+      { w: 90, k: 'coverage', num: true }, { w: 70, k: 'jobs', num: true },
+      { w: 80, k: 'months', num: true }, { w: 100, k: 'followedUp' }
+    ];
+    var HEAD = ['Business', 'Owner', 'Industry', 'Region', 'Grant', 'Released %', 'Score',
+                'Band', 'Credit readiness', 'Reporting', 'Evidence %', 'Jobs', 'Months', 'Followed up'];
+
+    function cell(v, style, type) {
+      return '<Cell' + (style ? ' ss:StyleID="' + style + '"' : '') + '>' +
+        '<Data ss:Type="' + (type || 'String') + '">' + xmlEsc(v) + '</Data></Cell>';
+    }
+    function spacer() { return '<Row/>'; }
+
+    var xml = '<?xml version="1.0"?>\n<?mso-application progid="Excel.Sheet"?>\n' +
+      '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ' +
+      'xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+      'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
+      'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
+      '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">' +
+        '<Title>Proven — Portfolio Report</Title><Company>Proven</Company></DocumentProperties>' +
+      '<Styles>' +
+        '<Style ss:ID="Default"><Font ss:FontName="Calibri" ss:Size="11" ss:Color="#0A2540"/>' +
+          '<Alignment ss:Vertical="Center"/></Style>' +
+        '<Style ss:ID="title"><Font ss:FontName="Calibri" ss:Size="20" ss:Bold="1" ss:Color="#0A2540"/>' +
+          '<Alignment ss:Vertical="Center"/></Style>' +
+        '<Style ss:ID="tagline"><Font ss:FontName="Calibri" ss:Size="11" ss:Italic="1" ss:Color="#0B7C8C"/></Style>' +
+        '<Style ss:ID="meta"><Font ss:FontName="Calibri" ss:Size="10" ss:Color="#5D6F88"/></Style>' +
+        '<Style ss:ID="section"><Font ss:FontName="Calibri" ss:Size="11" ss:Bold="1" ss:Color="#FFFFFF"/>' +
+          '<Interior ss:Color="#0A2540" ss:Pattern="Solid"/><Alignment ss:Vertical="Center"/></Style>' +
+        '<Style ss:ID="sumlbl"><Font ss:Bold="1" ss:Color="#5D6F88" ss:Size="10"/></Style>' +
+        '<Style ss:ID="sumval"><Font ss:Bold="1" ss:Size="12" ss:Color="#0A2540"/></Style>' +
+        '<Style ss:ID="summoney"><Font ss:Bold="1" ss:Size="12" ss:Color="#0A2540"/>' +
+          '<NumberFormat ss:Format="&quot;R&quot;#,##0"/></Style>' +
+        '<Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="10"/>' +
+          '<Interior ss:Color="#123A63" ss:Pattern="Solid"/>' +
+          '<Alignment ss:Vertical="Center" ss:WrapText="1"/>' +
+          '<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#0A2540"/></Borders></Style>' +
+        '<Style ss:ID="td"><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#DDE5F0"/></Borders></Style>' +
+        '<Style ss:ID="tdmoney"><NumberFormat ss:Format="&quot;R&quot;#,##0"/>' +
+          '<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#DDE5F0"/></Borders></Style>' +
+        '<Style ss:ID="tdnum"><Alignment ss:Horizontal="Right"/>' +
+          '<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#DDE5F0"/></Borders></Style>' +
+        '<Style ss:ID="green"><Font ss:Bold="1" ss:Color="#12805C"/><Interior ss:Color="#E3F6EE" ss:Pattern="Solid"/>' +
+          '<Alignment ss:Horizontal="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#DDE5F0"/></Borders></Style>' +
+        '<Style ss:ID="yellow"><Font ss:Bold="1" ss:Color="#A86A00"/><Interior ss:Color="#FDF1DC" ss:Pattern="Solid"/>' +
+          '<Alignment ss:Horizontal="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#DDE5F0"/></Borders></Style>' +
+        '<Style ss:ID="red"><Font ss:Bold="1" ss:Color="#C0322B"/><Interior ss:Color="#FDEAE8" ss:Pattern="Solid"/>' +
+          '<Alignment ss:Horizontal="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#DDE5F0"/></Borders></Style>' +
+        '<Style ss:ID="note"><Font ss:Size="9" ss:Italic="1" ss:Color="#8B9BB0"/></Style>' +
+      '</Styles>' +
+      '<Worksheet ss:Name="Portfolio" ss:Protected="1">' +
+      '<Table ss:DefaultRowHeight="16">' +
+      COLS.map(function (col) { return '<Column ss:Width="' + col.w + '"/>'; }).join('') +
+
+      /* Title block */
+      '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="5"><Data ss:Type="String">PROVEN — Portfolio Report</Data></Cell></Row>' +
+      '<Row><Cell ss:StyleID="tagline" ss:MergeAcross="5"><Data ss:Type="String">Turning Potential into Proof</Data></Cell></Row>' +
+      '<Row><Cell ss:StyleID="meta" ss:MergeAcross="5"><Data ss:Type="String">' +
+        xmlEsc('Generated ' + fmtDate(new Date().toISOString().slice(0, 10)) + ' · ' + total + ' funded businesses') +
+      '</Data></Cell></Row>' + spacer() +
+
+      /* Summary block */
+      '<Row ss:Height="20"><Cell ss:StyleID="section" ss:MergeAcross="5"><Data ss:Type="String">SUMMARY</Data></Cell></Row>' +
+      '<Row>' + cell('Total funding', 'sumlbl') + '<Cell ss:StyleID="summoney"><Data ss:Type="Number">' + totalFunding + '</Data></Cell></Row>' +
+      '<Row>' + cell('Jobs supported', 'sumlbl') + cell(jobs, 'sumval', 'Number') + '</Row>' +
+      '<Row>' + cell('Portfolio health', 'sumlbl') + cell(avgScore + '/100', 'sumval') + '</Row>' +
+      '<Row>' + cell('Needs attention', 'sumlbl') + cell(c.red + c.yellow, 'sumval', 'Number') + '</Row>' +
+      '<Row>' + cell('Healthy / Watch / At risk', 'sumlbl') + cell(c.green + ' / ' + c.yellow + ' / ' + c.red, 'sumval') + '</Row>' +
+      spacer() +
+
+      /* Business table, worst first */
+      '<Row ss:Height="20"><Cell ss:StyleID="section" ss:MergeAcross="' + (HEAD.length - 1) + '"><Data ss:Type="String">FUNDED BUSINESSES — worst first</Data></Cell></Row>' +
+      '<Row ss:Height="28">' + HEAD.map(function (t) { return cell(t, 'hdr'); }).join('') + '</Row>' +
+      rows.map(function (r) {
+        return '<Row>' + COLS.map(function (col) {
+          var v = r[col.k];
+          if (col.money) return '<Cell ss:StyleID="tdmoney"><Data ss:Type="Number">' + v + '</Data></Cell>';
+          if (col.num) return cell(v, 'tdnum', 'Number');
+          if (col.band) return cell(v, r.tier);
+          return cell(v, 'td');
+        }).join('') + '</Row>';
+      }).join('') +
+
+      spacer() +
+      '<Row><Cell ss:StyleID="note" ss:MergeAcross="8"><Data ss:Type="String">' +
+        xmlEsc('Scores are calculated from four weighted measures: sales trend 35%, spending control 25%, ' +
+               'reporting consistency 20%, customer growth 20%. Credit readiness is evidence to support, ' +
+               'not replace, a formal credit assessment.') +
+      '</Data></Cell></Row>' +
+
+      '</Table>' +
+      '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">' +
+        '<PageSetup><Layout x:Orientation="Landscape"/></PageSetup>' +
+        '<FitToPage/><Print><ValidPrinterInfo/><Scale>80</Scale></Print>' +
+        '<FreezePanes/><FrozenNoSplit/><SplitHorizontal>' + 13 + '</SplitHorizontal>' +
+        '<TopRowBottomPane>' + 13 + '</TopRowBottomPane><ActivePane>2</ActivePane>' +
+        /* Locked: this is a generated record, not a working file. Cells cannot
+           be edited, though the reader can still select, sort and copy. */
+        '<ProtectObjects>True</ProtectObjects><ProtectScenarios>True</ProtectScenarios>' +
+      '</WorksheetOptions></Worksheet></Workbook>';
+
+    downloadBlob(xml, 'application/vnd.ms-excel',
+      'proven-portfolio-' + new Date().toISOString().slice(0, 10) + '.xls');
+  }
+
+  /* =========================================================================
+     PDF WRITER — builds a real .pdf by hand
+     -------------------------------------------------------------------------
+     No library is available offline, so the file is assembled directly. It
+     uses the standard Helvetica faces (which need no embedding) and draws the
+     logo as an uncompressed RGB image, the one image form a PDF accepts
+     without a deflate implementation.
+     ========================================================================= */
+  var PDF = (function () {
+    var PT = { w: 842, h: 595 };            /* A4 landscape, in points */
+    var FONTS = { n: '/F1', b: '/F2', i: '/F3' };
+
+    /* Width of a string in Helvetica, needed to right-align and to trim text
+       that would otherwise run into the next column. */
+    var WID = (function () {
+      /* Helvetica advance widths per 1000 units, ASCII 32..126. */
+      var w = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,
+        556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,
+        1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,
+        667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,
+        333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,
+        556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+      return function (s, size, bold) {
+        var t = 0;
+        for (var i = 0; i < s.length; i++) {
+          var c = s.charCodeAt(i);
+          var u = (c >= 32 && c <= 126) ? w[c - 32] : 556;
+          if (bold) u = Math.round(u * 1.06);
+          t += u;
+        }
+        return t * size / 1000;
+      };
+    })();
+
+    function esc(s) {
+      return String(s).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)')
+        /* The standard fonts are Latin-1; drop anything outside it rather than
+           emit bytes the viewer would render as noise. */
+        .replace(/[^\x20-\x7E\xA0-\xFF]/g, function (ch) {
+          return ({ '—': '-', '–': '-', '·': '-', '’': "'", '‘': "'", '“': '"', '”': '"', '…': '...' })[ch] || '';
+        });
+    }
+
+    function fit(s, size, bold, max) {
+      s = String(s == null ? '' : s);
+      if (WID(s, size, bold) <= max) return s;
+      while (s.length > 1 && WID(s + '...', size, bold) > max) s = s.slice(0, -1);
+      return s + '...';
+    }
+
+    function Doc() {
+      this.ops = [];
+      this.img = null;
+    }
+    Doc.prototype.rect = function (x, y, w, h, rgb) {
+      this.ops.push(rgb.join(' ') + ' rg ' + x.toFixed(2) + ' ' + (PT.h - y - h).toFixed(2) +
+        ' ' + w.toFixed(2) + ' ' + h.toFixed(2) + ' re f');
+      return this;
+    };
+    Doc.prototype.text = function (s, x, y, size, rgb, style, maxW, align) {
+      var bold = style === 'b';
+      s = maxW ? fit(s, size, bold, maxW) : String(s == null ? '' : s);
+      var tx = x;
+      if (align === 'r') tx = x - WID(s, size, bold);
+      else if (align === 'c') tx = x - WID(s, size, bold) / 2;
+      this.ops.push('BT ' + (FONTS[style] || FONTS.n) + ' ' + size + ' Tf ' +
+        rgb.join(' ') + ' rg ' + tx.toFixed(2) + ' ' + (PT.h - y).toFixed(2) + ' Td (' + esc(s) + ') Tj ET');
+      return this;
+    };
+    Doc.prototype.line = function (x1, y1, x2, y2, rgb, wdt) {
+      this.ops.push(rgb.join(' ') + ' RG ' + (wdt || 0.5) + ' w ' +
+        x1.toFixed(2) + ' ' + (PT.h - y1).toFixed(2) + ' m ' +
+        x2.toFixed(2) + ' ' + (PT.h - y2).toFixed(2) + ' l S');
+      return this;
+    };
+    Doc.prototype.image = function (data, x, y, w, h) {
+      this.img = data;
+      this.ops.push('q ' + w.toFixed(2) + ' 0 0 ' + h.toFixed(2) + ' ' +
+        x.toFixed(2) + ' ' + (PT.h - y - h).toFixed(2) + ' cm /Im1 Do Q');
+      return this;
+    };
+
+    /* Assemble the objects and the cross-reference table. */
+    Doc.prototype.build = function () {
+      var stream = this.ops.join('\n');
+      var objs = [];
+      objs[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+      objs[2] = '<< /Type /Pages /Kids [3 0 R] /Count 1 >>';
+      var res = '/Font << /F1 5 0 R /F2 6 0 R /F3 7 0 R >>';
+      if (this.img) res += ' /XObject << /Im1 8 0 R >>';
+      objs[3] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + PT.w + ' ' + PT.h + '] ' +
+                '/Resources << ' + res + ' >> /Contents 4 0 R >>';
+      objs[4] = '<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream';
+      objs[5] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+      objs[6] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+      objs[7] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >>';
+      if (this.img) {
+        objs[8] = '<< /Type /XObject /Subtype /Image /Width ' + this.img.w + ' /Height ' + this.img.h +
+          ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Length ' + this.img.bytes.length + ' >>\n' +
+          'stream\n@@IMG@@\nendstream';
+      }
+
+      /* Bytes are assembled here so the image stream stays binary-safe. */
+      var enc = new TextEncoder();
+      var parts = [], offsets = [], pos = 0;
+      function push(u8) { parts.push(u8); pos += u8.length; }
+      /* Binary marker so viewers treat the file as binary, written as bytes
+         rather than literal characters to keep this source plain text. */
+      push(enc.encode('%PDF-1.4\n%'));
+      push(new Uint8Array([0xE2, 0xE3, 0xCF, 0xD3, 0x0A]));
+      for (var i = 1; i < objs.length; i++) {
+        offsets[i] = pos;
+        var head = i + ' 0 obj\n';
+        if (i === 8 && this.img) {
+          var pre = objs[i].split('@@IMG@@')[0];
+          var post = objs[i].split('@@IMG@@')[1];
+          push(enc.encode(head + pre));
+          push(this.img.bytes);
+          push(enc.encode(post + '\nendobj\n'));
+        } else {
+          push(enc.encode(head + objs[i] + '\nendobj\n'));
+        }
+      }
+      var xref = pos;
+      var x = 'xref\n0 ' + objs.length + '\n0000000000 65535 f \n';
+      for (var j = 1; j < objs.length; j++) {
+        x += ('0000000000' + offsets[j]).slice(-10) + ' 00000 n \n';
+      }
+      x += 'trailer\n<< /Size ' + objs.length + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+      push(enc.encode(x));
+
+      var total = parts.reduce(function (s, p) { return s + p.length; }, 0);
+      var out = new Uint8Array(total), o = 0;
+      parts.forEach(function (p) { out.set(p, o); o += p.length; });
+      return out;
+    };
+
+    return { Doc: Doc, PT: PT, width: WID };
+  })();
+
+  /* Decode the logo to raw RGB via canvas — PDF cannot read PNG directly, and
+     the uncompressed RGB form is the one that needs no deflate. */
+  function logoRgb() {
+    return loadLogo().then(function (dataUri) {
+      if (!dataUri) return null;
+      return new Promise(function (resolve) {
+        var im = new Image();
+        im.onload = function () {
+          var W = 96, H = Math.max(1, Math.round(im.height * W / im.width));
+          var cv = document.createElement('canvas');
+          cv.width = W; cv.height = H;
+          var ctx = cv.getContext('2d');
+          /* Flatten onto white: PDF DeviceRGB has no alpha channel. */
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, W, H);
+          ctx.drawImage(im, 0, 0, W, H);
+          var px = ctx.getImageData(0, 0, W, H).data;
+          var rgb = new Uint8Array(W * H * 3);
+          for (var i = 0, j = 0; i < px.length; i += 4) {
+            rgb[j++] = px[i]; rgb[j++] = px[i + 1]; rgb[j++] = px[i + 2];
+          }
+          resolve({ w: W, h: H, bytes: rgb });
+        };
+        im.onerror = function () { resolve(null); };
+        im.src = dataUri;
+      });
+    });
+  }
+
+  /* The logo as a data URI, so a downloaded report carries its own branding
+     and does not break when moved away from this folder. */
+  var logoData = null;
+  function loadLogo() {
+    if (logoData !== null) return Promise.resolve(logoData);
+    return fetch('assets/logo_only__1_-removebg-preview.png')
+      .then(function (r) { return r.blob(); })
+      .then(function (b) {
+        return new Promise(function (resolve) {
+          var fr = new FileReader();
+          fr.onload = function () { logoData = fr.result; resolve(logoData); };
+          fr.onerror = function () { logoData = ''; resolve(''); };
+          fr.readAsDataURL(b);
+        });
+      })
+      .catch(function () { logoData = ''; return ''; });
+  }
+
+  /* Branded report as a self-contained file. It downloads like any other
+     document, opens in any browser, and has a Save as PDF button inside it. */
+  /* Draws the portfolio report as a real PDF and downloads it. */
+  function exportPdf(covMap, logo) {
+    var rows = portfolioRows(covMap);
+    var c = counts(), total = state.businesses.length;
+    var totalFunding = state.businesses.reduce(function (s, b) { return s + b.fundingAmount; }, 0);
+    var jobs = rows.reduce(function (s, r) { return s + r.jobs; }, 0);
+    var avgScore = Math.round(state.businesses.reduce(function (s, b) { return s + computeHealth(b).score; }, 0) / total);
+
+    var NAVY = [0.039, 0.145, 0.251], INK = [0.039, 0.145, 0.251];
+    var MUTED = [0.365, 0.435, 0.533], FAINT = [0.545, 0.608, 0.690];
+    var CYAN = [0.043, 0.486, 0.549], LINE = [0.867, 0.898, 0.941], BG = [0.933, 0.949, 0.973];
+    var TONE = {
+      green: { fg: [0.071, 0.502, 0.361], bg: [0.890, 0.965, 0.933] },
+      yellow: { fg: [0.659, 0.416, 0.000], bg: [0.992, 0.945, 0.863] },
+      red: { fg: [0.753, 0.196, 0.169], bg: [0.992, 0.918, 0.910] }
+    };
+
+    var d = new PDF.Doc();
+    var M = 36, y = M;
+
+    /* Header */
+    if (logo) d.image(logo, M, y - 4, 34, 34 * logo.h / logo.w);
+    var tx = logo ? M + 44 : M;
+    d.text('Portfolio Report', tx, y + 15, 19, INK, 'b');
+    d.text('Proven - Turning Potential into Proof', tx, y + 29, 9.5, CYAN, 'i');
+    d.text(fmtDate(new Date().toISOString().slice(0, 10)), PDF.PT.w - M, y + 12, 9, MUTED, 'n', 0, 'r');
+    d.text(total + ' funded businesses', PDF.PT.w - M, y + 24, 9, MUTED, 'n', 0, 'r');
+    y += 44;
+    d.line(M, y, PDF.PT.w - M, y, NAVY, 2);
+    y += 18;
+
+    /* Summary tiles */
+    var tiles = [
+      ['TOTAL FUNDING', money(totalFunding)],
+      ['JOBS SUPPORTED', String(jobs)],
+      ['PORTFOLIO HEALTH', avgScore + '/100'],
+      ['NEEDS ATTENTION', String(c.red + c.yellow)]
+    ];
+    var tw = (PDF.PT.w - M * 2 - 3 * 10) / 4;
+    tiles.forEach(function (t, i) {
+      var x = M + i * (tw + 10);
+      d.rect(x, y, tw, 42, BG);
+      d.text(t[0], x + 10, y + 15, 7.5, MUTED, 'b', tw - 20);
+      d.text(t[1], x + 10, y + 32, 14, INK, 'b', tw - 20);
+    });
+    y += 58;
+
+    d.text('FUNDED BUSINESSES - WORST FIRST', M, y, 8.5, MUTED, 'b');
+    y += 10;
+
+    /* Table */
+    var COLS = [
+      { t: 'BUSINESS', w: 150, k: 'name' },
+      { t: 'OWNER', w: 92, k: 'owner' },
+      { t: 'GRANT', w: 62, k: 'grant', a: 'r', money: true },
+      { t: 'REL.', w: 38, k: 'released', a: 'r', pct: true },
+      { t: 'SCORE', w: 42, k: 'score', a: 'r' },
+      { t: 'BAND', w: 54, k: 'band', band: true },
+      { t: 'CREDIT READINESS', w: 118, k: 'readiness' },
+      { t: 'REPORTING', w: 78, k: 'reporting' },
+      { t: 'EVID.', w: 40, k: 'coverage', a: 'r', pct: true },
+      { t: 'JOBS', w: 32, k: 'jobs', a: 'r' }
+    ];
+    var xs = [], cx = M;
+    COLS.forEach(function (col) { xs.push(cx); cx += col.w; });
+
+    d.rect(M, y, PDF.PT.w - M * 2, 20, NAVY);
+    COLS.forEach(function (col, i) {
+      var x = col.a === 'r' ? xs[i] + col.w - 6 : xs[i] + 6;
+      d.text(col.t, x, y + 13.5, 7.5, [1, 1, 1], 'b', col.w - 12, col.a);
+    });
+    y += 20;
+
+    rows.forEach(function (r) {
+      var rh = 30;
+      d.text(r.name, xs[0] + 6, y + 13, 9.5, INK, 'b', COLS[0].w - 12);
+      d.text(r.industry + ' - ' + r.region, xs[0] + 6, y + 23, 7, FAINT, 'n', COLS[0].w - 12);
+      COLS.forEach(function (col, i) {
+        if (i === 0) return;
+        var v = r[col.k];
+        if (col.money) v = money(v);
+        else if (col.pct) v = v + '%';
+        var x = col.a === 'r' ? xs[i] + col.w - 6 : xs[i] + 6;
+        if (col.band) {
+          var tone = TONE[r.tier];
+          var bw = PDF.width(String(v), 8, true) + 12;
+          d.rect(xs[i] + 4, y + 6, bw, 14, tone.bg);
+          d.text(String(v), xs[i] + 10, y + 16, 8, tone.fg, 'b', col.w - 12);
+        } else {
+          var col2 = (col.k === 'reporting' && r.reportState === 'overdue') ? TONE.red.fg : INK;
+          var st = (col.k === 'score') ? 'b' : 'n';
+          d.text(String(v), x, y + 16, 9, col2, st, col.w - 12, col.a);
+        }
+      });
+      y += rh;
+      d.line(M, y, PDF.PT.w - M, y, LINE, 0.6);
+    });
+
+    y += 16;
+    d.text('Scores are calculated from four weighted measures: sales trend 35%, spending control 25%,',
+      M, y, 7.5, FAINT, 'i');
+    d.text('reporting consistency 20%, customer growth 20%. Credit readiness is evidence to support, not replace, a formal credit assessment.',
+      M, y + 10, 7.5, FAINT, 'i');
+
+    var bytes = d.build();
+    var blob = new Blob([bytes], { type: 'application/pdf' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'proven-portfolio-report-' + new Date().toISOString().slice(0, 10) + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function downloadBlob(content, type, filename) {
+    var blob = new Blob([content], { type: type + ';charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function portfolioRow(b) {
+    var h = computeHealth(b), t = trendOf(b), cr = creditReadiness(b), rep = reportingStatus(b);
+    var last = b.history[b.history.length - 1];
+    return '<tr data-biz="' + b.id + '"><td><div class="biz-cell"><div class="avatar">' + initials(b.name) + '</div><div><div class="nm">' + esc(b.name) + '</div><div class="sc">' + esc(b.owner) + ' · ' + esc(b.industry) + '</div></div></div></td>' +
+      '<td class="mono">' + moneyShort(b.fundingAmount) + '</td>' +
+      '<td class="tiny">' + esc(currentMilestone(b)) + '</td>' +
+      '<td><div class="scorebox"><span class="scorenum">' + h.score + '</span><span class="minibar"><i class="' + h.tier + '" style="width:' + h.score + '%"></i></span></div></td>' +
+      '<td><span class="chip ' + h.tier + '"><span class="dot"></span>' + tierLabel(h.tier) + '</span></td>' +
+      '<td class="hide-sm"><span class="trend ' + t + '">' + trendGlyph(t) + '</span></td>' +
+      '<td><span class="due-pill ' + rep.state + '">' + esc(rep.label) + '</span>' +
+        '<div class="tiny muted">' + (b.actioned ? '✔ followed up ' + fmtDateShort(b.actioned) : 'due ' + fmtDateShort(rep.due)) + '</div></td>' +
+      '<td><span class="chip ' + cr.color + '">' + cr.status + '</span></td></tr>';
+  }
+
+  /* =========================================================================
+     11. RENDER — BUSINESS PROFILE (shared)
+     ========================================================================= */
+  /* Evidence summary as the funder sees it — the same coverage figure the
+     entrepreneur sees on their own Transactions tab. Proof metadata for the
+     profiled business is loaded by render() before this runs. */
+  function evidencePanel(biz) {
+    var cov = evidenceCoverage(biz);
+    var tone = cov.pct >= 70 ? 'var(--green)' : cov.pct >= 40 ? 'var(--yellow)' : 'var(--red)';
+    var verdict = cov.pct >= 70 ? 'Well documented'
+      : cov.pct >= 40 ? 'Partially documented'
+      : cov.count === 0 ? 'No transactions logged yet' : 'Thinly documented';
+    return '<div class="panel"><div class="panel-head"><h3>Proof behind the numbers</h3>' +
+      '<span class="hint" style="margin-left:auto">Same view as the entrepreneur</span></div><div class="panel-body">' +
+      '<div class="cov-head"><div><div class="cov-title">' + verdict + '</div>' +
+      '<div class="tiny muted">' + cov.withProof + ' of ' + cov.count + ' entries carry a document</div></div>' +
+      '<div class="cov-pct" style="color:' + tone + '">' + cov.pct + '%</div></div>' +
+      '<div class="cov-bar"><span style="width:' + cov.pct + '%;background:' + tone + '"></span></div>' +
+      '<div class="cov-note">Coverage is the share of all logged value — income and costs — that has a supporting document attached. ' +
+      'Documents are marked <b>pending review</b> — Proven records that evidence exists, it does not certify it.</div>' +
+      '</div></div>';
+  }
+
+  function businessProfile(biz, returnTo) {
+    var h = computeHealth(biz), dec = decisionFor(biz), cr = creditReadiness(biz);
+    var factorMeta = [
+      { key: 'revenue', label: 'Are sales growing?', weight: 35, expl: 'Sales over the last 3 months compared with the 3 months before: ' + pct(h.revGrowth) + '.' },
+      { key: 'expense', label: 'Is spending under control?', weight: 25, expl: 'For every R1 earned, about ' + h.ratio.toFixed(2).replace('0.', 'R0.') + ' goes out in costs.' },
+      { key: 'consistency', label: 'Are updates sent on time?', weight: 20, expl: h.onTime + ' on time, ' + h.late + ' late, ' + h.missed + ' missed over the last ' + h.periods + ' months.' },
+      { key: 'customers', label: 'Are customers growing?', weight: 20, expl: 'Customers over the last 3 months compared with the 3 months before: ' + pct(h.custGrowth) + '.' }
+    ];
+    var factorsHtml = factorMeta.map(function (f) {
+      var val = h.factors[f.key], contrib = val * (f.weight / 100);
+      return '<div class="factor"><div class="top"><span class="fname">' + f.label + '</span><span class="wt">weight ' + f.weight + '%</span><span class="contrib">' + val.toFixed(1) + '</span></div><div class="bar"><i class="' + tierOf(val) + '" style="width:' + val + '%"></i></div><div class="expl">' + f.expl + '</div></div>';
+    }).join('');
+    var msRows = biz.milestones.map(function (m, i) { return '<div class="milestone-row ' + m.status + '"><div class="mnum">' + (m.status === 'done' ? '✔' : i + 1) + '</div><div class="mlabel">' + esc(m.label) + '</div></div>'; }).join('');
+    var guidance = getGuidance(biz).map(recCardHtml).join('');
+
+    var rep = reportingStatus(biz);
+    var tab = state.profileTab || 'overview';
+
+    /* Always visible: who this is, the score, and the call. Everything else is
+       behind a tab, so a funder reads the decision first and the supporting
+       detail only when they want it. */
+    var head = '<div class="panel score-hero">' + scoreRingHtml(h.score, h.tier, 'SCORE') +
+      '<div style="flex:1;min-width:200px"><div class="tiny muted">' + esc(biz.industry) + ' &middot; ' + esc(biz.region) + '</div>' +
+      '<div style="font-size:17px;font-weight:800;margin-top:2px">' + esc(biz.name) + '</div>' +
+      '<div style="margin-top:6px"><span class="chip ' + h.tier + '"><span class="dot"></span>' + tierLabel(h.tier) + '</span> ' +
+        '<span class="chip ' + cr.color + '">' + cr.status + '</span> ' +
+        '<span class="due-pill ' + rep.state + '">' + esc(rep.label) + '</span></div></div>' +
+      '<div class="decision ' + dec.kind + '" style="flex:1 1 300px;margin:0">' +
+        '<div class="glyph">' + (dec.kind === 'release' ? '✔' : dec.kind === 'hold' ? '⏸' : '⚠') + '</div>' +
+        '<div style="flex:1"><div class="lbl">What we suggest you do</div><div class="act">' + esc(dec.action) + '</div>' +
+          (biz.actioned
+            ? '<div class="actioned-note">✔ Followed up on ' + fmtDate(biz.actioned) + '</div>'
+            : '<button class="btn ghost sm" id="markActioned" style="margin-top:9px">Mark as followed up</button>') +
+        '</div></div></div>';
+
+    var TABS = [
+      { key: 'overview', label: 'Overview' },
+      { key: 'score', label: 'Why this score' },
+      { key: 'performance', label: 'Performance' },
+      { key: 'evidence', label: 'Evidence', count: getGuidance(biz).length }
+    ];
+    var tabsHtml = '<div class="ptabs">' + TABS.map(function (t) {
+      return '<button class="ptab' + (tab === t.key ? ' on' : '') + '" data-ptab="' + t.key + '">' + t.label + '</button>';
+    }).join('') + '</div>';
+
+    var bodyHtml;
+    if (tab === 'score') {
+      bodyHtml = '<div class="panel"><div class="panel-head"><h3>Why this score</h3>' +
+        '<span class="hint" style="margin-left:auto">Four measures, each shown with its weight</span></div>' +
+        '<div class="panel-body">' + factorsHtml + '</div>' +
+        '<div class="panel-body" style="border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)">' +
+        esc(dec.why) + '</div></div>';
+
+    } else if (tab === 'performance') {
+      /* Chart and stages sit side by side — the stages list is narrow enough to
+         fill the space the chart does not need. */
+      bodyHtml = '<div class="perf-split">' +
+        '<div class="panel"><div class="panel-head"><h3>Money in and money out</h3>' +
+          '<span class="hint" style="margin-left:auto">Last ' + Math.min(biz.history.length, 8) + ' months</span></div>' +
+          '<div class="panel-body">' + lineChart(biz) + '</div></div>' +
+        '<div class="panel"><div class="panel-head"><h3>Stages</h3>' +
+          '<span class="hint" style="margin-left:auto">' + milestoneProgress(biz) + '% complete</span></div>' +
+          '<div class="panel-body">' + msRows + '</div></div>' +
+      '</div>';
+
+    } else if (tab === 'evidence') {
+      bodyHtml = evidencePanel(biz) +
+        '<div class="panel" style="margin-top:16px"><div class="panel-head"><h3>What the owner was told to do</h3>' +
+        '<span class="hint" style="margin-left:auto">The same advice they see</span></div>' +
+        '<div class="panel-body">' + guidance + '</div></div>';
+
+    } else {
+      /* Overview — who they are, what the money has done, what it is earning. */
+      var months = biz.history.length;
+      var jobs = (biz.team && biz.team.staff ? biz.team.staff : 0) + 1;
+      bodyHtml = '<div class="grid2"><div class="stack">' +
+          '<div class="panel"><div class="panel-head"><h3>About this business</h3></div><div class="panel-body">' +
+            '<div class="about-grid">' +
+              '<div class="ab"><div class="l">Led by</div><div class="v">' + esc(biz.owner) + '</div></div>' +
+              '<div class="ab"><div class="l">People employed</div><div class="v">' + jobs + '</div>' +
+                '<div class="s">' + esc(biz.team && biz.team.roles ? biz.team.roles : 'Owner only') + '</div></div>' +
+              '<div class="ab"><div class="l">Trading since</div><div class="v">' + (biz.started ? monthLabel(biz.started + '-15') : '—') + '</div></div>' +
+              '<div class="ab"><div class="l">On Proven</div><div class="v">' + months + ' months</div>' +
+                '<div class="s">last update ' + fmtDate(biz.history[months - 1].date) + '</div></div>' +
+              '<div class="ab"><div class="l">Grant</div><div class="v">' + money(biz.fundingAmount) + '</div></div>' +
+              '<div class="ab"><div class="l">Released so far</div><div class="v">' + fundingUtilisation(biz) + '%</div>' +
+                '<div class="s">against stages reached</div></div>' +
+            '</div></div></div>' +
+          '<div class="panel"><div class="panel-head"><h3>Why we suggest this</h3></div>' +
+            '<div class="panel-body" style="font-size:13px;color:var(--muted);line-height:1.6">' + esc(dec.why) + '</div></div>' +
+        '</div><div class="stack">' +
+          '<div class="cr-hero"><div class="tiny" style="color:#9fb6d1;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Credit readiness</div>' +
+            '<div class="status">' + cr.status + '</div>' +
+            '<div class="tiny" style="color:#b9cbe0;margin-top:2px">' + esc(cr.plain) + '</div>' +
+            '<ul>' + cr.reasons.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>' +
+            '<div class="tiny" style="margin-top:12px;color:#9fb6d1">This is evidence to support, not replace, a formal credit assessment.</div></div>' +
+        '</div></div>';
+    }
+
+    return '<button class="back" data-back-to="' + returnTo + '">' +
+      (returnTo === 'attention' ? 'Back to needs attention' : 'Back to portfolio') + '</button>' +
+      head + tabsHtml + bodyHtml;
+  }
+
+  /* =========================================================================
+     12. MAIN RENDER + EVENTS
+     ========================================================================= */
+  /* Which business's proofs the current screen needs. */
+  function proofSubject() {
+    if (state.role === 'funder' && state.funderView === 'profile') return state.profileId;
+    if (state.role === 'entrepreneur') return state.bizId;
+    return null;
+  }
+  function render() {
+    saveState(); /* every change reaches here, so this keeps the save current */
+    var html = state.role === 'landing' ? renderLanding() : state.role === 'entrepreneur' ? renderEntrepreneur() : renderFunder();
+    document.getElementById('root').innerHTML = html;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    /* If the screen is showing a business whose proofs we do not currently
+       hold, load them and draw once more. Because this tracks the business
+       actually loaded, switching entrepreneur -> funder on the same business
+       reuses the fresh index instead of showing stale coverage. */
+    var want = proofSubject();
+    if (want && want !== proofsLoadedForBiz) {
+      proofsLoadedForBiz = want; /* claim it up front so this cannot loop */
+      refreshProofs(want).then(function () {
+        var still = proofSubject();
+        if (still === want) {
+          document.getElementById('root').innerHTML =
+            state.role === 'entrepreneur' ? renderEntrepreneur() : renderFunder();
+        }
+      });
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    var enter = e.target.closest('[data-enter]');
+    if (enter) { state.role = enter.getAttribute('data-enter'); if (state.role === 'entrepreneur') state.entTab = 'overview'; else { state.funderView = 'portfolio'; } render(); return; }
+
+    var nav = e.target.closest('[data-nav]');
+    if (nav) {
+      var key = nav.getAttribute('data-nav');
+      if (key === 'home') { state.role = 'landing'; render(); return; }
+      if (state.role === 'entrepreneur') { state.entTab = key; render(); return; }
+      if (state.role === 'funder' && (key === 'portfolio' || key === 'attention')) {
+        state.funderView = key; render(); return;
+      }
+    }
+
+    /* Triage screen: open a record, or record the follow-up in place. */
+    var attOpen = e.target.closest('[data-biz-att]');
+    if (attOpen) {
+      state.profileId = attOpen.getAttribute('data-biz-att');
+      state.profileReturn = 'attention';
+      state.funderView = 'profile';
+      state.profileTab = 'overview';
+      render(); return;
+    }
+    var attAct = e.target.closest('[data-att-action]');
+    if (attAct) {
+      var ab = byId(attAct.getAttribute('data-att-action'));
+      if (ab) {
+        ab.actioned = new Date().toISOString().slice(0, 10);
+        showToast('Recorded as followed up');
+        render();
+      }
+      return;
+    }
+
+    var filter = e.target.closest('[data-filter]');
+    if (filter) { state.filterTier = filter.getAttribute('data-filter'); render(); return; }
+
+    var bizRow = e.target.closest('[data-biz]');
+    if (bizRow) { state.profileId = bizRow.getAttribute('data-biz'); state.profileReturn = 'funder'; state.funderView = 'profile'; state.profileTab = 'overview'; render(); return; }
+
+    var backTo = e.target.closest('[data-back-to]');
+    if (backTo) {
+      /* Return to whichever screen the record was opened from. */
+      var dest = backTo.getAttribute('data-back-to');
+      state.funderView = dest === 'attention' ? 'attention' : 'portfolio';
+      state.profileTab = 'overview';
+      render(); return;
+    }
+
+    var ptab = e.target.closest('[data-ptab]');
+    if (ptab) { state.profileTab = ptab.getAttribute('data-ptab'); render(); return; }
+
+    if (e.target.id === 'markActioned') {
+      var mb = byId(state.profileId);
+      if (mb) {
+        mb.actioned = new Date().toISOString().slice(0, 10);
+        showToast('Recorded as followed up — visible on the portfolio');
+        render();
+      }
+      return;
+    }
+
+    if (e.target.closest && e.target.closest('#exportExcel')) {
+      allCoverage().then(function (map) {
+        exportExcel(map);
+        showToast('Portfolio downloaded — open it in Excel');
+      });
+      return;
+    }
+
+    if (e.target.closest && e.target.closest('#exportPdf')) {
+      Promise.all([allCoverage(), logoRgb()]).then(function (r) {
+        exportPdf(r[0], r[1]);
+        showToast('Portfolio report downloaded as a PDF');
+      });
+      return;
+    }
+
+    var msAction = e.target.closest('[data-milestone-action]');
+    if (msAction) {
+      var biz = byId(state.bizId), idx = parseInt(msAction.getAttribute('data-idx'), 10), act = msAction.getAttribute('data-milestone-action');
+      if (act === 'complete') { biz.milestones[idx].status = 'done'; if (biz.milestones[idx + 1]) biz.milestones[idx + 1].status = 'current'; showToast('Milestone marked complete'); }
+      else { biz.milestones[idx].status = 'delayed'; showToast('Milestone flagged as delayed — see Recommendations'); }
+      render(); return;
+    }
+
+    if (e.target.id === 'resetDemo') {
+      clearSaved();
+      try { localStorage.removeItem('provenProofsSeeded'); } catch (er) {}
+      state.businesses = makeSeed();
+      state.draft = {};
+      proofIndex = {};
+      proofsLoadedForBiz = null;
+      showToast('Demo reset to the starting example data');
+      render();
+      seedProofs().then(function () { proofsLoadedForBiz = null; render(); });
+      return;
+    }
+
+    if (e.target.id === 'addTxnBtn') {
+      var b = byId(state.bizId), desc = document.getElementById('txnDesc').value.trim() || 'Transaction', type = document.getElementById('txnType').value, cat = document.getElementById('txnCat').value, amt = parseFloat(document.getElementById('txnAmt').value) || 0;
+      if (amt <= 0) { showToast('Enter an amount to add a transaction'); return; }
+      var nextPeriod = 'P' + (b.history.length + 1);
+      var entry = { date: new Date().toISOString().slice(0, 10), period: nextPeriod, desc: desc, category: cat, type: type, amount: amt };
+      b.ledger.push(entry);
+      var d = draftFor(b.id); if (type === 'revenue') d.revenue += amt; else d.expenses += amt;
+
+      /* Carry any file picked on the form across to the new ledger entry. */
+      var picked = pendingProof;
+      pendingProof = null;
+      if (picked) {
+        var ref = txnRef(entry, b.ledger.length - 1);
+        ProofStore.put(b.id, ref, picked).then(function () {
+          return refreshProofs(b.id);
+        }).then(function () {
+          showToast('Transaction added with proof attached');
+          render();
+        }).catch(function () {
+          showToast('Transaction added, but the document could not be saved');
+          render();
+        });
+        return;
+      }
+      showToast('Transaction added'); render(); return;
+    }
+
+    /* Open a stored receipt. */
+    var viewBtn = e.target.closest ? e.target.closest('[data-proof-view]') : null;
+    if (viewBtn) { openProof(viewBtn.getAttribute('data-proof-view')); return; }
+
+    if (e.target.id === 'proofClose' || e.target.classList.contains('proof-modal')) { closeProof(); return; }
+    if (e.target.id === 'proofRemove') {
+      var rref = e.target.getAttribute('data-ref');
+      ProofStore.remove(state.bizId, rref).then(function () {
+        return refreshProofs(state.bizId);
+      }).then(function () { closeProof(); showToast('Document removed'); render(); });
+      return;
+    }
+
+    if (e.target.id === 'submitPeriodBtn') {
+      var biz2 = byId(state.bizId), d2 = draftFor(biz2.id);
+      var cust = parseInt(document.getElementById('submitCust').value, 10) || biz2.history[biz2.history.length - 1].customers;
+      var note = document.getElementById('submitNote').value.trim();
+      var msChoice = document.getElementById('submitMilestone').value;
+      var prevRev = biz2.history[biz2.history.length - 1].revenue;
+      var newRevenue = d2.revenue > 0 ? d2.revenue : prevRev;
+      var newExpenses = d2.expenses > 0 ? d2.expenses : biz2.history[biz2.history.length - 1].expenses;
+      submitPeriod(biz2, { revenue: newRevenue, expenses: newExpenses, customers: cust, status: 'on-time', note: note });
+      applyMilestoneChoice(biz2, msChoice);
+      state.draft[biz2.id] = { revenue: 0, expenses: 0 };
+      showToast('Monthly update submitted — score recalculated'); render(); return;
+    }
+
+    if (e.target.id === 'quickDemoBtn') {
+      var biz3 = byId(state.bizId);
+      var scripted = biz3.script && biz3.scriptStep < biz3.script.length ? biz3.script[biz3.scriptStep] : null;
+      var last = biz3.history[biz3.history.length - 1];
+      var rev, exp, cust3, status;
+      if (scripted) {
+        rev = Math.max(0, Math.round(last.revenue * (1 + scripted.rev) / 100) * 100);
+        exp = Math.max(0, Math.round(last.expenses * (1 + scripted.exp) / 100) * 100);
+        cust3 = Math.max(0, Math.round(last.customers * (1 + scripted.cust)));
+        status = scripted.status; biz3.scriptStep++;
+      } else {
+        rev = Math.round(last.revenue * 0.8 / 100) * 100; exp = Math.round(last.expenses * 1.15 / 100) * 100; cust3 = Math.round(last.customers * 0.9); status = 'late';
+      }
+      submitPeriod(biz3, { revenue: rev, expenses: exp, customers: cust3, status: status, note: 'Rough month — logged via quick demo.' });
+      state.draft[biz3.id] = { revenue: 0, expenses: 0 };
+      showToast('Rough month logged — watch the score update'); render(); return;
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    if (e.target.id === 'bizPick') {
+      state.bizId = e.target.value;
+      state.draft[state.bizId] = state.draft[state.bizId] || { revenue: 0, expenses: 0 };
+      refreshProofs(state.bizId).then(render);
+      return;
+    }
+    if (e.target.id === 'sortSel') { state.sortKey = e.target.value; render(); return; }
+
+    /* File chosen on the add-transaction form — held until the entry is created. */
+    if (e.target.id === 'txnProof') {
+      var f = e.target.files && e.target.files[0];
+      if (!f) { pendingProof = null; return; }
+      if (!checkFile(f)) { e.target.value = ''; return; }
+      pendingProof = f;
+      var lbl = document.getElementById('txnProofLabel');
+      var pick = e.target.parentNode;
+      if (lbl) lbl.textContent = f.name.length > 28 ? f.name.slice(0, 26) + '…' : f.name;
+      if (pick) pick.classList.add('ready');
+      return;
+    }
+
+    /* File chosen against an existing ledger row. */
+    if (e.target.hasAttribute && e.target.hasAttribute('data-proof-for')) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (!checkFile(file)) { e.target.value = ''; return; }
+      var ref = e.target.getAttribute('data-proof-for');
+      ProofStore.put(state.bizId, ref, file).then(function () {
+        return refreshProofs(state.bizId);
+      }).then(function () {
+        showToast('Document attached — pending review');
+        render();
+      }).catch(function () {
+        showToast('That document could not be saved on this device');
+      });
+      return;
+    }
+  });
+
+  function checkFile(f) {
+    if (f.size > MAX_PROOF) { showToast('That file is larger than 8MB — attach a smaller photo or PDF'); return false; }
+    if (f.size === 0) { showToast('That file appears to be empty'); return false; }
+    return true;
+  }
+
+  function fileSize(n) {
+    if (n >= 1048576) return (n / 1048576).toFixed(1) + ' MB';
+    if (n >= 1024) return Math.round(n / 1024) + ' KB';
+    return n + ' B';
+  }
+
+  /* ---- Receipt viewer ---------------------------------------------------- */
+  var proofUrl = null;
+
+  function closeProof() {
+    var m = document.getElementById('proofModal');
+    if (m) m.parentNode.removeChild(m);
+    if (proofUrl) { URL.revokeObjectURL(proofUrl); proofUrl = null; }
+  }
+
+  function openProof(ref) {
+    ProofStore.get(state.bizId, ref).then(function (rec) {
+      if (!rec) { showToast('That document is no longer stored on this device'); return; }
+      closeProof();
+      proofUrl = URL.createObjectURL(rec.blob);
+      var isImg = /^image\//.test(rec.type);
+      var body = isImg
+        ? '<img src="' + proofUrl + '" alt="' + esc(rec.name) + '" />'
+        : '<div class="nofile">' + esc(rec.name) + '<br/><span class="tiny">Open or download to view this file.</span></div>';
+      var m = document.createElement('div');
+      m.className = 'proof-modal';
+      m.id = 'proofModal';
+      m.innerHTML = '<div class="box">' +
+        '<div class="bh"><div><h3>' + esc(rec.name) + '</h3>' +
+          '<div class="tiny muted">' + fileSize(rec.size) + ' · attached ' + fmtDateShort(rec.uploadedAt.slice(0, 10)) + '</div></div>' +
+          '<span class="pending-tag">Pending review</span></div>' +
+        '<div class="bb">' + body + '</div>' +
+        '<div class="bf">' +
+          '<button class="btn ghost sm" id="proofRemove" data-ref="' + esc(ref) + '">Remove</button>' +
+          '<a class="btn ghost sm" href="' + proofUrl + '" download="' + esc(rec.name) + '">Download</a>' +
+          '<button class="btn sm" id="proofClose">Close</button>' +
+        '</div></div>';
+      document.body.appendChild(m);
+    }).catch(function () { showToast('Could not open that document'); });
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeProof();
+  });
+
+  /* Legend and donut highlight each other, and the centre reports the band
+     being hovered rather than staying a static total. */
+  document.addEventListener('mouseover', function (e) {
+    var t = e.target.closest ? e.target.closest('[data-band-btn], [data-band]') : null;
+    if (!t) return;
+    var band = t.getAttribute('data-band-btn') || t.getAttribute('data-band');
+    var panel = t.closest('.panel');
+    if (!panel || !band) return;
+    var slice = panel.querySelector('.dslice[data-band="' + band + '"]');
+    if (slice) {
+      panel.querySelectorAll('.dslice').forEach(function (s) { s.classList.remove('on'); });
+      slice.classList.add('on');
+      panel.querySelector('.dslices').style.setProperty('--hovering', '1');
+      var num = panel.querySelector('.dnum'), lbl = panel.querySelector('.dlbl');
+      if (num && lbl) {
+        if (!num.dataset.orig) { num.dataset.orig = num.textContent; lbl.dataset.orig = lbl.textContent; }
+        num.textContent = slice.getAttribute('data-count');
+        lbl.textContent = slice.getAttribute('data-label');
+      }
+    }
+    var btn = panel.querySelector('[data-band-btn="' + band + '"]');
+    if (btn) btn.classList.add('on');
+  });
+
+  document.addEventListener('mouseout', function (e) {
+    var t = e.target.closest ? e.target.closest('[data-band-btn], [data-band]') : null;
+    if (!t) return;
+    var panel = t.closest('.panel');
+    if (!panel) return;
+    panel.querySelectorAll('.dslice').forEach(function (s) { s.classList.remove('on'); });
+    panel.querySelectorAll('[data-band-btn]').forEach(function (b) {
+      if (b.getAttribute('data-band-btn') !== state.filterTier) b.classList.remove('on');
+    });
+    var num = panel.querySelector('.dnum'), lbl = panel.querySelector('.dlbl');
+    if (num && num.dataset.orig) { num.textContent = num.dataset.orig; lbl.textContent = lbl.dataset.orig; }
+  });
+
+  /* ---------------------------------------------------------------------
+     Chart hover — one invisible column per month drives a tooltip, a
+     crosshair and two markers. Delegated so it survives every re-render.
+     --------------------------------------------------------------------- */
+  document.addEventListener('mouseover', function (e) {
+    var hot = e.target.closest ? e.target.closest('.chart .hot') : null;
+    if (!hot) return;
+    var wrap = hot.closest('.chart-wrap');
+    var svg = hot.closest('svg');
+    var tip = wrap.querySelector('.chart-tip');
+    var cross = svg.querySelector('.crosshair');
+    var mRev = svg.querySelector('#markRev');
+    var mExp = svg.querySelector('#markExp');
+    if (!tip) return;
+
+    var p = (hot.getAttribute('data-tip') || '').split('||');
+    var cx = parseFloat(hot.getAttribute('data-cx'));
+    var ry = parseFloat(hot.getAttribute('data-rev-y'));
+    var ey = parseFloat(hot.getAttribute('data-exp-y'));
+
+    tip.innerHTML =
+      '<div class="tt">' + esc(p[0]) + '</div>' +
+      '<div class="tr"><span>Money in</span><b>' + esc(p[2]) + '</b></div>' +
+      '<div class="tr"><span>Money out</span><b>' + esc(p[3]) + '</b></div>' +
+      '<div class="tr"><span>' + (p[5] === 'up' ? 'Kept' : 'Short') + '</span><b style="color:' + (p[5] === 'up' ? '#4ade80' : '#fca5a5') + '">' + esc(p[4]) + '</b></div>' +
+      '<div class="tsub">' + esc(p[6]) + ' customers · ' + esc(p[7]) + '</div>';
+
+    if (cross) { cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('opacity', '1'); }
+    if (mRev) { mRev.setAttribute('cx', cx); mRev.setAttribute('cy', ry); mRev.setAttribute('opacity', '1'); }
+    if (mExp) { mExp.setAttribute('cx', cx); mExp.setAttribute('cy', ey); mExp.setAttribute('opacity', '1'); }
+
+    /* Place the tooltip over the hovered month, flipped near the right edge
+       so it never runs outside the panel. */
+    var box = svg.getBoundingClientRect();
+    var vb = svg.viewBox.baseVal;
+    var scale = box.width / (vb && vb.width ? vb.width : box.width);
+    var px = cx * scale;
+    tip.classList.add('on');
+    var tw = tip.offsetWidth;
+    var leftPos = px - tw / 2;
+    if (leftPos < 4) leftPos = 4;
+    if (leftPos + tw > box.width - 4) leftPos = box.width - tw - 4;
+    tip.style.left = leftPos + 'px';
+    tip.style.top = Math.max(0, Math.min(ry, ey) * scale - tip.offsetHeight - 12) + 'px';
+  });
+
+  document.addEventListener('mouseout', function (e) {
+    var hot = e.target.closest ? e.target.closest('.chart .hot') : null;
+    if (!hot) return;
+    var wrap = hot.closest('.chart-wrap');
+    var svg = hot.closest('svg');
+    if (e.relatedTarget && wrap && wrap.contains(e.relatedTarget) && e.relatedTarget.classList.contains('hot')) return;
+    var tip = wrap && wrap.querySelector('.chart-tip');
+    if (tip) tip.classList.remove('on');
+    ['.crosshair', '#markRev', '#markExp'].forEach(function (s) {
+      var el = svg && svg.querySelector(s);
+      if (el) el.setAttribute('opacity', '0');
+    });
+  });
+
+  document.addEventListener('input', function (e) {
+    if (e.target.id === 'q') { state.query = e.target.value; var pos = e.target.selectionStart; render(); var again = document.getElementById('q'); if (again) { again.focus(); again.setSelectionRange(pos, pos); } }
+  });
+
+  function applyMilestoneChoice(biz, choice) {
+    var idx = -1;
+    for (var i = 0; i < biz.milestones.length; i++) if (biz.milestones[i].status === 'current' || biz.milestones[i].status === 'delayed') { idx = i; break; }
+    if (idx === -1) return;
+    if (choice === 'complete') { biz.milestones[idx].status = 'done'; if (biz.milestones[idx + 1]) biz.milestones[idx + 1].status = 'current'; }
+    else if (choice === 'delayed') { biz.milestones[idx].status = 'delayed'; }
+  }
+
+  function submitPeriod(biz, p) {
+    var idx = biz.history.length, prevDate = biz.history[biz.history.length - 1].date;
+    var dt = new Date(prevDate + 'T00:00:00Z'); dt.setUTCMonth(dt.getUTCMonth() + 1);
+    var date = PERIOD_DATES[idx] || dt.toISOString().slice(0, 10);
+    biz.history.push({ period: 'P' + (idx + 1), date: date, revenue: p.revenue, expenses: p.expenses, customers: p.customers, status: p.status });
+    if (p.note) biz.notes.push({ date: date, title: 'Status update — P' + (idx + 1), detail: p.note });
+    var h = computeHealth(biz);
+    biz.notes.push({ date: date, title: 'Score recalculated: ' + h.score + ' (' + tierLabel(h.tier) + ')', detail: getGuidance(biz)[0] ? getGuidance(biz)[0].issue : 'No major issues detected.' });
+  }
+
+  /* Draw immediately, then attach the sample receipts and redraw so evidence
+     coverage is populated from the first screen the user sees. */
+  render();
+  seedProofs().then(function () {
+    proofsLoadedForBiz = null;
+    return refreshPortfolioCoverage();
+  }).then(function () {
+    render();
+  });
+})();
+</script>
+</body>
+</html>

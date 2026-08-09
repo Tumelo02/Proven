@@ -1,0 +1,12 @@
+# Local Python environment — not part of the site
+.venv/
+
+# Generated during testing, not source
+portfolio.xls
+report.pdf
+report.html
+
+# OS noise
+Thumbs.db
+.DS_Store
+desktop.ini

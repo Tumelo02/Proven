@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Proven</title>
+<link rel="icon" type="image/png" href="assets/logo_only__1_-removebg-preview.png" />
+<!-- Fetched early so the intro animation starts promptly rather than waiting on it. -->
+<link rel="preload" as="image" href="assets/logo_only__1_-removebg-preview.png" />
+<style>
+  :root {
+    --navy: #0a2540;
+    --navy-2: #123a63;
+    --navy-3: #1d5490;
+    /* Brand accent, drawn from the logo's cyan but darkened to pass contrast on
+       white. Kept distinct from --red so brand styling never reads as an alarm. */
+    --accent: #0b7c8c;
+    --accent-soft: #e4f6f9;
+    --accent-ink: #096975; /* darker teal for small text on --accent-soft (5.7:1) */
+    --cyan: #22dff5; /* raw logo cyan — large shapes on navy only, fails contrast on white */
+    --bg: #eef2f8;
+    --card: #ffffff;
+    --ink: #0a2540;
+    --muted: #5d6f88;
+    --faint: #8b9bb0;
+    --green: #12805c;
+    --green-soft: #e3f6ee;
+    --yellow: #a86a00;
+    --yellow-soft: #fdf1dc;
+    --red: #c0322b;
+    --red-soft: #fdeae8;
+    --blue: #1d5490;
+    --blue-soft: #e6eefb;
+    --line: #dde5f0;
+    --shadow: 0 1px 2px rgba(10,37,64,.06), 0 8px 24px rgba(10,37,64,.08);
+    --shadow-lg: 0 2px 4px rgba(10,37,64,.06), 0 16px 40px rgba(10,37,64,.12);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; font-family: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--card); color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3 { margin: 0; font-weight: 800; letter-spacing: -0.02em; }
+  p { margin: 0; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+  section { padding: 88px 0; }
+
+  /* ---------- Top mini-nav ---------- */
+  .topnav {
+    position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.9); backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line); padding: 14px 28px; display: flex; align-items: center; gap: 12px;
+  }
+  .topnav .mark {
+    width: 30px; height: 30px; display: block; object-fit: contain; flex: 0 0 auto;
+  }
+  .topnav .nm { font-weight: 800; font-size: 15px; letter-spacing: -0.01em; }
+  .topnav .spacer { flex: 1; }
+
+  /* ---------- Hero ---------- */
+  /* The launch page is a single screen: the story fills the viewport below the
+     nav, so there is nothing to scroll before choosing a view. */
+  .hero {
+    background: var(--navy); color: #fff;
+    min-height: calc(100vh - 60px); display: flex; align-items: center;
+    padding: clamp(24px, 4vh, 52px) 0;
+  }
+
+  /* Closes the argument the timeline has just demonstrated. */
+  .hero .closer {
+    margin-top: clamp(14px, 2.2vh, 24px); max-width: 680px;
+    font-size: 14px; line-height: 1.6; color: #9fb6d1;
+  }
+  .hero .closer b { color: var(--cyan); font-weight: 800; display: block; font-size: 16px; margin-bottom: 5px; }
+  .hero-cta { margin-top: clamp(14px, 2.2vh, 24px); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .hero-cta .cta.primary { background: var(--cyan); color: var(--navy); }
+  .hero-cta .cta.primary:hover { filter: brightness(1.08); }
+  .hero-cta .cta-note { font-size: 13px; color: #9fb6d1; font-weight: 600; }
+  .hero .step { color: var(--cyan); font-weight: 800; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+  .hero h1 { font-size: 40px; line-height: 1.14; margin-top: 10px; max-width: 720px; }
+  .hero .lede { color: #b9cbe0; font-size: 17px; margin-top: 14px; max-width: 620px; line-height: 1.6; }
+
+  /* ---------- Interactive hero story ---------- */
+  /* The pitch is delivered by clicking through four beats rather than by reading
+     a paragraph: the score and copy change together at each stop. */
+  .story { margin-top: 26px; max-width: 660px; }
+  .story-track { position: relative; display: flex; justify-content: space-between; padding: 0 0 4px; }
+  .story-line {
+    position: absolute; left: 7px; right: 7px; top: 7px; height: 2px;
+    background: rgba(255,255,255,.16); border-radius: 2px;
+  }
+  .story-fill {
+    display: block; height: 100%; width: 0%; border-radius: 2px;
+    background: linear-gradient(90deg, var(--cyan), #7de3f2); transition: width .45s cubic-bezier(.3,.8,.3,1);
+  }
+  .beat {
+    position: relative; background: none; border: 0; padding: 0; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 9px; flex: 0 0 auto;
+  }
+  .beat .bd {
+    width: 15px; height: 15px; border-radius: 50%; background: var(--navy);
+    border: 2px solid rgba(255,255,255,.35); transition: all .3s ease; z-index: 1;
+  }
+  .beat .bm { font-size: 11.5px; font-weight: 800; color: #7d94b3; letter-spacing: .04em; transition: color .3s; }
+  .beat:hover .bd { border-color: var(--cyan); transform: scale(1.15); }
+  .beat.on .bd { background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 0 5px rgba(34,223,245,.16); }
+  .beat.on .bm { color: #fff; }
+  .beat.done .bd { border-color: var(--cyan); }
+
+  .story-panel {
+    display: flex; gap: 24px; align-items: center; margin-top: 26px; padding: 22px 24px;
+    background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.12); border-radius: 14px;
+  }
+  .story-score { flex: 0 0 108px; text-align: center; }
+  .sscore { font-size: 42px; font-weight: 800; line-height: 1; transition: color .4s ease; color: #4ade80; }
+  .sunit { font-size: 9px; font-weight: 800; letter-spacing: .1em; color: #7d94b3; margin-top: 5px; }
+  .sbar { height: 4px; border-radius: 3px; background: rgba(255,255,255,.14); margin-top: 10px; overflow: hidden; }
+  .sbar span {
+    display: block; height: 100%; width: 85%; border-radius: 3px; background: #4ade80;
+    transition: width .5s cubic-bezier(.3,.8,.3,1), background .4s ease;
+  }
+  .story-text { flex: 1; min-width: 0; }
+  .stitle { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+  .sbody { font-size: 14px; color: #b9cbe0; margin-top: 6px; line-height: 1.55; }
+  .stag {
+    display: inline-block; margin-top: 11px; font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .07em; padding: 4px 11px; border-radius: 999px;
+    background: rgba(74,222,128,.16); color: #4ade80; transition: background .4s, color .4s;
+  }
+  /* Content swaps get a short fade so the change is felt without being flashy. */
+  /* What nobody saw that month — quiet through the story, then the line that
+     names the statistic when the business closes. */
+  .story-note {
+    margin-top: 12px; padding: 12px 16px; border-radius: 12px; font-size: 12.5px; line-height: 1.55;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #9fb6d1;
+    transition: background .4s ease, border-color .4s ease, color .4s ease;
+  }
+  .story-note.final {
+    background: rgba(192,50,43,.14); border-color: rgba(192,50,43,.4); color: #f0b4af;
+    font-weight: 700; font-size: 13.5px;
+  }
+  .story-panel.swap .story-text, .story-panel.swap .sscore { animation: story-fade .42s ease; }
+  .story-note.swap { animation: story-fade .42s ease; }
+  /* The closing beat drains the colour out of the panel. */
+  .story-panel.closed { background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.08); }
+  @keyframes story-fade {
+    0% { opacity: 0; transform: translateY(5px); }
+    100% { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .story-panel.swap .story-text, .story-panel.swap .sscore { animation: none; }
+  }
+
+  /* ---------- Call to action ---------- */
+  .cta {
+    display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; border-radius: 11px; font-weight: 800;
+    font-size: 14.5px; text-decoration: none; box-shadow: var(--shadow);
+  }
+
+  /* ---------- First-visit intro ---------- */
+  /* Registering --sweep as an <angle> is what makes it animatable. */
+  @property --sweep {
+    syntax: '<angle>'; inherits: false; initial-value: 0deg;
+  }
+  /* A navy curtain reveals the mark by sweeping a conic mask from a quarter turn
+     round to full, holds a beat, then lifts. Shown once per browser session. */
+  .intro {
+    position: fixed; inset: 0; z-index: 999; background: var(--navy);
+    display: grid; place-items: center;
+    animation: intro-out .65s ease 2.15s forwards;
+  }
+  /* Every animation starts paused and is released together once the logo has
+     actually decoded — otherwise the CSS clock runs during image load and the
+     sweep is already part-done (or finished) by the time anything is painted. */
+  .intro:not(.go), .intro:not(.go) * { animation-play-state: paused !important; }
+  .intro-mark {
+    width: 132px; height: 132px; position: relative;
+    animation: intro-rise 2.2s cubic-bezier(.22,.8,.3,1) both;
+  }
+  .intro-mark img { width: 100%; height: 100%; display: block; object-fit: contain; }
+  /* Faint full logo underneath so the unrevealed part reads as "not yet filled". */
+  .intro-mark .ghost { position: absolute; inset: 0; opacity: .13; }
+  .intro-mark .fill {
+    position: absolute; inset: 0;
+    -webkit-mask-image: conic-gradient(#000 var(--sweep, 0deg), transparent 0);
+            mask-image: conic-gradient(#000 var(--sweep, 0deg), transparent 0);
+    animation: intro-sweep 1.9s ease-in-out both;
+    filter: drop-shadow(0 0 10px rgba(34,223,245,.28));
+  }
+  /* Quarter, half, three-quarter, whole — each stage eases in then holds a beat,
+     so it reads as a cycle completing rather than a continuous spin. */
+  @keyframes intro-sweep {
+    0%          { --sweep: 0deg; }
+    16%, 24%    { --sweep: 90deg; }
+    40%, 48%    { --sweep: 180deg; }
+    64%, 72%    { --sweep: 270deg; }
+    88%, 100%   { --sweep: 360deg; }
+  }
+  @keyframes intro-rise {
+    0%   { opacity: 0; transform: translateY(8px) scale(.94); }
+    30%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes intro-out { to { opacity: 0; visibility: hidden; } }
+  /* Without an animatable custom property the sweep cannot run (class set by JS),
+     so show the whole mark and let the rise/fade carry the intro instead. */
+  .intro.no-sweep .fill { -webkit-mask-image: none; mask-image: none; animation: none; }
+  .intro.no-sweep .ghost { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .intro-mark, .intro-mark .fill { animation: none; }
+    .intro-mark .ghost { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 28px; }
+    .stepgrid h2 { font-size: 24px; }
+    .vitals { grid-template-columns: 1fr; }
+    section { padding: 60px 0; }
+    .scorewrap { flex-direction: column; }
+    .verdict-box { text-align: center; max-width: 100%; }
+    .gradverdict { text-align: center; margin: 0 auto; }
+    .twoup { grid-template-columns: 1fr; }
+    .bandrow { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+  <script>
+  /* First-visit intro. Injected before paint so there is no flash of the page
+     underneath, and only for this browser session — repeat navigation goes
+     straight to the content. */
+  (function () {
+    'use strict';
+    try {
+      if (sessionStorage.getItem('provenIntroSeen')) return;
+      sessionStorage.setItem('provenIntroSeen', '1');
+    } catch (e) { /* private mode: fall through and just show it */ }
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    /* The sweep needs a conic-gradient mask plus a custom property that actually
+       registered as an <angle>. Probe the computed value rather than trusting a
+       feature flag: if --sweep did not register, it computes as the empty string
+       and the mask would sit at 0deg — the logo would never fill in. */
+    var hasMask = !!(window.CSS && CSS.supports && (
+      CSS.supports('mask-image', 'conic-gradient(#000 90deg, transparent 0)') ||
+      CSS.supports('-webkit-mask-image', 'conic-gradient(#000 90deg, transparent 0)')
+    ));
+    var registered = false;
+    try {
+      var probe = document.createElement('div');
+      document.body.appendChild(probe);
+      registered = getComputedStyle(probe).getPropertyValue('--sweep').trim() === '0deg';
+      document.body.removeChild(probe);
+    } catch (e) { registered = false; }
+    var supportsSweep = hasMask && registered;
+
+    var el = document.createElement('div');
+    el.className = 'intro' + (supportsSweep ? '' : ' no-sweep');
+    el.setAttribute('role', 'presentation');
+    el.innerHTML =
+      '<div class="intro-mark">' +
+        '<img class="ghost" src="assets/logo_only__1_-removebg-preview.png" alt="" />' +
+        '<img class="fill" src="assets/logo_only__1_-removebg-preview.png" alt="Proven" />' +
+      '</div>';
+
+    (document.body || document.documentElement).appendChild(el);
+    document.documentElement.style.overflow = 'hidden';
+
+    var finished = false;
+    function done() {
+      if (finished) return;
+      finished = true;
+      document.documentElement.style.overflow = '';
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }
+    el.addEventListener('animationend', function (ev) {
+      if (ev.animationName === 'intro-out') done();
+    });
+
+    /* Release the paused animations only once the logo is decoded, so the sweep
+       always plays from the start at full length. Capped so a slow or failed
+       image can never hold the page hostage. */
+    var started = false;
+    function start() {
+      if (started) return;
+      started = true;
+      el.classList.add('go');
+      setTimeout(done, 3400); /* safety net if animationend never fires (fade ends ~2800) */
+    }
+
+    var img = el.querySelector('.fill');
+    if (img.decode) {
+      img.decode().then(start, start);
+    } else if (img.complete) {
+      start();
+    } else {
+      img.addEventListener('load', start);
+      img.addEventListener('error', start);
+    }
+    setTimeout(start, 1200); /* never wait longer than this for the image */
+  })();
+  </script>
+
+  <div class="topnav">
+    <img class="mark" src="assets/logo_only__1_-removebg-preview.png" alt="Proven logo" />
+    <div class="nm">Proven</div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="step">Turning Potential into Proof</div>
+      <h1>A business can start failing long before anyone sees it.</h1>
+      <p class="lede">Funding creates potential. But between check-ins, problems can grow silently.</p>
+
+      <!-- Interactive story: the pitch is told by clicking, not by reading. -->
+      <div class="story">
+        <div class="story-track" role="tablist" aria-label="Business timeline">
+          <div class="story-line"><span class="story-fill" id="storyFill"></span></div>
+          <button class="beat on" role="tab" data-beat="0" aria-selected="true"><span class="bd"></span><span class="bm">Month 1</span></button>
+          <button class="beat" role="tab" data-beat="1" aria-selected="false"><span class="bd"></span><span class="bm">Month 3</span></button>
+          <button class="beat" role="tab" data-beat="2" aria-selected="false"><span class="bd"></span><span class="bm">Month 5</span></button>
+          <button class="beat" role="tab" data-beat="3" aria-selected="false"><span class="bd"></span><span class="bm">Month 7</span></button>
+        </div>
+
+        <div class="story-panel">
+          <div class="story-score">
+            <div class="sscore" id="storyScore">85</div>
+            <div class="sunit" id="storyUnit">HEALTH SCORE</div>
+            <div class="sbar"><span id="storyBar"></span></div>
+          </div>
+          <div class="story-text">
+            <div class="stitle" id="storyTitle">Month 1 — The money lands</div>
+            <div class="sbody" id="storyBody">The business gets funded and starts strong. Everyone feels confident.</div>
+            <div class="stag" id="storyTag">Healthy</div>
+          </div>
+        </div>
+
+        <!-- What nobody saw that month. Turns stark on the final beat. -->
+        <div class="story-note" id="storyNote">The plan is signed off. The next formal check-in is months away.</div>
+      </div>
+
+      <p class="closer"><b>Proven breaks the gap.</b>
+        By making business performance visible while there is still time to act — to the entrepreneur and the funder at the same time.</p>
+
+
+      <div class="hero-cta">
+        <a class="cta primary" href="dashboard.html">Open the platform</a>
+        <span class="cta-note">Choose your view next — entrepreneur or funder</span>
+      </div>
+    </div>
+  </section>
+
+
+
+
+
+<script>
+(function(){
+  'use strict';
+  /* ---------------------------------------------------------------------
+     Hero story — four beats of one business, driven by the timeline.
+     --------------------------------------------------------------------- */
+  /* The original pitch narrative, told one beat at a time instead of as a
+     paragraph: the turning point, the quiet drift, the catch, the proof. */
+  /* This is the story as it runs today, without Proven — each beat a month
+     nobody was watching. It ends where most of them end. The product is not
+     shown here on purpose: the closing line is the turn. */
+  var BEATS = [
+    { score: 85, band: '#4ade80', tag: 'Healthy', tagBg: 'rgba(74,222,128,.16)',
+      title: 'The money lands',
+      body: 'The business gets funded and starts strong. Everyone feels confident.',
+      note: '' },
+
+    { score: 68, band: '#facc15', tag: 'Watch', tagBg: 'rgba(250,204,21,.16)',
+      title: 'The first warning',
+      body: 'A supplier issue delays stock and sales dip. The business keeps going, but something has changed.',
+      note: 'Nobody outside the business sees it yet.' },
+
+    { score: 41, band: '#fb923c', tag: 'At Risk', tagBg: 'rgba(251,146,60,.18)',
+      title: 'The pattern grows',
+      body: 'Costs rise and sales fall for a second month. The business is still operating, so the problem remains largely invisible.',
+      note: 'The entrepreneur needs help. The funder needs visibility.' },
+
+    { score: 0, band: '#8b9bb0', tag: 'Closed', tagBg: 'rgba(139,155,176,.18)',
+      title: 'Too late',
+      body: 'The funding is gone. The business closes, but nobody can clearly see when intervention could have changed the outcome.',
+      note: 'The problem wasn’t that nobody cared. It was that nobody saw it in time.',
+      final: true }
+  ];
+  var sScore = document.getElementById('storyScore');
+  var sBar   = document.getElementById('storyBar');
+  var sTitle = document.getElementById('storyTitle');
+  var sBody  = document.getElementById('storyBody');
+  var sTag   = document.getElementById('storyTag');
+  var sFill  = document.getElementById('storyFill');
+  var sNote  = document.getElementById('storyNote');
+  var sUnit  = document.getElementById('storyUnit');
+  var panel  = document.querySelector('.story-panel');
+  var beats  = [].slice.call(document.querySelectorAll('.beat'));
+
+  function showBeat(i) {
+    var b = BEATS[i];
+    if (!b) return;
+    beats.forEach(function (el, n) {
+      el.classList.toggle('on', n === i);
+      el.classList.toggle('done', n < i);
+      el.setAttribute('aria-selected', n === i ? 'true' : 'false');
+    });
+    sFill.style.width = (i / (BEATS.length - 1) * 100) + '%';
+    /* A closed business has no score — an em dash reads as "ended" where a 0
+       would look like a number that failed to load. */
+    sScore.textContent = b.final ? '—' : b.score;
+    sUnit.textContent = b.final ? 'BUSINESS CLOSED' : 'HEALTH SCORE';
+    sScore.style.color = b.band;
+    sBar.style.width = b.score + '%';
+    sBar.style.background = b.band;
+    sTitle.textContent = 'Month ' + [1, 3, 5, 7][i] + ' — ' + b.title;
+    sBody.textContent = b.body;
+    sTag.textContent = b.tag;
+    sTag.style.color = b.band;
+    sTag.style.background = b.tagBg;
+    sNote.textContent = b.note;
+    /* Month one has nothing hidden yet, so the box is left out entirely
+       rather than rendered empty. */
+    sNote.style.display = b.note ? '' : 'none';
+    sNote.classList.toggle('final', !!b.final);
+    panel.classList.toggle('closed', !!b.final);
+    panel.classList.remove('swap');
+    sNote.classList.remove('swap');
+    void panel.offsetWidth; /* restart the fade */
+    panel.classList.add('swap');
+    sNote.classList.add('swap');
+  }
+  beats.forEach(function (el, i) {
+    el.addEventListener('click', function () { showBeat(i); });
+    el.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' && beats[i + 1]) { beats[i + 1].focus(); showBeat(i + 1); }
+      if (e.key === 'ArrowLeft' && beats[i - 1]) { beats[i - 1].focus(); showBeat(i - 1); }
+    });
+  });
+  showBeat(0);
+})();
+</script>
+</body>
+</html>
