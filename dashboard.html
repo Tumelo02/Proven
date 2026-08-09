@@ -524,13 +524,16 @@
   .chart .hot { cursor: crosshair; }
   .chart .marker, .chart .crosshair { transition: opacity .15s ease; pointer-events: none; }
 
+  /* Positioned beside the hovered month by script, so it fades rather than
+     slides: a transform here would fight the computed left/top. */
   .chart-tip {
-    position: absolute; z-index: 6; pointer-events: none; opacity: 0; transform: translateY(4px);
-    transition: opacity .15s ease, transform .15s ease;
+    position: absolute; z-index: 6; pointer-events: none; opacity: 0;
+    transition: opacity .15s ease, left .12s ease, top .12s ease;
     background: var(--navy); color: #fff; border-radius: 10px; padding: 10px 12px;
-    font-size: 12px; line-height: 1.5; box-shadow: var(--shadow-lg); min-width: 156px;
+    font-size: 12px; line-height: 1.5; box-shadow: var(--shadow-lg);
+    min-width: 150px; max-width: 200px;
   }
-  .chart-tip.on { opacity: 1; transform: translateY(0); }
+  .chart-tip.on { opacity: 1; }
   .chart-tip .tt { font-weight: 800; font-size: 12.5px; margin-bottom: 6px; }
   .chart-tip .tr { display: flex; gap: 10px; align-items: baseline; }
   .chart-tip .tr span:first-child { color: #9fb6d1; flex: 1; }
@@ -3087,12 +3090,24 @@
     var scale = box.width / (vb && vb.width ? vb.width : box.width);
     var px = cx * scale;
     tip.classList.add('on');
-    var tw = tip.offsetWidth;
-    var leftPos = px - tw / 2;
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var GAP = 14;
+
+    /* Sit beside the hovered month, not on top of it, so the points and both
+       lines stay visible while reading the figures. Flips to the other side
+       near the right edge. */
+    var leftPos = px + GAP;
+    if (leftPos + tw > box.width - 4) leftPos = px - tw - GAP;
     if (leftPos < 4) leftPos = 4;
-    if (leftPos + tw > box.width - 4) leftPos = box.width - tw - 4;
+
+    /* Vertically centred on the two markers, then kept inside the panel. */
+    var mid = (ry + ey) / 2 * scale;
+    var topPos = mid - th / 2;
+    if (topPos < 4) topPos = 4;
+    if (topPos + th > box.height - 4) topPos = Math.max(4, box.height - th - 4);
+
     tip.style.left = leftPos + 'px';
-    tip.style.top = Math.max(0, Math.min(ry, ey) * scale - tip.offsetHeight - 12) + 'px';
+    tip.style.top = topPos + 'px';
   });
 
   document.addEventListener('mouseout', function (e) {
