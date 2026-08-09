@@ -2503,13 +2503,24 @@
     var bytes = d.build();
     var blob = new Blob([bytes], { type: 'application/pdf' });
     var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'proven-portfolio-report-' + new Date().toISOString().slice(0, 10) + '.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    var name = 'proven-portfolio-report-' + new Date().toISOString().slice(0, 10) + '.pdf';
+
+    /* Open it in a tab so the report can be read before it is saved — the
+       browser's own PDF viewer supplies the download and print controls. If
+       pop-ups are blocked, fall back to saving it directly rather than
+       leaving the click doing nothing. */
+    var tab = window.open(url, '_blank');
+    if (!tab || tab.closed || typeof tab.closed === 'undefined') {
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Pop-up blocked — the report was downloaded instead');
+    }
+    /* Held long enough for the tab to load; revoking too early blanks it. */
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
   }
 
   function downloadBlob(content, type, filename) {
@@ -2809,9 +2820,9 @@
     }
 
     if (e.target.closest && e.target.closest('#exportPdf')) {
+      /* exportPdf reports its own outcome when a pop-up blocker intervenes. */
       Promise.all([allCoverage(), logoRgb()]).then(function (r) {
         exportPdf(r[0], r[1]);
-        showToast('Portfolio report downloaded as a PDF');
       });
       return;
     }
