@@ -12,7 +12,7 @@
        white. Kept distinct from --red so brand styling never reads as an alarm. */
     --accent: #0b7c8c; --accent-soft: #e4f6f9;
     --accent-ink: #096975; /* darker teal for small text on --accent-soft (5.7:1) */
-    --cyan: #22dff5; /* raw logo cyan — large shapes on navy only, fails contrast on white */
+    --cyan: #22dff5; /* raw logo cyan, large shapes on navy only, fails contrast on white */
     --bg: #eef2f8; --card: #ffffff; --ink: #0a2540;
     --muted: #5d6f88; --faint: #8b9bb0;
     --green: #12805c; --green-soft: #e3f6ee;
@@ -83,12 +83,12 @@
   .journey .step:focus-visible .dot { box-shadow: 0 0 0 3px rgba(34,223,245,.25); }
   .journey .step .ico * { transform-box: fill-box; transform-origin: center; }
 
-  /* 1 Funding — the coin gives a small confident nudge. */
+  /* 1 Funding, the coin gives a small confident nudge. */
   .journey .step[data-step="funding"]:hover .ico,
   .journey .step[data-step="funding"]:focus-visible .ico { animation: st-nudge .5s ease; }
   @keyframes st-nudge { 40% { transform: translateY(-2.5px); } 100% { transform: none; } }
 
-  /* 2 Visibility — the eye closes and opens. */
+  /* 2 Visibility, the eye closes and opens. */
   .journey .step[data-step="visibility"] .eye-pupil { transition: opacity .12s; }
   .journey .step[data-step="visibility"]:hover .eye-outline,
   .journey .step[data-step="visibility"]:focus-visible .eye-outline { animation: st-blink .75s ease; }
@@ -97,7 +97,7 @@
   @keyframes st-blink { 45% { transform: scaleY(.08); } 70% { transform: scaleY(1); } }
   @keyframes st-pupil { 35%, 62% { opacity: 0; } }
 
-  /* 3 Early Detection — the warning blinks, the way an alert would. */
+  /* 3 Early Detection, the warning blinks, the way an alert would. */
   .journey .step[data-step="detection"]:hover .alert,
   .journey .step[data-step="detection"]:focus-visible .alert { animation: st-alert .85s ease; }
   @keyframes st-alert {
@@ -106,7 +106,7 @@
     40%, 80% { opacity: 1; }
   }
 
-  /* 4 Guidance — the needle swings and settles, like a compass finding north. */
+  /* 4 Guidance, the needle swings and settles, like a compass finding north. */
   .journey .step[data-step="guidance"]:hover .needle,
   .journey .step[data-step="guidance"]:focus-visible .needle { animation: st-compass 1.1s cubic-bezier(.3,1.4,.5,1); }
   @keyframes st-compass {
@@ -117,7 +117,7 @@
     100% { transform: rotate(360deg); }
   }
 
-  /* 5 Stronger Performance — the trend line pops upward. */
+  /* 5 Stronger Performance, the trend line pops upward. */
   .journey .step[data-step="growth"]:hover .trend,
   .journey .step[data-step="growth"]:focus-visible .trend { animation: st-pop .55s cubic-bezier(.3,1.5,.5,1); }
   @keyframes st-pop {
@@ -125,7 +125,7 @@
     100% { transform: none; }
   }
 
-  /* 6 Verified Track Record — the tick clears and redraws itself. */
+  /* 6 Verified Track Record, the tick clears and redraws itself. */
   .journey .step[data-step="record"] .tick { stroke-dasharray: 12; }
   .journey .step[data-step="record"]:hover .tick,
   .journey .step[data-step="record"]:focus-visible .tick { animation: st-tick .7s ease forwards; }
@@ -135,7 +135,7 @@
     100% { stroke-dashoffset: 0; }
   }
 
-  /* 7 Greater Financial Readiness — a small burst of confetti. */
+  /* 7 Greater Financial Readiness, a small burst of confetti. */
   .journey .step .spark { position: absolute; inset: 0; pointer-events: none; }
   .journey .step .spark i {
     position: absolute; top: 50%; left: 50%; width: 3px; height: 3px; border-radius: 1px;
@@ -662,7 +662,7 @@
   'use strict';
 
   /* =========================================================================
-     1. SCORING ENGINE — rules-based, fully explainable.
+     1. SCORING ENGINE, rules-based, fully explainable.
      ========================================================================= */
   var WEIGHTS = { revenue: 0.35, expense: 0.25, consistency: 0.20, customers: 0.20 };
   var CREDIT_WEIGHTS = { trend: 0.40, stability: 0.35, discipline: 0.25 };
@@ -721,7 +721,7 @@
     return { score: score, factors: { trend: trend, stability: stability, discipline: discipline }, avgGrowth: avgG, meanRatio: meanR, volatility: varR, periods: h.length };
   }
 
-  /* The four bands in order — named exactly as the pitch deck defines them. */
+  /* The four bands in order, named exactly as the pitch deck defines them. */
   var CR_BANDS = ['Building Track Record', 'Developing', 'Strong Evidence', 'Credit-Ready Candidate'];
 
   function creditReadiness(biz) {
@@ -739,7 +739,7 @@
     /* Band names match the pitch deck exactly, each paired with a plain-English
        line so the meaning is clear without needing the deck to hand. */
     var plain;
-    if (periods < 4 || cr.score < 45) { status = 'Building Track Record'; plain = 'Still early — not enough history yet'; }
+    if (periods < 4 || cr.score < 45) { status = 'Building Track Record'; plain = 'Still early, not enough history yet'; }
     else if (cr.score < 62) { status = 'Developing'; plain = 'Coming along, with more to prove'; }
     else if (cr.score < 80) { status = 'Strong Evidence'; plain = 'A solid record is building up'; }
     else { status = 'Credit-Ready Candidate'; plain = 'Ready for a funding conversation'; }
@@ -749,7 +749,7 @@
 
   function decisionFor(biz) {
     var health = computeHealth(biz);
-    if (health.tier === 'green') return { kind: 'release', action: 'Doing well — keep going', why: 'A score of ' + health.score + ' is healthy. Sales and customers are both moving in the right direction.' };
+    if (health.tier === 'green') return { kind: 'release', action: 'Doing well. Keep going', why: 'A score of ' + health.score + ' is healthy. Sales and customers are both moving in the right direction.' };
     if (health.tier === 'yellow') return { kind: 'hold', action: 'Needs a check-in', why: 'A score of ' + health.score + ' means keep an eye on this one. ' + weakestFactorPhrase(health) };
     return { kind: 'escalate', action: 'Needs attention now', why: 'A score of ' + health.score + ' is low. ' + weakestFactorPhrase(health) };
   }
@@ -761,7 +761,7 @@
   }
 
   /* =========================================================================
-     2. GUIDANCE ENGINE — explains the problem, gives a practical next step.
+     2. GUIDANCE ENGINE, explains the problem, gives a practical next step.
      ========================================================================= */
   /* Advice quotes the business's own figures, so two businesses with the same
      underlying problem never read as the same generic note. */
@@ -776,7 +776,7 @@
 
     if (h.revGrowth <= -0.15) {
       out.push({ sev: 'red',
-        issue: 'Your sales have dropped sharply — down ' + Math.abs(Math.round(h.revGrowth * 100)) + '% on the months before.',
+        issue: 'Your sales have dropped sharply: down ' + Math.abs(Math.round(h.revGrowth * 100)) + '% on the months before.',
         rec: 'Sales fell from ' + money(prev.revenue) + ' to ' + money(last.revenue) + '. Look at which customers or products brought in less than usual, and start there.' });
     }
 
@@ -784,14 +784,14 @@
       /* Same rule, but the wording and urgency follow how tight it actually is. */
       if (ratio >= 0.95) {
         out.push({ sev: 'red',
-          issue: 'Costs have caught up with your sales — you are spending R' + ratio.toFixed(2) + ' for every R1 you earn.',
+          issue: 'Costs have caught up with your sales: you are spending R' + ratio.toFixed(2) + ' for every R1 you earn.',
           rec: topCost ? 'Your biggest cost this month was ' + topCost.desc.toLowerCase() + ' at ' + money(topCost.amount) + '. That is the first one to bring down.'
                        : 'Bring your largest cost down before it overtakes what you earn.' });
       } else {
         out.push({ sev: 'yellow',
           issue: 'Your costs are creeping up faster than your sales.',
           rec: 'You keep about ' + money(last.revenue - last.expenses) + ' of every month right now. ' +
-               (topCost ? 'Check ' + topCost.desc.toLowerCase() + ' at ' + money(topCost.amount) + ' first — it is your largest cost.' : 'Review your largest costs first.') });
+               (topCost ? 'Check ' + topCost.desc.toLowerCase() + ' at ' + money(topCost.amount) + ' first: it is your largest cost.' : 'Review your largest costs first.') });
       }
     }
 
@@ -815,16 +815,16 @@
 
     if (!out.length && h.tier === 'green') {
       out.push({ sev: 'green',
-        issue: 'Steady month — you kept ' + money(last.revenue - last.expenses) + ' after costs.',
+        issue: 'Steady month. You kept ' + money(last.revenue - last.expenses) + ' after costs.',
         rec: 'You are ' + biz.milestones.filter(function (m) { return m.status === 'done'; }).length + ' of ' + biz.milestones.length +
-             ' stages in with ' + biz.history.length + ' months on record. Keep sending your numbers — this history is what your next funding conversation rests on.' });
+             ' stages in with ' + biz.history.length + ' months on record. Keep sending your numbers, this history is what your next funding conversation rests on.' });
     }
     if (!out.length) out.push({ sev: 'yellow', issue: 'Nothing serious this month, but a few things are worth watching.', rec: 'Keep sending your numbers on time so any problem shows up early.' });
     return out;
   }
 
   /* =========================================================================
-     3. DEMO DATA — 10 fictional South African SMEs.
+     3. DEMO DATA, 10 fictional South African SMEs.
      ========================================================================= */
   /* Reporting months are generated relative to today so the demo never looks
      stale: the most recent month is always last month, and the next update is
@@ -844,7 +844,7 @@
     }
     return out;
   })();
-  /* Plain-language stage names — anyone should understand these without a
+  /* Plain-language stage names, anyone should understand these without a
      glossary. "Onboarding & Setup" became "Getting set up", and so on. */
   var MSTAGES = ['Getting set up', 'Open and trading', 'Growing the business', 'Standing on its own'];
   var EXP_CATEGORIES = ['Stock & Inventory', 'Rent', 'Wages', 'Transport', 'Marketing', 'Utilities', 'Other'];
@@ -860,22 +860,22 @@
   /* Three businesses, one per situation, so the difference is obvious at a
      glance: one doing well, one in the middle, one in trouble. */
   var DEFS = [
-    /* Figures are sized for AYEF-scale youth grants: R100k–R150k of funding, and
+    /* Figures are sized for AYEF-scale youth grants: R100k-R150k of funding, and
        monthly trading in the tens of thousands. A business turning over R240k a
        month would not be applying for a R150k start-up grant, so revenue is kept
        proportionate to the funding it received. */
 
-    /* DOING WELL — growing sales, costs under control, always reports on time. */
+    /* DOING WELL, growing sales, costs under control, always reports on time. */
     { id: 'nandi-beauty', name: 'Nandi Beauty Studio', industry: 'Beauty & Wellness', owner: 'Nandi Mahlangu', region: 'Tembisa, GP', fundingAmount: 150000,
       milestones: milestoneSet(3, 'current'), model: { rev: 0.038, exp: 0.022, cust: 0.035, vol: 0.008, miss: 0.02 }, base: { revenue: 48000, expenses: 27500, customers: 145 }, reporting: 'sent',
       team: { staff: 3, roles: 'Two stylists and a receptionist' }, started: '2024-03' },
 
-    /* IN THE MIDDLE — sales growing slowly, costs rising faster, one late report. */
+    /* IN THE MIDDLE, sales growing slowly, costs rising faster, one late report. */
     { id: 'soweto-bakery', name: 'Soweto Sunrise Bakery', industry: 'Food & Beverage', owner: 'Palesa Dlamini', region: 'Soweto, GP', fundingAmount: 120000,
       milestones: milestoneSet(2, 'current'), model: { rev: 0.012, exp: 0.030, cust: 0.009, vol: 0.012, miss: 0.05 }, base: { revenue: 36000, expenses: 24500, customers: 160 }, lateAt: [3], reporting: 'due',
       team: { staff: 4, roles: 'A baker, two counter staff and a driver' }, started: '2024-08' },
 
-    /* IN TROUBLE — sales falling, spending more than it earns, reports missed.
+    /* IN TROUBLE, sales falling, spending more than it earns, reports missed.
        Also carries the scripted bad month used by the "log a rough month" demo. */
     { id: 'zola-deliveries', name: 'Zola Deliveries', industry: 'Transport', owner: 'Zola Mokoena', region: 'Pretoria, GP', fundingAmount: 100000,
       milestones: milestoneSet(1, 'delayed'), model: { rev: -0.018, exp: 0.026, cust: -0.016, vol: 0.014, miss: 0.10 }, base: { revenue: 32000, expenses: 26500, customers: 95 }, lateAt: [1, 4], reporting: 'late',
@@ -897,7 +897,7 @@
     }
     return h;
   }
-  /* Recent transactions for the latest month only — a short, readable list
+  /* Recent transactions for the latest month only, a short, readable list
      rather than pages of rows. Descriptions are written per trade so they read
      like a real business's books, not generic category names. */
   var LEDGER_LINES = {
@@ -961,11 +961,11 @@
      4. STATE
      ========================================================================= */
   /* =========================================================================
-     4b. PROOF STORE — real file storage, no server
+     4b. PROOF STORE, real file storage, no server
      -------------------------------------------------------------------------
      Receipts are held as Blobs in IndexedDB, so an uploaded file survives a
      refresh and a browser restart and can be reopened or downloaded. Nothing
-     leaves the machine and nothing needs installing — the prototype still runs
+     leaves the machine and nothing needs installing, the prototype still runs
      by opening the file directly. A real deployment would post these to object
      storage instead; the calling code below would not change.
      ========================================================================= */
@@ -1042,7 +1042,7 @@
         });
       },
 
-      /* Drop everything for one business — used when the demo's dates move on
+      /* Drop everything for one business, used when the demo's dates move on
          and the stored refs no longer match any transaction. */
       clearFor: function (bizId) {
         return tx('readwrite').then(function (os) {
@@ -1118,7 +1118,7 @@
   /* -------------------------------------------------------------------------
      Sample receipts. So the demo opens with evidence coverage already showing
      something real, a simple receipt is drawn for most expense entries and
-     stored like any uploaded file — openable, downloadable, and counted in the
+     stored like any uploaded file, openable, downloadable, and counted in the
      coverage figure. Runs once; anything attached by hand is left alone.
      ------------------------------------------------------------------------- */
   function receiptSvg(biz, t) {
@@ -1152,17 +1152,17 @@
   function seedProofs() {
     if (!ProofStore.available()) return Promise.resolve();
     /* Transaction refs contain the entry date, and the demo's dates are
-       generated relative to today — so a save made in a previous month points
+       generated relative to today, so a save made in a previous month points
        at refs that no longer exist and coverage silently reads 0%. Stamp the
        flag with the current period so the receipts are rebuilt when it moves. */
     var stamp = PERIOD_DATES[5] || '';
     try { if (localStorage.getItem('provenProofsSeeded') === stamp) return Promise.resolve(); } catch (e) {}
     /* How many expenses are left undocumented, per business. The well-run
-       business has everything; the struggling one has gaps — its paperwork
+       business has everything; the struggling one has gaps, its paperwork
        slips for the same reasons its numbers do. */
     var SKIP = { 'nandi-beauty': [], 'soweto-bakery': [4], 'zola-deliveries': [0, 2, 4, 5] };
-    /* Clear first — receipts written against a previous period's dates are
-       orphaned — then write the current set. The clear must finish before the
+    /* Clear first, receipts written against a previous period's dates are
+       orphaned, then write the current set. The clear must finish before the
        puts, or it would delete the very records being added. */
     return Promise.all(state.businesses.map(function (b) { return ProofStore.clearFor(b.id); }))
       .then(function () {
@@ -1192,13 +1192,13 @@
       }).catch(function () {});
   }
 
-  /* Stable reference for a ledger entry — proofs survive re-renders and sorting. */
+  /* Stable reference for a ledger entry, proofs survive re-renders and sorting. */
   function txnRef(t, i) {
     return [t.period, t.date, t.type, t.category, Math.round(t.amount), i].join('|');
   }
 
   /* =========================================================================
-     4c. SAVED WORK — changes stay put across refreshes
+     4c. SAVED WORK, changes stay put across refreshes
      -------------------------------------------------------------------------
      Transactions, submitted months and stage decisions are written to
      localStorage so anything done during a demo is still there after a
@@ -1213,7 +1213,7 @@
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         businesses: state.businesses, draft: state.draft, savedAt: new Date().toISOString()
       }));
-    } catch (e) { /* storage full or blocked — demo still works, just unsaved */ }
+    } catch (e) { /* storage full or blocked, demo still works, just unsaved */ }
   }
 
   function loadSaved() {
@@ -1227,7 +1227,7 @@
       var seedIds = makeSeed().map(function (b) { return b.id; }).sort().join(',');
       var savedIds = data.businesses.map(function (b) { return b.id; }).sort().join(',');
       if (seedIds !== savedIds) return null;
-      /* Matching ids are not enough — a save written before a field was added
+      /* Matching ids are not enough, a save written before a field was added
          passes that check and then renders wrong (missing teams showed every
          business as 1 job). Require every field the UI reads. */
       var NEEDED = ['team', 'reporting', 'history', 'ledger', 'milestones'];
@@ -1266,10 +1266,10 @@
   function fmtDate(iso) { return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); }
   function fmtDateShort(iso) { return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', timeZone: 'UTC' }); }
   function initials(name) { return name.split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase(); }
-  function trendGlyph(t) { return t === 'up' ? '▲' : t === 'down' ? '▼' : '—'; }
+  function trendGlyph(t) { return t === 'up' ? '▲' : t === 'down' ? '▼' : '-'; }
   /* Share of the funding released so far. Money is drawn down as stages are
      reached, so this tracks progress through the stages rather than totalling
-     every running cost — six months of trading expenses would exceed any grant
+     every running cost, six months of trading expenses would exceed any grant
      and pin every business at 100%. */
   /* -------------------------------------------------------------------------
      Reporting cycle. Numbers are due on the 15th of the month after the one
@@ -1290,7 +1290,7 @@
        has it coming up, and the struggling one has let it slip. */
     var behaviour = biz.reporting || 'due';
 
-    /* Everything is in — nothing owed until next month's deadline. */
+    /* Everything is in, nothing owed until next month's deadline. */
     if (behaviour === 'sent') {
       return { due: dueIso, days: days, state: 'sent', sent: true,
         title: 'Everything is up to date',
@@ -1309,7 +1309,7 @@
       var over = Math.max(1, Math.round((new Date() - lateDue) / 86400000));
       return { due: lateIso, days: -over, state: 'overdue', sent: false,
         title: 'Your ' + monthLabel(owedMonth.toISOString().slice(0, 10)) + ' update is still outstanding',
-        detail: 'It was due ' + fmtDate(lateIso) + ' — that is ' + over + ' day' + (over === 1 ? '' : 's') +
+        detail: 'It was due ' + fmtDate(lateIso) + ', that is ' + over + ' day' + (over === 1 ? '' : 's') +
                 ' ago. Sending on time counts for 20% of your score.',
         label: over + ' days late', covers: monthLabel(owedMonth.toISOString().slice(0, 10)) };
     }
@@ -1324,7 +1324,7 @@
       detail: state === 'overdue'
         ? 'It was due ' + fmtDate(dueIso) + '. Sending on time counts for 20% of your score.'
         : 'Your ' + monthLabel(last.date) + ' update is in. The next one is due ' + fmtDate(dueIso) +
-          ' — ' + (days === 0 ? 'today' : 'in ' + days + ' day' + (days === 1 ? '' : 's')) + '.',
+          ' · ' + (days === 0 ? 'today' : 'in ' + days + ' day' + (days === 1 ? '' : 's')) + '.',
       label: state === 'overdue' ? (Math.abs(days) + ' days late')
            : days === 0 ? 'Due today'
            : 'Due in ' + days + ' day' + (days === 1 ? '' : 's'),
@@ -1346,7 +1346,7 @@
   /* =========================================================================
      6. LINE CHART (dependency-free SVG)
      ========================================================================= */
-  /* Month name for a period, e.g. "Feb 2026" — used instead of P1/P2 wherever
+  /* Month name for a period, e.g. "Feb 2026", used instead of P1/P2 wherever
      a person reads the chart or table. */
   function monthLabel(iso) {
     return new Date(iso + 'T00:00:00Z').toLocaleDateString('en-ZA', { month: 'short', year: 'numeric', timeZone: 'UTC' });
@@ -1356,7 +1356,7 @@
   }
 
   function lineChart(biz) {
-    /* Roughly 4:1 — wide and low, so a full-width panel does not scale the
+    /* Roughly 4:1, wide and low, so a full-width panel does not scale the
        chart into a tall block that outgrows whatever sits beside it. */
     var h = biz.history.slice(-8), W = 760, H = 190, P = { t: 12, r: 16, b: 30, l: 52 }, iw = W - P.l - P.r, ih = H - P.t - P.b;
     var mx = Math.max.apply(null, h.map(function (x) { return Math.max(x.revenue, x.expenses); }));
@@ -1427,7 +1427,7 @@
         '<span class="hint">Hover any month for the detail</span>' +
       '</div></div>';
   }
-  /* Donut of the health mix. Proportions are true — no perspective tilt, which
+  /* Donut of the health mix. Proportions are true, no perspective tilt, which
      would make equal slices read as unequal. Depth comes from a soft shadow and
      a gradient; the life comes from hover, where a slice lifts, brightens and
      tells you what it is. Slices are also a filter for the table below. */
@@ -1479,7 +1479,7 @@
         'data-band="' + b.k + '" data-filter="' + b.k + '" ' +
         'data-label="' + esc(b.label) + '" data-count="' + b.v + '" ' +
         'style="--mx:' + off[0].toFixed(2) + 'px; --my:' + off[1].toFixed(2) + 'px; ' +
-        'filter:url(#glow-' + b.k + ')"><title>' + esc(b.label) + ' — ' + b.v + '</title></path>';
+        'filter:url(#glow-' + b.k + ')"><title>' + esc(b.label) + ' · ' + b.v + '</title></path>';
     }).join('');
 
     return '<div class="donut-wrap">' +
@@ -1494,7 +1494,7 @@
   }
 
   /* =========================================================================
-     7. RENDER — LANDING
+     7. RENDER, LANDING
      ========================================================================= */
   function renderLanding() {
     /* Each journey step carries an icon that depicts the step itself: a coin for
@@ -1538,7 +1538,7 @@
       '<div class="brandname">PROVEN</div>' +
       '<div class="brandtag">Turning Potential into Proof</div>' +
       '<h1>We don’t just track where funding went.</h1>' +
-      '<p class="tagline">We help determine whether the funding is helping build a sustainable business — and create the evidence to prove it.</p>' +
+      '<p class="tagline">We help determine whether the funding is helping build a sustainable business, and create the evidence to prove it.</p>' +
       '<div class="journey">' + stepsHtml + '</div>' +
       '<p class="twosided-line">Entrepreneurs see how to improve. Funders see whether improvement is happening.</p>' +
       '<div class="role-picks">' +
@@ -1558,7 +1558,7 @@
   }
 
   /* =========================================================================
-     8. RENDER — SHELL (sidebar + topbar)
+     8. RENDER, SHELL (sidebar + topbar)
      ========================================================================= */
   function renderShell(navItems, activeKey, title, sub, bodyHtml, showBizPicker) {
     var navHtml = navItems.map(function (it) {
@@ -1588,7 +1588,7 @@
   }
 
   /* =========================================================================
-     9. RENDER — ENTREPRENEUR VIEW
+     9. RENDER, ENTREPRENEUR VIEW
      ========================================================================= */
   function renderEntrepreneur() {
     var biz = byId(state.bizId);
@@ -1596,7 +1596,7 @@
       { key: 'overview', label: 'Overview' },
       { key: 'transactions', label: 'Transactions' },
       { key: 'milestones', label: 'Stages' },
-      /* Only flag red when there is a real problem to act on — a healthy business
+      /* Only flag red when there is a real problem to act on, a healthy business
          still gets one "keep going" note, which should not look like an alert. */
       { key: 'recommendations', label: 'What to do next', count: getGuidance(biz).length,
         alarm: getGuidance(biz).some(function (g) { return g.sev === 'red' || g.sev === 'yellow'; }) },
@@ -1610,7 +1610,7 @@
     return renderShell(navItems, state.entTab, biz.name, biz.industry + ' · ' + biz.region, body, true);
   }
 
-  /* Six months of score in a thumbnail — shows direction, which a single
+  /* Six months of score in a thumbnail, shows direction, which a single
      number cannot. Deliberately small: it supports the ring, not competes. */
   function scoreSpark(biz) {
     var pts = biz.history.map(function (_, i) { return healthAt(biz, i).score; }).slice(-6);
@@ -1659,7 +1659,7 @@
       '<div class="tiny muted" style="margin-top:5px">' + currentMilestone(biz) + ' &middot; ' + milestoneProgress(biz) + '% complete</div></div></div>' +
 
       /* Credit readiness sits beside the score, so what the record is earning is
-         visible without scrolling — it is the entrepreneur's reason to keep going. */
+         visible without scrolling, it is the entrepreneur's reason to keep going. */
       '<div class="cr-side ' + cr.color + '">' +
         '<div class="crs-label">Credit readiness</div>' +
         '<div class="crs-status">' + esc(cr.status) + '</div>' +
@@ -1721,7 +1721,7 @@
   }
 
   /* Share of transaction value that carries an attached document. */
-  /* Every entry needs backing, income included — a sales total is exactly the
+  /* Every entry needs backing, income included, a sales total is exactly the
      figure a funder would most want evidence for, so income carries a till
      summary or deposit slip just as spending carries a receipt. */
   function evidenceCoverage(biz) {
@@ -1761,7 +1761,7 @@
       '<div class="tiny muted">' + money(cov.backed) + ' of ' + money(cov.total) + ' backed by a document · ' + cov.withProof + ' of ' + cov.count + ' entries</div></div>' +
       '<div class="cov-pct" style="color:' + covTone + '">' + cov.pct + '%</div></div>' +
       '<div class="cov-bar"><span style="width:' + cov.pct + '%;background:' + covTone + '"></span></div>' +
-      '<div class="cov-note">This is the share of <b>everything you log</b> — money in and money out — that has a document behind it. Sales need a till summary or deposit slip; costs need a receipt or invoice. ' +
+      '<div class="cov-note">This is the share of <b>everything you log</b>, money in and money out, that has a document behind it. Sales need a till summary or deposit slip; costs need a receipt or invoice. ' +
       'Documents stay on this device and are marked <b>pending review</b> until a funder opens them.</div>' +
       '</div></div>';
     var catOptions = EXP_CATEGORIES.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
@@ -1778,13 +1778,13 @@
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M12 16V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M4 16v3.2h16V16"/></svg>' +
         '<span id="txnProofLabel">Attach receipt or invoice</span></label>' +
-        '<span class="tiny muted">Optional — you can also attach it later from the table below.</span></div>' +
+        '<span class="tiny muted">Optional, you can also attach it later from the table below.</span></div>' +
       '</div></div>' +
 
       '<div class="panel" style="margin-bottom:16px"><div class="panel-head"><h3>Send this month&rsquo;s numbers</h3>' +
       '<span class="hint" style="margin-left:auto">Due ' + fmtDate(reportingStatus(biz).due) + ' &middot; ' + reportingStatus(biz).label + '</span></div><div class="panel-body">' +
         /* Totals of what has been added but not yet submitted. Shown only once
-           there is something in them — three zeros on arrival explained nothing
+           there is something in them, three zeros on arrival explained nothing
            and sat in the wrong panel. */
         (draft.revenue || draft.expenses
           ? '<div class="draft-summary">' +
@@ -1807,7 +1807,7 @@
           '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
             '<path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.8 5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.4-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.6 0a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.6-1.2a.4.4 0 0 0 0-.4c0-.1-.6-1.4-.8-1.9s-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.9 11.9 0 0 0 4.6 4c1.7.7 2.3.8 3.1.7a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .2-1.2c-.1-.1-.3-.2-.5-.3Z"/>' +
           '</svg>' +
-          '<span>In production, entrepreneurs send this by <b>WhatsApp</b> — no app download, low data. ' +
+          '<span>In production, entrepreneurs send this by <b>WhatsApp</b>, no app download, low data. ' +
           'This form stands in for that check-in.</span>' +
         '</div>' +
         '<button class="btn ghost sm" id="quickDemoBtn" style="margin-top:12px">Quick demo: log a rough month</button>' +
@@ -1834,7 +1834,7 @@
         delta = '<span class="mchange flat">first month</span>';
       }
       var statusLabel = p.status === 'on-time' ? 'On time' : p.status === 'late' ? 'Late' : 'Not sent';
-      return '<tr class="mrow" title="' + esc(monthLabel(p.date) + ' — sent ' + statusLabel.toLowerCase() + ' on ' + fmtDate(p.date)) + '">' +
+      return '<tr class="mrow" title="' + esc(monthLabel(p.date) + ', sent ' + statusLabel.toLowerCase() + ' on ' + fmtDate(p.date)) + '">' +
         '<td><b>' + monthLabel(p.date) + '</b><div class="tiny muted">' + fmtDate(p.date) + '</div></td>' +
         '<td class="mono">' + moneyShort(p.revenue) + '<div class="tiny">' + delta + '</div></td>' +
         '<td class="mono">' + moneyShort(p.expenses) + '</td>' +
@@ -1872,10 +1872,10 @@
   }
 
   /* =========================================================================
-     10. RENDER — FUNDER VIEW
+     10. RENDER, FUNDER VIEW
      ========================================================================= */
   function renderFunder() {
-    /* Businesses that are flagged and not yet followed up — the count a funder
+    /* Businesses that are flagged and not yet followed up, the count a funder
        is actually working through. */
     var open = state.businesses.filter(function (b) {
       return computeHealth(b).tier !== 'green' && !b.actioned;
@@ -1900,14 +1900,14 @@
     } else {
       body = funderPortfolio();
       title = 'Portfolio Overview';
-      sub = 'Worst first, so problems reach you — the same score the entrepreneur sees';
+      sub = 'Worst first, so problems reach you, the same score the entrepreneur sees';
       active = 'portfolio';
     }
     return renderShell(navItems, active, title, sub, body, false);
   }
 
   /* Triage screen: one card per flagged business carrying the reason, the
-     advice the owner already received, and the follow-up action — so a funder
+     advice the owner already received, and the follow-up action, so a funder
      can work the list without opening every profile in turn. */
   function funderAttention() {
     var flagged = state.businesses.filter(function (b) { return computeHealth(b).tier !== 'green'; })
@@ -1956,7 +1956,7 @@
     var overdue = state.businesses.filter(function (b) { return reportingStatus(b).state === 'overdue'; }).length;
     var rows = visibleBusinesses();
 
-    /* The portfolio's direction answers "is this working?" — a single score
+    /* The portfolio's direction answers "is this working?", a single score
        cannot. */
     var prevScores = state.businesses.map(function (b) {
       return b.history.length > 1 ? healthAt(b, b.history.length - 2).score : computeHealth(b).score;
@@ -1977,7 +1977,7 @@
             trendGlyph(trendDir) + ' ' + (trendDelta > 0 ? '+' : '') + trendDelta + '</span></div>' +
           '<div class="foot">average score · ' + (trendDelta === 0 ? 'unchanged' : (trendDelta > 0 ? 'up' : 'down') + ' since last month') + '</div></div>' +
         '<div class="kpi"><div class="label">Evidence coverage</div>' +
-          '<div class="value">' + (portfolioCoverage === null ? '—' : portfolioCoverage + '%') + '</div>' +
+          '<div class="value">' + (portfolioCoverage === null ? '-' : portfolioCoverage + '%') + '</div>' +
           '<div class="foot">of logged value backed by a document</div></div>' +
         '<div class="kpi"><div class="label">Funding at work</div><div class="value">' + moneyShort(totalFunding) + '</div>' +
           '<div class="foot">' + avgUtil + '% released against stages reached</div></div>' +
@@ -2009,8 +2009,8 @@
         '<div class="panel-body" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">' + donut(c) +
           '<div style="flex:1;min-width:170px">' +
             '<div class="mix-legend">' +
-              [['green', 'Healthy', c.green, '#12805c', 'score 80–100'],
-               ['yellow', 'Watch', c.yellow, '#a86a00', 'score 50–79'],
+              [['green', 'Healthy', c.green, '#12805c', 'score 80-100'],
+               ['yellow', 'Watch', c.yellow, '#a86a00', 'score 50-79'],
                ['red', 'At risk', c.red, '#c0322b', 'below 50']].map(function (b) {
                 return '<button data-band-btn="' + b[0] + '" data-filter="' + b[0] + '"' +
                   (state.filterTier === b[0] ? ' class="on"' : '') + '>' +
@@ -2021,7 +2021,7 @@
             '<div class="mix-hint">Hover a band to highlight it, click to filter the list.</div>' +
           '</div></div></div>' +
         '<div class="panel"><div class="panel-head"><h3>What this means</h3></div>' +
-        '<div class="panel-body" style="font-size:12.5px;color:var(--muted);line-height:1.7">Businesses on Watch or At Risk are flagged so support can reach them early. The same score, the same explanation and the same recommendation are visible to the entrepreneur — this is a shared evidence platform, not a surveillance tool.</div></div>' +
+        '<div class="panel-body" style="font-size:12.5px;color:var(--muted);line-height:1.7">Businesses on Watch or At Risk are flagged so support can reach them early. The same score, the same explanation and the same recommendation are visible to the entrepreneur, this is a shared evidence platform, not a surveillance tool.</div></div>' +
       '</div>';
   }
 
@@ -2064,7 +2064,7 @@
   }
 
   /* Portfolio as a formatted workbook. SpreadsheetML is XML that Excel opens
-     natively — it carries fonts, fills, column widths, number formats and a
+     natively, it carries fonts, fills, column widths, number formats and a
      frozen header, none of which plain CSV can. It cannot hold images, so the
      branding is a typographic title block; the PDF export carries the logo. */
   function portfolioRows(covMap) {
@@ -2121,7 +2121,7 @@
       'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
       'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
       '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">' +
-        '<Title>Proven — Portfolio Report</Title><Company>Proven</Company></DocumentProperties>' +
+        '<Title>Proven, Portfolio Report</Title><Company>Proven</Company></DocumentProperties>' +
       '<Styles>' +
         '<Style ss:ID="Default"><Font ss:FontName="Calibri" ss:Size="11" ss:Color="#0A2540"/>' +
           '<Alignment ss:Vertical="Center"/></Style>' +
@@ -2157,7 +2157,7 @@
       COLS.map(function (col) { return '<Column ss:Width="' + col.w + '"/>'; }).join('') +
 
       /* Title block */
-      '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="5"><Data ss:Type="String">PROVEN — Portfolio Report</Data></Cell></Row>' +
+      '<Row ss:Height="30"><Cell ss:StyleID="title" ss:MergeAcross="5"><Data ss:Type="String">PROVEN, Portfolio Report</Data></Cell></Row>' +
       '<Row><Cell ss:StyleID="tagline" ss:MergeAcross="5"><Data ss:Type="String">Turning Potential into Proof</Data></Cell></Row>' +
       '<Row><Cell ss:StyleID="meta" ss:MergeAcross="5"><Data ss:Type="String">' +
         xmlEsc('Generated ' + fmtDate(new Date().toISOString().slice(0, 10)) + ' · ' + total + ' funded businesses') +
@@ -2173,7 +2173,7 @@
       spacer() +
 
       /* Business table, worst first */
-      '<Row ss:Height="20"><Cell ss:StyleID="section" ss:MergeAcross="' + (HEAD.length - 1) + '"><Data ss:Type="String">FUNDED BUSINESSES — worst first</Data></Cell></Row>' +
+      '<Row ss:Height="20"><Cell ss:StyleID="section" ss:MergeAcross="' + (HEAD.length - 1) + '"><Data ss:Type="String">FUNDED BUSINESSES, worst first</Data></Cell></Row>' +
       '<Row ss:Height="28">' + HEAD.map(function (t) { return cell(t, 'hdr'); }).join('') + '</Row>' +
       rows.map(function (r) {
         return '<Row>' + COLS.map(function (col) {
@@ -2208,7 +2208,7 @@
   }
 
   /* =========================================================================
-     PDF WRITER — builds a real .pdf by hand
+     PDF WRITER, builds a real .pdf by hand
      -------------------------------------------------------------------------
      No library is available offline, so the file is assembled directly. It
      uses the standard Helvetica faces (which need no embedding) and draws the
@@ -2246,7 +2246,7 @@
         /* The standard fonts are Latin-1; drop anything outside it rather than
            emit bytes the viewer would render as noise. */
         .replace(/[^\x20-\x7E\xA0-\xFF]/g, function (ch) {
-          return ({ '—': '-', '–': '-', '·': '-', '’': "'", '‘': "'", '“': '"', '”': '"', '…': '...' })[ch] || '';
+          return ({ '-': '-', '-': '-', '·': '-', '’': "'", '‘': "'", '“': '"', '”': '"', '…': '...' })[ch] || '';
         });
     }
 
@@ -2347,7 +2347,7 @@
     return { Doc: Doc, PT: PT, width: WID };
   })();
 
-  /* Decode the logo to raw RGB via canvas — PDF cannot read PNG directly, and
+  /* Decode the logo to raw RGB via canvas, PDF cannot read PNG directly, and
      the uncompressed RGB form is the one that needs no deflate. */
   function logoRgb() {
     return loadLogo().then(function (dataUri) {
@@ -2505,7 +2505,7 @@
     var url = URL.createObjectURL(blob);
     var name = 'proven-portfolio-report-' + new Date().toISOString().slice(0, 10) + '.pdf';
 
-    /* Open it in a tab so the report can be read before it is saved — the
+    /* Open it in a tab so the report can be read before it is saved, the
        browser's own PDF viewer supplies the download and print controls. If
        pop-ups are blocked, fall back to saving it directly rather than
        leaving the click doing nothing. */
@@ -2517,7 +2517,7 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      showToast('Pop-up blocked — the report was downloaded instead');
+      showToast('Pop-up blocked, the report was downloaded instead');
     }
     /* Held long enough for the tab to load; revoking too early blanks it. */
     setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
@@ -2550,9 +2550,9 @@
   }
 
   /* =========================================================================
-     11. RENDER — BUSINESS PROFILE (shared)
+     11. RENDER, BUSINESS PROFILE (shared)
      ========================================================================= */
-  /* Evidence summary as the funder sees it — the same coverage figure the
+  /* Evidence summary as the funder sees it, the same coverage figure the
      entrepreneur sees on their own Transactions tab. Proof metadata for the
      profiled business is loaded by render() before this runs. */
   function evidencePanel(biz) {
@@ -2567,8 +2567,8 @@
       '<div class="tiny muted">' + cov.withProof + ' of ' + cov.count + ' entries carry a document</div></div>' +
       '<div class="cov-pct" style="color:' + tone + '">' + cov.pct + '%</div></div>' +
       '<div class="cov-bar"><span style="width:' + cov.pct + '%;background:' + tone + '"></span></div>' +
-      '<div class="cov-note">Coverage is the share of all logged value — income and costs — that has a supporting document attached. ' +
-      'Documents are marked <b>pending review</b> — Proven records that evidence exists, it does not certify it.</div>' +
+      '<div class="cov-note">Coverage is the share of all logged value, income and costs, that has a supporting document attached. ' +
+      'Documents are marked <b>pending review</b>, Proven records that evidence exists, it does not certify it.</div>' +
       '</div></div>';
   }
 
@@ -2626,7 +2626,7 @@
         esc(dec.why) + '</div></div>';
 
     } else if (tab === 'performance') {
-      /* Chart and stages sit side by side — the stages list is narrow enough to
+      /* Chart and stages sit side by side, the stages list is narrow enough to
          fill the space the chart does not need. */
       bodyHtml = '<div class="perf-split">' +
         '<div class="panel"><div class="panel-head"><h3>Money in and money out</h3>' +
@@ -2644,7 +2644,7 @@
         '<div class="panel-body">' + guidance + '</div></div>';
 
     } else {
-      /* Overview — who they are, what the money has done, what it is earning. */
+      /* Overview, who they are, what the money has done, what it is earning. */
       var months = biz.history.length;
       var jobs = (biz.team && biz.team.staff ? biz.team.staff : 0) + 1;
       bodyHtml = '<div class="grid2"><div class="stack">' +
@@ -2653,7 +2653,7 @@
               '<div class="ab"><div class="l">Led by</div><div class="v">' + esc(biz.owner) + '</div></div>' +
               '<div class="ab"><div class="l">People employed</div><div class="v">' + jobs + '</div>' +
                 '<div class="s">' + esc(biz.team && biz.team.roles ? biz.team.roles : 'Owner only') + '</div></div>' +
-              '<div class="ab"><div class="l">Trading since</div><div class="v">' + (biz.started ? monthLabel(biz.started + '-15') : '—') + '</div></div>' +
+              '<div class="ab"><div class="l">Trading since</div><div class="v">' + (biz.started ? monthLabel(biz.started + '-15') : '-') + '</div></div>' +
               '<div class="ab"><div class="l">On Proven</div><div class="v">' + months + ' months</div>' +
                 '<div class="s">last update ' + fmtDate(biz.history[months - 1].date) + '</div></div>' +
               '<div class="ab"><div class="l">Grant</div><div class="v">' + money(biz.fundingAmount) + '</div></div>' +
@@ -2710,7 +2710,7 @@
       var want = ROUTES[state.role] || '/platform';
       if (location.pathname.replace(/\/+$/, '') === want) return;
       history[replace ? 'replaceState' : 'pushState']({ role: state.role }, '', want);
-    } catch (e) { /* file:// blocks pushState — the app still works */ }
+    } catch (e) { /* file:// blocks pushState, the app still works */ }
   }
 
   window.addEventListener('popstate', function () {
@@ -2805,7 +2805,7 @@
       var mb = byId(state.profileId);
       if (mb) {
         mb.actioned = new Date().toISOString().slice(0, 10);
-        showToast('Recorded as followed up — visible on the portfolio');
+        showToast('Recorded as followed up, visible on the portfolio');
         render();
       }
       return;
@@ -2814,7 +2814,7 @@
     if (e.target.closest && e.target.closest('#exportExcel')) {
       allCoverage().then(function (map) {
         exportExcel(map);
-        showToast('Portfolio downloaded — open it in Excel');
+        showToast('Portfolio downloaded, open it in Excel');
       });
       return;
     }
@@ -2831,7 +2831,7 @@
     if (msAction) {
       var biz = byId(state.bizId), idx = parseInt(msAction.getAttribute('data-idx'), 10), act = msAction.getAttribute('data-milestone-action');
       if (act === 'complete') { biz.milestones[idx].status = 'done'; if (biz.milestones[idx + 1]) biz.milestones[idx + 1].status = 'current'; showToast('Milestone marked complete'); }
-      else { biz.milestones[idx].status = 'delayed'; showToast('Milestone flagged as delayed — see Recommendations'); }
+      else { biz.milestones[idx].status = 'delayed'; showToast('Milestone flagged as delayed, see Recommendations'); }
       render(); return;
     }
 
@@ -2899,7 +2899,7 @@
       submitPeriod(biz2, { revenue: newRevenue, expenses: newExpenses, customers: cust, status: 'on-time', note: note });
       applyMilestoneChoice(biz2, msChoice);
       state.draft[biz2.id] = { revenue: 0, expenses: 0 };
-      showToast('Monthly update submitted — score recalculated'); render(); return;
+      showToast('Monthly update submitted, score recalculated'); render(); return;
     }
 
     if (e.target.id === 'quickDemoBtn') {
@@ -2915,9 +2915,9 @@
       } else {
         rev = Math.round(last.revenue * 0.8 / 100) * 100; exp = Math.round(last.expenses * 1.15 / 100) * 100; cust3 = Math.round(last.customers * 0.9); status = 'late';
       }
-      submitPeriod(biz3, { revenue: rev, expenses: exp, customers: cust3, status: status, note: 'Rough month — logged via quick demo.' });
+      submitPeriod(biz3, { revenue: rev, expenses: exp, customers: cust3, status: status, note: 'Rough month, logged via quick demo.' });
       state.draft[biz3.id] = { revenue: 0, expenses: 0 };
-      showToast('Rough month logged — watch the score update'); render(); return;
+      showToast('Rough month logged, watch the score update'); render(); return;
     }
   });
 
@@ -2930,7 +2930,7 @@
     }
     if (e.target.id === 'sortSel') { state.sortKey = e.target.value; render(); return; }
 
-    /* File chosen on the add-transaction form — held until the entry is created. */
+    /* File chosen on the add-transaction form, held until the entry is created. */
     if (e.target.id === 'txnProof') {
       var f = e.target.files && e.target.files[0];
       if (!f) { pendingProof = null; return; }
@@ -2952,7 +2952,7 @@
       ProofStore.put(state.bizId, ref, file).then(function () {
         return refreshProofs(state.bizId);
       }).then(function () {
-        showToast('Document attached — pending review');
+        showToast('Document attached, pending review');
         render();
       }).catch(function () {
         showToast('That document could not be saved on this device');
@@ -2962,7 +2962,7 @@
   });
 
   function checkFile(f) {
-    if (f.size > MAX_PROOF) { showToast('That file is larger than 8MB — attach a smaller photo or PDF'); return false; }
+    if (f.size > MAX_PROOF) { showToast('That file is larger than 8MB, attach a smaller photo or PDF'); return false; }
     if (f.size === 0) { showToast('That file appears to be empty'); return false; }
     return true;
   }
@@ -3050,7 +3050,7 @@
   });
 
   /* ---------------------------------------------------------------------
-     Chart hover — one invisible column per month drives a tooltip, a
+     Chart hover, one invisible column per month drives a tooltip, a
      crosshair and two markers. Delegated so it survives every re-render.
      --------------------------------------------------------------------- */
   document.addEventListener('mouseover', function (e) {
@@ -3126,7 +3126,7 @@
     var dt = new Date(prevDate + 'T00:00:00Z'); dt.setUTCMonth(dt.getUTCMonth() + 1);
     var date = PERIOD_DATES[idx] || dt.toISOString().slice(0, 10);
     biz.history.push({ period: 'P' + (idx + 1), date: date, revenue: p.revenue, expenses: p.expenses, customers: p.customers, status: p.status });
-    if (p.note) biz.notes.push({ date: date, title: 'Status update — P' + (idx + 1), detail: p.note });
+    if (p.note) biz.notes.push({ date: date, title: 'Status update, P' + (idx + 1), detail: p.note });
     var h = computeHealth(biz);
     biz.notes.push({ date: date, title: 'Score recalculated: ' + h.score + ' (' + tierLabel(h.tier) + ')', detail: getGuidance(biz)[0] ? getGuidance(biz)[0].issue : 'No major issues detected.' });
   }

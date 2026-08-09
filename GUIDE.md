@@ -1,4 +1,4 @@
-# How to use Proven — a simple guide
+# How to use Proven
 
 This guide explains what Proven does and how to use it, in plain language.
 No technical knowledge needed.
@@ -8,11 +8,11 @@ No technical knowledge needed.
 ## What Proven is, in one paragraph
 
 When a funder gives money to a small business, they usually only find out how
-things are going at the next check-in — often months later. By then a small
+things are going at the next check-in, often months later. By then a small
 problem has become a big one. Proven closes that gap. The business logs its
 numbers as it goes, Proven turns those numbers into a health score, and both
 the business owner and the funder see **the same score, the same reason, and
-the same suggested next step** — at the same time.
+the same suggested next step**, at the same time.
 
 Funding creates potential. Performance creates evidence. Proven turns that
 evidence into proof.
@@ -43,13 +43,13 @@ The first screen of the platform asks you to pick a side:
 | **Enter as Funder** | An organisation monitoring the businesses it has funded |
 
 You can swap at any time using **Switch role** in the top-left sidebar. Pick
-either one to start — trying both is how you see the point of the system.
+either one to start, trying both is how you see the point of the system.
 
 ---
 
 ## The three businesses
 
-To keep things clear, the demo has three businesses — one in each situation.
+To keep things clear, the demo has three businesses, one in each situation.
 They are examples, not real companies.
 
 | Business | Score | Situation |
@@ -58,13 +58,13 @@ They are examples, not real companies.
 | **Soweto Sunrise Bakery** | ~72 · Watch | **In the middle.** R120 000 grant. Still growing, but costs are climbing faster than sales and one report came in late. |
 | **Zola Deliveries** | ~44 · At Risk | **In trouble.** R100 000 grant. Sales falling, spending about R1.03 for every R1 earned, reports missed, behind on its stage. |
 
-Look at all three and the difference is immediately obvious — that is the
+Look at all three and the difference is immediately obvious, that is the
 point. The score, the advice, and what the funder is told all change to match
 the situation.
 
 ---
 
-# Part 1 — Using it as an Entrepreneur
+# Part 1: Using it as an Entrepreneur
 
 You are the business owner. Your job is to keep your numbers up to date and act
 on what Proven tells you.
@@ -75,20 +75,20 @@ Your home screen. At the top you get, side by side:
 
 - **Your health score** out of 100 and which band you are in, with a small line
   showing how it has moved over the last six months
-- **Your credit readiness** — which of the four levels you have reached, and how
+- **Your credit readiness**, which of the four levels you have reached, and how
   many are left
 
 Below that:
 
-- **A reminder about your monthly update** — whether it is in, due soon, or late
+- **A reminder about your monthly update**, whether it is in, due soon, or late
 - **Four figures**: are sales growing, are costs under control, what you kept
   after costs, and how much of your funding has been released
-- **Where you stand** — exactly what your funder is seeing right now
-- **Do this first** — the single most important thing to act on
+- **Where you stand**, exactly what your funder is seeing right now
+- **Do this first**, the single most important thing to act on
 
 Start here to see where you stand.
 
-## Transactions — the most important tab
+## Transactions (the most important tab)
 
 This is where your numbers come from.
 
@@ -105,7 +105,7 @@ form.
 
 **To attach proof of a transaction:**
 
-You can attach a photo of a receipt or an invoice — either when you add the
+You can attach a photo of a receipt or an invoice, either when you add the
 transaction, or afterwards.
 
 - *When adding:* click **Attach receipt or invoice** before clicking Add
@@ -116,7 +116,7 @@ Attached documents show a green **✓ Attached** tag. Click it to view the
 receipt, download it, or remove it.
 
 **Evidence coverage.** At the top of this tab is a percentage. It is the share
-of your transaction value that has a document attached. Higher is better — it
+of your transaction value that has a document attached. Higher is better, it
 means the numbers you are reporting are backed by paperwork. Your funder sees
 this same percentage.
 
@@ -137,13 +137,13 @@ This locks in the month and works out your new score. **Your funder sees the
 new score immediately.**
 
 > **A note on how this works in practice.** In a live deployment the monthly
-> check-in is sent by **WhatsApp** — no app to download, and it works on low
+> check-in is sent by **WhatsApp**, no app to download, and it works on low
 > data, which is how this group of entrepreneurs actually gets online. The form
 > in the prototype stands in for that conversation.
 
 ## What to do next
 
-If something needs attention, Proven tells you what to do about it — not just
+If something needs attention, Proven tells you what to do about it, not just
 that a number dropped. For example: *"Your sales have dropped sharply this month. Look at which
 customers or products brought in less than usual, and start there."*
 
@@ -157,7 +157,7 @@ This tab shows how the money has actually been used over time.
 **At the top** are four totals: money in across all months, money out, what was
 kept after costs, and your best month.
 
-**The chart** draws two lines — money in (blue) and money out (red). Hover over
+**The chart** draws two lines, money in (blue) and money out (red). Hover over
 any month and a box appears showing that month's exact figures: money in, money
 out, what was left, how many customers, and whether the update was sent on
 time. Months are labelled by name (Sept, Oct, Nov) rather than codes.
@@ -165,7 +165,7 @@ time. Months are labelled by name (Sept, Oct, Nov) rather than codes.
 **The table below** lists every month, newest first. Each row shows what came
 in, what went out, what was left over, your customers, your score for that
 month, and whether the update arrived on time. The percentage under "money in"
-tells you how that month compared with the month before — green up, red down.
+tells you how that month compared with the month before, green up, red down.
 
 Hover any row to see the full date it was submitted.
 
@@ -175,18 +175,18 @@ Hover any row to see the full date it was submitted.
 
 As you build a steady record, you move through four levels:
 
-1. **Building Track Record** — still early, not enough history yet
-2. **Developing** — coming along, with more to prove
-3. **Strong Evidence** — a solid record is building up
-4. **Credit-Ready Candidate** — ready for a funding conversation
+1. **Building Track Record**, still early, not enough history yet
+2. **Developing**, coming along, with more to prove
+3. **Strong Evidence**, a solid record is building up
+4. **Credit-Ready Candidate**, ready for a funding conversation
 
 This is **not** an automatic loan approval. It is a summary of the evidence you
-have built through your actual performance — something to show when you apply
+have built through your actual performance, something to show when you apply
 for what comes next.
 
 ---
 
-# Part 2 — Using it as a Funder
+# Part 2: Using it as a Funder
 
 You are monitoring businesses you have funded.
 
@@ -219,9 +219,9 @@ The triage screen. Only businesses that are flagged appear here, worst first,
 each on a card showing:
 
 - Why it is flagged, in plain language
-- **The advice the owner has already been given** — so you are not repeating it
+- **The advice the owner has already been given**, so you are not repeating it
 - Whether its monthly update is late
-- **Mark followed up** — records that you have made contact, with the date
+- **Mark followed up**, records that you have made contact, with the date
 
 The number on the sidebar counts businesses that are flagged *and* not yet
 followed up, so it goes down as you work through them.
@@ -229,7 +229,7 @@ followed up, so it goes down as you work through them.
 ## A business record
 
 Opening a business shows the score, the band, and the recommended action at the
-top — then four tabs, so you are not reading everything at once:
+top, then four tabs, so you are not reading everything at once:
 
 | Tab | What is on it |
 |---|---|
@@ -244,20 +244,20 @@ Nothing here is hidden from the business owner. That is deliberate.
 
 Two buttons above the business list:
 
-- **Excel** — the full portfolio as a spreadsheet, with a summary block and
+- **Excel**, the full portfolio as a spreadsheet, with a summary block and
   every business on a row. It opens in Excel and cannot be edited by accident.
-- **PDF** — a one-page branded report that downloads straight to your computer,
+- **PDF**, a one-page branded report that downloads straight to your computer,
   ready to attach to an email or take into a meeting.
 
 ## What Proven does and does not decide
 
-Proven gives you a **recommended action** — proceed, monitor, or review — and
+Proven gives you a **recommended action**, proceed, monitor, or review, and
 shows the reasoning behind it. It does not make the funding decision. You do.
 The score is an input to your judgement, not a replacement for it.
 
 ---
 
-# Part 3 — How the two sides connect
+# Part 3: How the two sides connect
 
 This is the core idea, so it is worth being clear.
 
@@ -265,7 +265,7 @@ This is the core idea, so it is worth being clear.
 attaches a receipt, or submits a monthly update, that change is immediately
 what the funder sees. There is no separate "funder version" of the numbers.
 
-**Try it yourself — this takes one minute:**
+**Try it yourself, this takes one minute:**
 
 1. Enter as **Entrepreneur**
 2. Note the health score on Overview, then go to **Transactions**
@@ -275,7 +275,7 @@ what the funder sees. There is no separate "funder version" of the numbers.
 6. Open **Needs attention** in the sidebar
 
 That business is now on the list, carrying the same score and the same advice
-the owner just received. Nobody had to send anything or chase anyone — that is
+the owner just received. Nobody had to send anything or chase anyone, that is
 the whole product in one loop.
 
 ---
@@ -318,7 +318,7 @@ screen).
 
 **Are uploaded documents verified?**
 No. Proven records that a document exists and shows it to your funder. It is
-marked *pending review* — a person still needs to look at it. Proven does not
+marked *pending review*, a person still needs to look at it. Proven does not
 certify that a receipt is genuine.
 
 **Can I lose my uploaded files?**
@@ -328,7 +328,7 @@ there.
 
 **Does the funder see everything I see?**
 They see the same score, the same reasons, and the same recommendations. That
-is the point — nobody sees a number the other side cannot also see and
+is the point, nobody sees a number the other side cannot also see and
 understand.
 
 **Does a low score mean my funding gets cut?**
@@ -345,13 +345,13 @@ something to show. Anything you add yourself is really stored on your device.
 
 ## If something looks wrong
 
-- **The page looks like code** — right-click the file, choose *Open with*, and
+- **The page looks like code**, right-click the file, choose *Open with*, and
   pick Chrome, Edge, or Firefox
-- **Uploads are not saving** — your browser may be in private/incognito mode,
+- **Uploads are not saving**, your browser may be in private/incognito mode,
   which restricts storage; try a normal window
-- **Everything reset** — if you used **Reset the demo data**, that is expected;
+- **Everything reset**, if you used **Reset the demo data**, that is expected;
   otherwise your changes should still be there
-- **A number looks wrong after an update** — use **Reset the demo data** in the
+- **A number looks wrong after an update**, use **Reset the demo data** in the
   sidebar; saved work from an older version of the demo can occasionally linger
-- **The Excel file warns about its format** — click Yes, it opens correctly.
+- **The Excel file warns about its format**, click Yes, it opens correctly.
   Use the PDF button if you would rather avoid the prompt
