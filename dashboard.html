@@ -608,7 +608,7 @@
 
   /* Whether a funder has actually opened the document yet. Kept separate from
      the "Attached" chip so the two facts are never confused. */
-  .proof-cell { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .rev-none { font-size: 11px; color: var(--faint); }
   .rev-pill {
     font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 999px;
     white-space: nowrap; letter-spacing: .02em;
@@ -1790,20 +1790,22 @@
       var t = o.t, p = proofIndex[o.ref];
       var verified = p && p.review === 'verified';
       var proofCell = p
-        ? '<div class="proof-cell">' +
-            '<button class="proof-chip has" data-proof-view="' + esc(o.ref) + '" title="' + esc(p.name) + '">' +
-              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>' +
-              'Attached</button>' +
-            '<span class="rev-pill ' + (verified ? 'ok' : 'wait') + '" title="' +
-              (verified ? 'A funder has opened and checked this document' : 'Waiting for a funder to check it') + '">' +
-              (verified ? 'Verified' : 'Pending review') + '</span>' +
-          '</div>'
+        ? '<button class="proof-chip has" data-proof-view="' + esc(o.ref) + '" title="' + esc(p.name) + '">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>' +
+            'Attached</button>'
         : '<label class="proof-chip add"><input type="file" accept="image/*,.pdf" data-proof-for="' + esc(o.ref) + '" hidden />' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>' +
             'Attach</label>';
+      /* Review state lives in its own column: whether a document exists and
+         whether anyone has checked it are two different facts. */
+      var statusCell = p
+        ? '<span class="rev-pill ' + (verified ? 'ok' : 'wait') + '" title="' +
+            (verified ? 'A funder has opened and checked this document' : 'Waiting for a funder to check it') + '">' +
+            (verified ? 'Verified' : 'Pending review') + '</span>'
+        : '<span class="rev-none">No document</span>';
       return '<tr><td>' + monthShort(t.date) + '<div class="tiny muted">' + fmtDateShort(t.date) + '</div></td><td>' + esc(t.desc) + '</td><td>' + esc(t.category) + '</td>' +
         '<td style="color:' + (t.type === 'revenue' ? 'var(--green)' : 'var(--ink)') + '">' + (t.type === 'revenue' ? '+' : '−') + money(t.amount) + '</td>' +
-        '<td>' + proofCell + '</td></tr>';
+        '<td>' + proofCell + '</td><td>' + statusCell + '</td></tr>';
     }).join('');
 
     var coveragePanel = '<div class="panel" style="margin-bottom:16px"><div class="panel-body">' +
@@ -1864,7 +1866,7 @@
       '</div></div>' +
 
       '<div class="panel"><div class="panel-head"><h3>Recent transactions</h3><span class="hint" style="margin-left:auto">Attach a document to any entry</span></div>' +
-      '<table><thead><tr><th>Month</th><th>Description</th><th>Category</th><th>Amount</th><th>Proof</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      '<table><thead><tr><th>Month</th><th>Description</th><th>Category</th><th>Amount</th><th>Proof</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
 
   function entHistory(biz) {
