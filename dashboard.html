@@ -606,6 +606,16 @@
   .proof-chip.add { background: var(--bg); color: var(--muted); border-color: var(--line); border-style: dashed; }
   .proof-chip.add:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 
+  /* Whether a funder has actually opened the document yet. Kept separate from
+     the "Attached" chip so the two facts are never confused. */
+  .proof-cell { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .rev-pill {
+    font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 999px;
+    white-space: nowrap; letter-spacing: .02em;
+  }
+  .rev-pill.ok { background: var(--green-soft); color: var(--green); }
+  .rev-pill.wait { background: var(--yellow-soft); color: var(--yellow); }
+
   /* Receipt viewer */
   .proof-modal {
     position: fixed; inset: 0; z-index: 200; background: rgba(10,37,64,.55);
@@ -1001,14 +1011,18 @@
       available: function () { return !!window.indexedDB; },
 
       /* Store a File against a business + transaction reference. */
-      put: function (bizId, txnRef, file) {
+      /* review: 'pending' until a funder opens the document, then 'verified'.
+         Anything the entrepreneur uploads starts pending — Proven records that
+         evidence exists, it does not certify it. */
+      put: function (bizId, txnRef, file, review) {
         return tx('readwrite').then(function (os) {
           return new Promise(function (resolve, reject) {
             var rec = {
               id: bizId + '::' + txnRef,
               bizId: bizId, txnRef: txnRef,
               name: file.name, size: file.size, type: file.type || 'application/octet-stream',
-              uploadedAt: new Date().toISOString(), blob: file
+              uploadedAt: new Date().toISOString(), blob: file,
+              review: review || 'pending'
             };
             var r = os.put(rec);
             r.onsuccess = function () { resolve(rec); };
@@ -1027,7 +1041,8 @@
               var c = e.target.result;
               if (!c) { resolve(out); return; }
               var v = c.value;
-              out[v.txnRef] = { name: v.name, size: v.size, type: v.type, uploadedAt: v.uploadedAt };
+              out[v.txnRef] = { name: v.name, size: v.size, type: v.type, uploadedAt: v.uploadedAt,
+                                review: v.review || 'pending' };
               c.continue();
             };
             req.onerror = function () { reject(req.error); };
@@ -1047,6 +1062,25 @@
 
       /* Drop everything for one business, used when the demo's dates move on
          and the stored refs no longer match any transaction. */
+      /* Records that someone has actually opened and checked the document. */
+      markReviewed: function (bizId, txnRef) {
+        return tx('readwrite').then(function (os) {
+          return new Promise(function (resolve, reject) {
+            var r = os.get(bizId + '::' + txnRef);
+            r.onsuccess = function () {
+              var rec = r.result;
+              if (!rec) { resolve(null); return; }
+              rec.review = 'verified';
+              rec.reviewedAt = new Date().toISOString();
+              var w = os.put(rec);
+              w.onsuccess = function () { resolve(rec); };
+              w.onerror = function () { reject(w.error); };
+            };
+            r.onerror = function () { reject(r.error); };
+          });
+        });
+      },
+
       clearFor: function (bizId) {
         return tx('readwrite').then(function (os) {
           return new Promise(function (resolve) {
@@ -1158,12 +1192,18 @@
        generated relative to today, so a save made in a previous month points
        at refs that no longer exist and coverage silently reads 0%. Stamp the
        flag with the current period so the receipts are rebuilt when it moves. */
-    var stamp = PERIOD_DATES[5] || '';
+    /* Version prefix so a change to what is seeded (not just the dates) also
+       rebuilds the documents. */
+    var stamp = 'v2:' + (PERIOD_DATES[5] || '');
     try { if (localStorage.getItem('provenProofsSeeded') === stamp) return Promise.resolve(); } catch (e) {}
     /* How many expenses are left undocumented, per business. The well-run
        business has everything; the struggling one has gaps, its paperwork
        slips for the same reasons its numbers do. */
     var SKIP = { 'nandi-beauty': [], 'soweto-bakery': [4], 'zola-deliveries': [0, 2, 4, 5] };
+    /* Which of the seeded documents a funder has already opened. The well-run
+       business has been reviewed; the struggling one has not been looked at
+       yet, which is part of why it drifted. */
+    var CHECKED = { 'nandi-beauty': [0, 1, 2, 3], 'soweto-bakery': [0, 1], 'zola-deliveries': [] };
     /* Clear first, receipts written against a previous period's dates are
        orphaned, then write the current set. The clear must finish before the
        puts, or it would delete the very records being added. */
@@ -1185,7 +1225,8 @@
               file = new Blob([svg], { type: 'image/svg+xml' });
               file.name = name;
             }
-            jobs.push(ProofStore.put(biz.id, txnRef(t, i), file));
+            var checked = (CHECKED[biz.id] || []).indexOf(i) !== -1;
+            jobs.push(ProofStore.put(biz.id, txnRef(t, i), file, checked ? 'verified' : 'pending'));
           });
         });
         return Promise.all(jobs);
@@ -1747,10 +1788,16 @@
     var rows = biz.ledger.map(function (t, i) { return { t: t, ref: txnRef(t, i) }; })
       .reverse().slice(0, 12).map(function (o) {
       var t = o.t, p = proofIndex[o.ref];
+      var verified = p && p.review === 'verified';
       var proofCell = p
-        ? '<button class="proof-chip has" data-proof-view="' + esc(o.ref) + '" title="' + esc(p.name) + '">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>' +
-            'Attached</button>'
+        ? '<div class="proof-cell">' +
+            '<button class="proof-chip has" data-proof-view="' + esc(o.ref) + '" title="' + esc(p.name) + '">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>' +
+              'Attached</button>' +
+            '<span class="rev-pill ' + (verified ? 'ok' : 'wait') + '" title="' +
+              (verified ? 'A funder has opened and checked this document' : 'Waiting for a funder to check it') + '">' +
+              (verified ? 'Verified' : 'Pending review') + '</span>' +
+          '</div>'
         : '<label class="proof-chip add"><input type="file" accept="image/*,.pdf" data-proof-for="' + esc(o.ref) + '" hidden />' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>' +
             'Attach</label>';
@@ -2883,6 +2930,17 @@
     if (viewBtn) { openProof(viewBtn.getAttribute('data-proof-view')); return; }
 
     if (e.target.id === 'proofClose' || e.target.classList.contains('proof-modal')) { closeProof(); return; }
+    if (e.target.id === 'proofVerify') {
+      var vref = e.target.getAttribute('data-ref');
+      ProofStore.markReviewed(state.bizId, vref).then(function () {
+        return refreshProofs(state.bizId);
+      }).then(function () {
+        closeProof();
+        showToast('Marked as checked');
+        render();
+      });
+      return;
+    }
     if (e.target.id === 'proofRemove') {
       var rref = e.target.getAttribute('data-ref');
       ProofStore.remove(state.bizId, rref).then(function () {
@@ -2997,14 +3055,18 @@
       var m = document.createElement('div');
       m.className = 'proof-modal';
       m.id = 'proofModal';
+      var isVerified = rec.review === 'verified';
       m.innerHTML = '<div class="box">' +
         '<div class="bh"><div><h3>' + esc(rec.name) + '</h3>' +
-          '<div class="tiny muted">' + fileSize(rec.size) + ' · attached ' + fmtDateShort(rec.uploadedAt.slice(0, 10)) + '</div></div>' +
-          '<span class="pending-tag">Pending review</span></div>' +
+          '<div class="tiny muted">' + fileSize(rec.size) + ' · attached ' + fmtDateShort(rec.uploadedAt.slice(0, 10)) +
+            (isVerified && rec.reviewedAt ? ' · checked ' + fmtDateShort(rec.reviewedAt.slice(0, 10)) : '') + '</div></div>' +
+          '<span class="rev-pill ' + (isVerified ? 'ok' : 'wait') + '">' +
+            (isVerified ? 'Verified' : 'Pending review') + '</span></div>' +
         '<div class="bb">' + body + '</div>' +
         '<div class="bf">' +
           '<button class="btn ghost sm" id="proofRemove" data-ref="' + esc(ref) + '">Remove</button>' +
           '<a class="btn ghost sm" href="' + proofUrl + '" download="' + esc(rec.name) + '">Download</a>' +
+          (isVerified ? '' : '<button class="btn ghost sm" id="proofVerify" data-ref="' + esc(ref) + '">Mark as checked</button>') +
           '<button class="btn sm" id="proofClose">Close</button>' +
         '</div></div>';
       document.body.appendChild(m);
