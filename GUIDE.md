@@ -21,15 +21,21 @@ evidence into proof.
 
 ## Opening it
 
-Double-click **`index.html`**. It opens in your web browser.
+Proven runs as a web application. Open the address it is deployed at, or run it
+locally:
 
-That page is a short walkthrough of the idea. When you want to see the working
-system, click **"Open the full platform"** at the top right, which takes you to
-**`dashboard.html`**.
+```bash
+npm install
+npm run dev
+```
 
-You can also double-click `dashboard.html` directly.
+Then open <http://localhost:3000>.
 
-Nothing to install. No internet needed.
+The first page is a short walkthrough of the idea. **Open the platform** takes
+you to the sign-in screen, where you choose which side you are entering as.
+
+You will need an account. See [`supabase/SETUP.md`](supabase/SETUP.md) if you
+are setting the system up for the first time.
 
 ---
 

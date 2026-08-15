@@ -1,0 +1,235 @@
+/**
+ * The portfolio report, styled for paper.
+ *
+ * Landscape A4, because the table has ten columns and squeezing them onto
+ * portrait would make the report unreadable in the one place it matters most.
+ */
+
+.report-page {
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 24px 16px 60px;
+}
+
+.rep-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.report {
+  background: #fff;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 34px 38px 40px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  color: var(--ink);
+}
+
+.rep-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid var(--navy);
+}
+
+.rep-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex: 1;
+}
+
+.rep-brand img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.rep-brand h1 {
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.rep-brand p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--cyan);
+}
+
+.rep-meta {
+  text-align: right;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+  flex: 0 0 auto;
+}
+
+.rep-orglogo {
+  max-height: 34px;
+  max-width: 140px;
+  object-fit: contain;
+  margin-bottom: 6px;
+  display: inline-block;
+}
+
+.rep-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 22px;
+}
+
+.rep-tile {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.rep-tile .l {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.rep-tile .v {
+  font-size: 19px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.rep-section {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.rep-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.rep-table thead th {
+  background: var(--navy);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  padding: 9px 8px;
+  white-space: nowrap;
+}
+
+.rep-table td {
+  padding: 9px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.rep-table .r { text-align: right; }
+.rep-table .c { text-align: center; }
+
+.rep-table td.late {
+  color: var(--red);
+}
+
+.rep-table .sub {
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.rep-band {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.rep-band.green { background: var(--green-soft); color: var(--green); }
+.rep-band.yellow { background: var(--yellow-soft); color: var(--yellow); }
+.rep-band.red { background: var(--red-soft); color: var(--red); }
+
+.rep-note {
+  margin-top: 18px;
+  font-size: 9.5px;
+  font-style: italic;
+  color: var(--faint);
+  line-height: 1.6;
+}
+
+.rep-foot {
+  display: block;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 9px;
+  color: var(--faint);
+  letter-spacing: 0.02em;
+}
+
+/* ---------------------------------------------------------------------------
+   Print
+   --------------------------------------------------------------------------- */
+@media print {
+  /* Named margin boxes emptied so the browser's own header and footer, the
+     page title and the source URL, do not print. Chrome and Edge honour this;
+     Firefox and Safari still need the reader to untick "Headers and footers",
+     which is why the attribution is also printed in the document itself. */
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+
+    @top-left { content: ''; }
+    @top-center { content: ''; }
+    @top-right { content: ''; }
+    @bottom-left { content: ''; }
+    @bottom-center { content: ''; }
+    @bottom-right { content: ''; }
+  }
+
+  .report-page {
+    background: #fff;
+    padding: 0;
+  }
+
+  /* The buttons are for the screen. They must never appear in the document. */
+  .rep-actions {
+    display: none;
+  }
+
+  .report {
+    max-width: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  /* Keep the band colours: they carry meaning, and a report that prints them
+     as grey blocks loses the one thing the eye scans for. */
+  .rep-band,
+  .rep-table thead th,
+  .rep-tile {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .rep-table tr {
+    break-inside: avoid;
+  }
+}

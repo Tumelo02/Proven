@@ -1,0 +1,19 @@
+{
+  "name": "proven",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Proven: a shared evidence and growth platform for small businesses and the organisations that fund them.",
+  "workspaces": [
+    "packages/*",
+    "app"
+  ],
+  "scripts": {
+    "build:engine": "npm run build --workspace @proven/engine",
+    "test": "npm test --workspace @proven/engine",
+    "typecheck": "npm run typecheck --workspace @proven/engine && npm run typecheck --workspace @proven/app",
+    "dev": "npm run build:engine && npm run dev --workspace @proven/app",
+    "build": "npm run build:engine && npm run build --workspace @proven/app",
+    "verify": "npm run build:engine && npm test && npm run typecheck"
+  },
+  "license": "UNLICENSED"
+}

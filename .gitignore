@@ -1,10 +1,28 @@
 # Local Python environment — not part of the site
 .venv/
 
+# Node / TypeScript build output
+node_modules/
+dist/
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# Local environment: Supabase keys and database URLs never belong in the repo.
+.env
+.env.local
+.env*.local
+
 # Generated during testing, not source
 portfolio.xls
 report.pdf
 report.html
+
+# Tooling
+npm-debug.log*
+yarn-error.log*
+.vercel
 
 # OS noise
 Thumbs.db
