@@ -158,3 +158,56 @@ export async function createOrganisation(
   revalidatePath('/admin');
   return { message: `${name} created. Its code is ${slug}.` };
 }
+
+/**
+ * Set an organisation's commercial standing.
+ *
+ * Proven staff only, and written with the service-role client because
+ * `organisations` grants UPDATE to the organisation's own admins: without the
+ * check below, a funder could quietly mark themselves as paying.
+ */
+export async function setOrgAccount(formData: FormData): Promise<void> {
+  const orgId = String(formData.get('org_id') ?? '');
+  const status = String(formData.get('account_status') ?? '');
+  const until = String(formData.get('account_until') ?? '').trim();
+  const note = String(formData.get('account_note') ?? '').trim();
+
+  const VALID = ['pilot', 'paying', 'internal', 'lapsed'];
+  if (!orgId || !VALID.includes(status)) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_platform_admin')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile?.is_platform_admin) return;
+
+  const admin = createAdminClient();
+  await admin
+    .from('organisations')
+    .update({
+      account_status: status as 'pilot' | 'paying' | 'internal' | 'lapsed',
+      account_until: until || null,
+      account_note: note,
+    })
+    .eq('id', orgId);
+
+  await recordEvent({
+    action: 'organisation.account_changed',
+    entityType: 'organisation',
+    entityId: orgId,
+    orgId,
+    severity: 'notice',
+    detail: { status, ...(until ? { until } : {}) },
+  });
+
+  revalidatePath('/admin');
+  revalidatePath(`/admin/org/${orgId}`);
+}

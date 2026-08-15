@@ -18,6 +18,7 @@ const ACTION_LABEL: Record<string, string> = {
   'auth.signed_in': 'Signed in',
   'auth.sign_in_failed': 'Failed sign-in',
   'organisation.created': 'Created an organisation',
+  'organisation.account_changed': 'Changed a commercial standing',
   'document.verified': 'Marked a document verified',
   'document.rejected': 'Turned a document down',
   'funding_link.confirmed': 'Confirmed a funding link',

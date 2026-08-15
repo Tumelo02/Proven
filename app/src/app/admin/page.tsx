@@ -9,7 +9,24 @@ import {
 } from '@/lib/queries';
 import { signOut } from '@/app/(auth)/actions';
 import { NewOrganisation } from './new-org';
+import type { AccountStatus } from '@/lib/database.types';
 import '../workspace.css';
+
+const ACCOUNT_LABEL: Record<AccountStatus, string> = {
+  pilot: 'Pilot',
+  paying: 'Paying',
+  internal: 'Internal',
+  lapsed: 'Lapsed',
+};
+
+/* Paying is the good outcome, lapsed the one to act on, internal is ours and
+   should not read as a customer. */
+const ACCOUNT_CHIP: Record<AccountStatus, string> = {
+  pilot: 'yellow',
+  paying: 'green',
+  internal: 'grey',
+  lapsed: 'red',
+};
 
 /**
  * Proven's own view across every organisation.
@@ -220,6 +237,7 @@ export default async function AdminPage() {
                   <thead>
                     <tr>
                       <th>Organisation</th>
+                      <th>Standing</th>
                       <th>Code</th>
                       <th className="num">People</th>
                       <th className="num">Businesses</th>
@@ -239,6 +257,18 @@ export default async function AdminPage() {
                           >
                             <strong>{org.name}</strong>
                           </Link>
+                        </td>
+                        {/* Commercial standing, staff-side only. It changes who
+                            gets chased and who gets a renewal conversation. */}
+                        <td>
+                          <span className={`chip ${ACCOUNT_CHIP[org.account_status]}`}>
+                            {ACCOUNT_LABEL[org.account_status]}
+                          </span>
+                          {org.account_until && (
+                            <div className="tiny muted" style={{ marginTop: 2 }}>
+                              to {org.account_until}
+                            </div>
+                          )}
                         </td>
                         <td className="muted mono">{org.slug}</td>
                         <td className="num mono">{members}</td>
