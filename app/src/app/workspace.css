@@ -1,0 +1,1771 @@
+/**
+ * The entrepreneur and funder workspaces.
+ */
+
+/* ---------------------------------------------------------------------------
+   Panels
+   --------------------------------------------------------------------------- */
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.panel-head {
+  padding: 14px 17px;
+  border-bottom: 1px solid var(--line-2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.panel-head h3 {
+  font-size: 14px;
+}
+
+.panel-head .hint {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.panel-body {
+  padding: 17px;
+}
+
+.tiny {
+  font-size: 11px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .grid2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Chips and trends
+   --------------------------------------------------------------------------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.chip .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.chip.green { background: var(--green-soft); color: var(--green); }
+.chip.yellow { background: var(--yellow-soft); color: var(--yellow); }
+.chip.red { background: var(--red-soft); color: var(--red); }
+.chip.blue { background: var(--blue-soft); color: var(--blue); }
+.chip.grey { background: var(--grey-soft); color: var(--grey); }
+
+.trend {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.trend.up { color: var(--green); }
+.trend.down { color: var(--red); }
+.trend.flat { color: var(--faint); }
+
+/* ---------------------------------------------------------------------------
+   KPI tiles
+   --------------------------------------------------------------------------- */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 1000px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.kpi {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 13px 15px;
+}
+
+.kpi .label {
+  color: var(--muted);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.kpi .value {
+  font-size: 23px;
+  font-weight: 750;
+  margin-top: 4px;
+}
+
+.kpi .foot {
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Score hero: ring, sparkline, stage progress, credit readiness
+   --------------------------------------------------------------------------- */
+.score-hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px;
+  flex-wrap: wrap;
+}
+
+.ring {
+  width: 96px;
+  height: 96px;
+  flex: 0 0 96px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.ring > div {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+}
+
+/* The inner wrapper holding the number and the label. A flex column with the
+   fixed line boxes below, so the pair is centred as one block. */
+.ring > div > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+/* Fixed line box, not the default leading. A score can be "26" or "72.5", and
+   a decimal point carries almost no ink above the baseline, so a box that
+   shrinks to its content lands in a different optical spot for each. A constant
+   height and tabular figures keep every score on the same line, whatever it
+   reads. */
+.ring .n {
+  font-size: 26px;
+  font-weight: 800;
+  height: 27px;
+  line-height: 27px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.ring .u {
+  font-size: 8.5px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  height: 10px;
+  line-height: 10px;
+}
+
+.progress-track {
+  height: 8px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-track i {
+  display: block;
+  height: 100%;
+  background: var(--navy-3);
+}
+
+/* Credit readiness sits beside the score, so what the record is earning is
+   visible without scrolling: it is the entrepreneur's reason to keep going. */
+.cr-side {
+  margin-left: auto;
+  flex: 0 0 auto;
+  min-width: 210px;
+  max-width: 260px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 15px;
+}
+
+.cr-side .crs-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.cr-side .crs-status {
+  font-size: 15px;
+  font-weight: 800;
+  margin-top: 3px;
+  line-height: 1.25;
+}
+
+.cr-side .crs-plain {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.cr-side .crs-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.cr-side .crs-dot {
+  width: 22px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.cr-side .crs-of {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+.cr-side.green .crs-status { color: var(--green); }
+.cr-side.green .crs-dot.on { background: var(--green); }
+.cr-side.blue .crs-status { color: var(--blue); }
+.cr-side.blue .crs-dot.on { background: var(--blue); }
+.cr-side.yellow .crs-status { color: var(--yellow); }
+.cr-side.yellow .crs-dot.on { background: var(--yellow); }
+.cr-side.grey .crs-dot.on { background: var(--grey); }
+
+@media (max-width: 860px) {
+  .cr-side {
+    margin-left: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reporting-cycle bar
+   --------------------------------------------------------------------------- */
+.duebar {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  margin-bottom: 16px;
+}
+
+.duebar .dueicon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--navy-3);
+}
+
+.duebar .dueicon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.duebar .duetitle {
+  font-weight: 800;
+  font-size: 13.5px;
+}
+
+.duebar .duesub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.duebar .duebtn {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+/* The state is carried by the icon and a left edge, not by flooding the whole
+   bar. "Your update is due next week" is ordinary business, and a panel of
+   colour every month makes the one month that is genuinely late look the same
+   as all the others. Only overdue gets coloured wording, because only overdue
+   asks the reader to do something today. */
+.duebar {
+  border-left: 3px solid var(--line);
+}
+
+.duebar.sent,
+.duebar.ok {
+  border-left-color: var(--green);
+}
+
+.duebar.sent .dueicon,
+.duebar.ok .dueicon {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.duebar.due-soon {
+  border-left-color: var(--yellow);
+}
+
+.duebar.due-soon .dueicon {
+  background: var(--yellow-soft);
+  color: var(--yellow);
+}
+
+.duebar.overdue {
+  border-left-color: var(--red);
+}
+
+.duebar.overdue .dueicon {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.duebar.overdue .duetitle {
+  color: var(--red);
+}
+
+/* ---------------------------------------------------------------------------
+   Decision panel
+   --------------------------------------------------------------------------- */
+/* One coloured edge rather than a filled panel. This is the single most
+   prominent thing on a funder's screen, and it earns that prominence through
+   position and weight instead of a wash of colour behind it. */
+.decision {
+  border-radius: var(--radius);
+  padding: 15px 17px;
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+}
+
+.decision.release { border-left-color: var(--green); }
+.decision.hold { border-left-color: var(--yellow); }
+.decision.escalate { border-left-color: var(--red); }
+
+.decision .glyph {
+  font-size: 19px;
+}
+
+.decision .lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 750;
+  opacity: 0.8;
+}
+
+.decision .act {
+  font-size: 15.5px;
+  font-weight: 750;
+  margin: 2px 0 4px;
+}
+
+.decision.release .act { color: var(--green); }
+.decision.hold .act { color: var(--yellow); }
+.decision.escalate .act { color: var(--red); }
+
+.decision .why {
+  font-size: 12.5px;
+  color: #38495e;
+}
+
+/* ---------------------------------------------------------------------------
+   Guidance cards
+   --------------------------------------------------------------------------- */
+/* Severity is carried by a single coloured edge, not by a filled background and
+   coloured heading together. Guidance is advice a person has to read and act
+   on: a card that shouts before it is read makes the reading harder, and a
+   screen of red cards flattens the difference between "watch this" and "this
+   is urgent". The edge keeps the ranking legible while the words stay calm. */
+.rec-card {
+  border-radius: 10px;
+  padding: 13px 15px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  margin-bottom: 10px;
+}
+
+.rec-card:last-child {
+  margin-bottom: 0;
+}
+
+.rec-card.red { border-left-color: var(--red); }
+.rec-card.yellow { border-left-color: var(--yellow); }
+.rec-card.green { border-left-color: var(--green); }
+
+.rec-card .issue {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.rec-card .rec {
+  font-size: 12.5px;
+  color: #38495e;
+  margin-top: 5px;
+}
+
+.rec-card .rec b {
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------------
+   Stages
+   --------------------------------------------------------------------------- */
+.milestone-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.milestone-row:last-child {
+  border-bottom: 0;
+}
+
+.milestone-row .mnum {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 750;
+  font-size: 11.5px;
+  flex: 0 0 26px;
+  background: var(--grey-soft);
+  color: var(--muted);
+}
+
+.milestone-row.done .mnum { background: var(--green); color: #fff; }
+.milestone-row.current .mnum { background: var(--navy); color: #fff; }
+.milestone-row.delayed .mnum { background: var(--red); color: #fff; }
+
+.milestone-row .mlabel {
+  font-weight: 650;
+  font-size: 13px;
+  flex: 1;
+}
+
+.milestone-row .mactions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ---------------------------------------------------------------------------
+   Month by month
+   --------------------------------------------------------------------------- */
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.msum {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.msum .ms {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 11px 13px;
+}
+
+.msum .ms .l {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.msum .ms .v {
+  font-size: 16px;
+  font-weight: 800;
+  margin-top: 3px;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 760px) {
+  .msum {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Change against the month before, so a trend is visible without maths. */
+.mchange {
+  font-weight: 700;
+  font-size: 10.5px;
+}
+
+.mchange.up { color: var(--green); }
+.mchange.down { color: var(--red); }
+.mchange.flat { color: var(--faint); }
+
+.stat-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.stat-pill.on-time { background: var(--green-soft); color: var(--green); }
+.stat-pill.late { background: var(--yellow-soft); color: var(--yellow); }
+.stat-pill.missed { background: var(--red-soft); color: var(--red); }
+
+/* The updates timeline. */
+.tl {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tl li {
+  position: relative;
+  padding: 0 0 14px 18px;
+  border-left: 2px solid var(--line);
+}
+
+.tl li:last-child {
+  padding-bottom: 0;
+  border-left-color: transparent;
+}
+
+.tl li::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--navy-3);
+}
+
+.tl .t-title { font-weight: 650; font-size: 12.5px; }
+.tl .t-detail { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+.tl .t-date { color: var(--faint); font-size: 10.5px; margin-top: 2px; }
+
+/* ---------------------------------------------------------------------------
+   Add a transaction: one horizontal row
+   ---------------------------------------------------------------------------
+   Logging a cost should be a few seconds' work, so the whole form is one line
+   rather than a column of stacked fields to scroll through.
+   --------------------------------------------------------------------------- */
+.txn-form {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 0.9fr auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.txn-form .f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.txn-form label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.txn-form input,
+.txn-form select {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 9px;
+  font-size: 12.5px;
+  font-family: inherit;
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  .txn-form {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.txn-proof {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.proof-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 9px;
+  border: 1px dashed var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.proof-pick:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.proof-pick svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+/* Totals of what has been logged but not yet submitted. Shown only once there
+   is something in them: three zeros on arrival explain nothing. */
+.draft-summary {
+  display: flex;
+  gap: 20px;
+  padding: 13px 15px;
+  background: var(--bg);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.draft-summary .d {
+  min-width: 100px;
+}
+
+.draft-summary .d .l {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.draft-summary .d .v {
+  font-size: 17px;
+  font-weight: 750;
+  margin-top: 2px;
+}
+
+.draft-summary .draft-hint {
+  flex: 1 1 220px;
+  align-self: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Names the real-world channel this form stands in for. */
+.wa-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 11px 13px;
+  background: #eaf7ef;
+  border: 1px solid #cbe9d6;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #2c5c42;
+  line-height: 1.5;
+}
+
+.wa-note svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: #25a05a;
+  margin-top: 1px;
+}
+
+.wa-note b {
+  color: #1d7a44;
+}
+
+/* ---------------------------------------------------------------------------
+   Evidence coverage, and proof of transaction
+   --------------------------------------------------------------------------- */
+.cov-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.cov-title {
+  font-weight: 800;
+  font-size: 14.5px;
+}
+
+.cov-pct {
+  margin-left: auto;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.cov-bar {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--bg);
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.cov-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.3, 0.8, 0.3, 1), background 0.3s;
+}
+
+.cov-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 11px;
+  line-height: 1.5;
+}
+
+.cov-note b {
+  color: var(--ink);
+}
+
+.proof-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+/* The chip is a <label> wrapping a hidden file input, so a keyboard user
+   still reaches it: focus lands on the input and this shows where it is. */
+.proof-chip:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.proof-chip svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+
+.proof-chip.has {
+  background: var(--green-soft);
+  color: var(--green);
+  border-color: #b5e3d0;
+}
+
+.proof-chip.has:hover {
+  background: #d3f0e4;
+}
+
+/* Dashed, so an empty slot reads as something still to do rather than as a
+   button that does nothing. */
+.proof-chip.add {
+  background: var(--bg);
+  color: var(--muted);
+  border-color: var(--line);
+  border-style: dashed;
+}
+
+.proof-chip.add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* The one chip that asks for action rather than reporting a fact. Shown only
+   when a document has been turned down: an attached document waiting on review
+   offers nothing to click, because sent is sent. */
+.proof-chip.redo {
+  background: var(--red-soft);
+  color: var(--red);
+  border-color: #f3c2c2;
+}
+
+.proof-chip.redo:hover {
+  background: #f8d5d5;
+}
+
+/* Whether a funder has actually opened the document yet. Kept separate from
+   the "Attached" chip, because whether a document exists and whether anyone
+   has checked it are two different facts. */
+.rev-none {
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.rev-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.rev-pill.ok { background: var(--green-soft); color: var(--green); }
+.rev-pill.wait { background: var(--yellow-soft); color: var(--yellow); }
+/* Rejected is not "still waiting": the business needs to send something else,
+   so it must not be mistaken for a queue it will leave on its own. */
+.rev-pill.no { background: var(--red-soft); color: var(--red); }
+
+/* ---------------------------------------------------------------------------
+   Funder: portfolio table
+   --------------------------------------------------------------------------- */
+.biz-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  font-weight: 750;
+  font-size: 11.5px;
+  color: #fff;
+  background: var(--navy-3);
+  overflow: hidden;
+}
+
+/* A real logo needs a light ground: most are drawn for white, and the navy
+   used behind initials swallows them. */
+.avatar:has(img) {
+  background: #fff;
+  border: 1px solid var(--line);
+  padding: 2px;
+}
+
+.biz-cell .nm {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.biz-cell .sc {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.scorebox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scorenum {
+  font-weight: 750;
+  font-size: 14px;
+  min-width: 28px;
+}
+
+.minibar {
+  width: 46px;
+  height: 5px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.minibar i {
+  display: block;
+  height: 100%;
+}
+
+.minibar i.green { background: var(--green); }
+.minibar i.yellow { background: var(--yellow); }
+.minibar i.red { background: var(--red); }
+
+/* Where a business sits in its reporting cycle, at a glance. */
+.due-pill {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--grey-soft);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.due-pill.due-soon { background: var(--yellow-soft); color: var(--yellow); }
+.due-pill.overdue { background: var(--red-soft); color: var(--red); }
+.due-pill.ok { background: var(--green-soft); color: var(--green); }
+
+/* ---------------------------------------------------------------------------
+   Score factor breakdown
+   ---------------------------------------------------------------------------
+   Every factor, its weight and its contribution, shown openly. A funder has to
+   be able to explain a score to the business it describes.
+   --------------------------------------------------------------------------- */
+.factor {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.factor:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.factor .top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+
+.factor .fname {
+  font-weight: 650;
+  font-size: 12.5px;
+}
+
+.factor .wt {
+  color: var(--faint);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.factor .contrib {
+  margin-left: auto;
+  font-weight: 750;
+  font-size: 12.5px;
+}
+
+.bar {
+  height: 6px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+}
+
+.bar i.green { background: var(--green); }
+.bar i.yellow { background: var(--yellow); }
+.bar i.red { background: var(--red); }
+
+.factor .expl {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ---------------------------------------------------------------------------
+   Funder: toolbar
+   --------------------------------------------------------------------------- */
+.toolbar {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 13px;
+}
+
+.seg {
+  display: flex;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.seg a,
+.seg button {
+  border: 0;
+  background: transparent;
+  padding: 6px 11px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 650;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.seg a.on,
+.seg button.on {
+  background: var(--navy);
+  color: #fff;
+}
+
+.tbfield {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 6px 10px;
+}
+
+.tbfield label {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tbfield select,
+.tbfield input {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 650;
+  outline: none;
+  font-size: 12px;
+  width: auto;
+  padding: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Funder: needs attention
+   ---------------------------------------------------------------------------
+   Cards rather than table rows: each flagged business needs its reasons and
+   its next step read together, which a row cannot carry.
+   --------------------------------------------------------------------------- */
+.att-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.att-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+}
+
+.att-card.red { border-left-color: var(--red); }
+.att-card.yellow { border-left-color: var(--yellow); }
+
+.att-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.att-who {
+  flex: 1;
+  min-width: 0;
+}
+
+.att-who .nm {
+  font-weight: 800;
+  font-size: 15px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.att-who .nm:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.att-score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.att-score .scorenum {
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.att-score .scorenum.red { color: var(--red); }
+.att-score .scorenum.yellow { color: var(--yellow); }
+
+/* The reasons, in the business's own figures: a funder should see why before
+   deciding what to do about it. */
+.att-why {
+  list-style: none;
+  margin: 13px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.att-why li {
+  padding: 10px 13px;
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* No tint per reason. The card already carries the severity on its left edge,
+   and colouring each reason inside it repeats the same signal two and three
+   times over, which is what turns a flagged business into a wall of red. */
+.att-why li.red,
+.att-why li.yellow,
+.att-why li.green {
+  background: var(--bg);
+}
+
+.att-why li b {
+  display: block;
+  color: var(--ink);
+}
+
+.att-why li span {
+  color: var(--muted);
+}
+
+.att-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line-2);
+  flex-wrap: wrap;
+}
+
+.att-foot .spacer {
+  margin-left: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   Admin: the mark in the topbar
+   ---------------------------------------------------------------------------
+   These pages have no sidebar to carry the brand, so it sits beside the
+   heading. No halo here: the topbar is white, and the glow exists to keep the
+   dark leaf readable against navy.
+   --------------------------------------------------------------------------- */
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.admin-brand img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   Admin: a compact status strip
+   ---------------------------------------------------------------------------
+   Deliberately quieter than the KPI tiles an entrepreneur or funder sees.
+   These are context for the work below, not the point of the screen, so they
+   read as one strip rather than as a row of competing cards.
+   --------------------------------------------------------------------------- */
+.statstrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.statstrip .s {
+  background: var(--card);
+  padding: 13px 16px;
+}
+
+.statstrip .s .l {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.statstrip .s .v {
+  font-size: 24px;
+  font-weight: 800;
+  margin-top: 3px;
+  letter-spacing: -0.02em;
+}
+
+.statstrip .s .f {
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 3px;
+  line-height: 1.45;
+}
+
+/* The split reads as parts of the number above it, not as its own figure. */
+.statstrip .s .f b {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .statstrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .statstrip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* What needs doing, above everything else on the page. */
+.worklist {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.workitem {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+
+.workitem .wicon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--navy-3);
+}
+
+.workitem .wicon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.workitem .wtitle {
+  font-weight: 800;
+  font-size: 13.5px;
+}
+
+.workitem .wsub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.workitem .wbtn {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+/* Amber only when there is something to do. A cleared queue should look
+   settled, not like a warning nobody has dismissed. */
+.workitem.todo {
+  background: var(--yellow-soft);
+  border-color: #f0dcb4;
+}
+
+.workitem.todo .wicon {
+  background: #fbe7c4;
+  color: var(--yellow);
+}
+
+.workitem.todo .wtitle {
+  color: var(--yellow);
+}
+
+.workitem.clear .wicon {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+/* ---------------------------------------------------------------------------
+   Small screens
+   ---------------------------------------------------------------------------
+   This product is used on whatever phone someone already owns, so a narrow
+   screen is the normal case for an entrepreneur, not an edge case. Two rules
+   throughout: nothing may force the page wider than the viewport, and a wide
+   table scrolls inside its own box rather than pushing the layout sideways.
+   --------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+  /* The toolbar's parts each take a full row rather than being squeezed to
+     the point where the search box fits two characters. */
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .toolbar .seg {
+    overflow-x: auto;
+  }
+
+  .tbfield {
+    flex: 1 1 100%;
+  }
+
+  .tbfield input,
+  .tbfield select {
+    width: 100%;
+  }
+
+  /* The score, its detail and credit readiness stack instead of competing for
+     a row that cannot hold them. */
+  .score-hero {
+    gap: 14px;
+  }
+
+  .att-head {
+    flex-wrap: wrap;
+  }
+
+  .att-foot {
+    gap: 8px;
+  }
+
+  .att-foot .spacer {
+    margin-left: 0;
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  /* A work item's button belongs under its text on a narrow screen, not
+     crushed against the right edge. */
+  .workitem {
+    flex-wrap: wrap;
+  }
+
+  .workitem .wbtn {
+    margin-left: 46px;
+  }
+
+  .duebar {
+    flex-wrap: wrap;
+  }
+
+  .duebar .duebtn {
+    margin-left: 46px;
+  }
+
+  .panel-head,
+  .panel-body {
+    padding: 13px 14px;
+  }
+}
+
+/* Anything narrower than a small phone in portrait. */
+@media (max-width: 420px) {
+  .msum {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ring {
+    width: 84px;
+    height: 84px;
+    flex: 0 0 84px;
+  }
+
+  .ring > div {
+    width: 68px;
+    height: 68px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Sidebar business picker
+   --------------------------------------------------------------------------- */
+.biz-picker {
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.biz-picker label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #7d94b3;
+  font-weight: 700;
+}
+
+.biz-picker select {
+  width: 100%;
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.biz-picker select option {
+  color: #0a2540;
+}
+
+/* A count beside a nav item, red only when there is something to act on. */
+.nav-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.nav-count.alarm {
+  background: var(--red);
+}
+
+.reset-inline {
+  display: block;
+  margin-top: 8px;
+  background: none;
+  border: 0;
+  color: var(--cyan);
+  font-weight: 700;
+  font-size: 11.5px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-family: inherit;
+}
+
+/* ---------------------------------------------------------------------------
+   Business record tabs, funder side
+   ---------------------------------------------------------------------------
+   The head of the record, who this is, the score, and the call, stays put.
+   Everything else sits behind a tab so a funder reads the decision first and
+   the supporting detail only when they go looking for it. One long scrolling
+   page asks them to find the part they need; this puts it one click away. */
+.ptabs {
+  display: flex;
+  gap: 4px;
+  margin: 16px 0;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.ptab {
+  background: none;
+  border: 0;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  text-decoration: none;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.ptab:hover {
+  color: var(--ink);
+}
+
+.ptab.on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Facts about the business, laid out so each reads on its own. */
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.about-grid .ab .l {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.about-grid .ab .v {
+  font-size: 15px;
+  font-weight: 800;
+  margin-top: 3px;
+}
+
+.about-grid .ab .s {
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* Credit readiness as a dark panel: the one place colour is used generously,
+   because this is what the whole record is building toward and it is good news
+   rather than a warning. */
+.cr-hero {
+  background: linear-gradient(135deg, var(--navy), var(--navy-3));
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.cr-hero .status {
+  font-size: 19px;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+.cr-hero ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: #cbd8e8;
+  font-size: 12.5px;
+  line-height: 1.8;
+}
+
+/* Chart beside the stages: the stages list is narrow enough to fill the space
+   the chart does not need. */
+.perf-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(240px, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.perf-split > .panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.perf-split > .panel > .panel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .perf-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stack {
+  display: grid;
+  gap: 16px;
+}
+
+.actioned-note {
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 700;
+  margin-top: 9px;
+}
+
+/* ---------------------------------------------------------------------------
+   Portfolio health mix
+   --------------------------------------------------------------------------- */
+.donut {
+  display: block;
+  overflow: visible;
+}
+
+.donut .dnum {
+  font-size: 26px;
+  font-weight: 800;
+  fill: var(--ink);
+}
+
+.donut .dlbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  fill: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* The legend doubles as the filter, so reading the chart and acting on it are
+   the same gesture. */
+.mix-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mix-legend a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 11px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink);
+  text-align: left;
+  text-decoration: none;
+  transition: background 0.16s ease;
+}
+
+.mix-legend a:hover,
+.mix-legend a.on {
+  background: var(--bg);
+}
+
+.mix-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: 0 0 auto;
+}
+
+.mix-legend .n {
+  margin-left: auto;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.mix-hint {
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* Export buttons, pushed to the far end of the toolbar. */
+.exports {
+  margin-left: auto;
+  display: flex;
+  gap: 7px;
+}
+
+.exports .btn {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.exports .btn svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  flex: 0 0 auto;
+}
+
+/* An organisation's mark beside its name, wherever a funder is named to an
+   entrepreneur. Light ground because most logos are drawn for white. */
+.org-mark {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.org-mark:has(img) {
+  background: #fff;
+  padding: 3px;
+}
+
+.org-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

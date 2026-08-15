@@ -1,0 +1,26 @@
+{
+  "name": "@proven/engine",
+  "version": "1.0.0",
+  "description": "Proven scoring and guidance engine: rules-based, explainable, no AI.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --experimental-strip-types --test src/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

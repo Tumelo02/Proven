@@ -1,0 +1,532 @@
+/**
+ * The landing screen: the seven-step journey and the two role buttons, both of
+ * which lead to sign-in.
+ */
+
+.landing {
+  min-height: 100vh;
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 24px clamp(18px, 3vh, 32px);
+  position: relative;
+}
+
+/* Pinned to the corner rather than sitting in the flow, so it costs the
+   centred column no vertical space. */
+.to-launch {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd8e8;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.to-launch:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.landing .mark {
+  margin-bottom: clamp(6px, 1.2vh, 12px);
+}
+
+/* Halo keeps the dark leaf readable against the navy landing background. */
+.landing .mark img {
+  display: block;
+  height: clamp(46px, 7vh, 66px);
+  width: auto;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.5))
+    drop-shadow(0 0 9px rgba(34, 223, 245, 0.22));
+}
+
+.landing .brandname {
+  font-size: clamp(18px, 2.4vh, 22px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #fff;
+}
+
+.landing .brandtag {
+  font-size: clamp(10.5px, 1.5vh, 12.5px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-top: 3px;
+  margin-bottom: clamp(10px, 1.8vh, 18px);
+}
+
+.landing h1 {
+  font-size: clamp(24px, 3.8vh, 34px);
+  text-align: center;
+  max-width: 720px;
+  line-height: 1.18;
+}
+
+.landing .tagline {
+  color: #b9cbe0;
+  font-size: clamp(13.5px, 1.9vh, 16px);
+  text-align: center;
+  max-width: 620px;
+  margin-top: clamp(8px, 1.5vh, 16px);
+  line-height: 1.5;
+}
+
+.landing .twosided-line {
+  color: #9fb6d1;
+  font-size: clamp(12px, 1.6vh, 13.5px);
+  font-weight: 700;
+  text-align: center;
+  margin-top: clamp(12px, 2.2vh, 24px);
+}
+
+/* ---------------------------------------------------------------------------
+   The seven-step journey
+   --------------------------------------------------------------------------- */
+.journey {
+  display: flex;
+  gap: 0;
+  margin: clamp(20px, 3.6vh, 46px) 0 4px;
+  max-width: 1040px;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.journey .step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 116px;
+  text-align: center;
+  position: relative;
+}
+
+.journey .step .dot {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  color: var(--cyan);
+  position: relative;
+  transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+
+.journey .step:hover .dot {
+  border-color: var(--cyan);
+  background: rgba(34, 223, 245, 0.12);
+  transform: translateY(-2px);
+}
+
+.journey .step .dot .ico {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.journey .step .dot .no {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--cyan);
+  color: var(--navy);
+  font-size: 10px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.journey .step .lbl {
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-top: 11px;
+  color: #cbd8e8;
+  line-height: 1.3;
+}
+
+/* ---------------------------------------------------------------------------
+   Per-step icon animations
+   ---------------------------------------------------------------------------
+   Each step animates as the thing it depicts: the coin nudges, the eye blinks,
+   the alert flashes, the compass finds north. Small, and only on hover or
+   keyboard focus, so the screen is still while being read.
+   --------------------------------------------------------------------------- */
+.journey .step .ico * {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* 1 Funding, the coin gives a small confident nudge. */
+.journey .step[data-step='funding']:hover .ico,
+.journey .step[data-step='funding']:focus-visible .ico {
+  animation: st-nudge 0.5s ease;
+}
+@keyframes st-nudge {
+  40% {
+    transform: translateY(-2.5px);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 2 Visibility, the eye closes and opens. */
+.journey .step[data-step='visibility'] .eye-pupil {
+  transition: opacity 0.12s;
+}
+.journey .step[data-step='visibility']:hover .eye-outline,
+.journey .step[data-step='visibility']:focus-visible .eye-outline {
+  animation: st-blink 0.75s ease;
+}
+.journey .step[data-step='visibility']:hover .eye-pupil,
+.journey .step[data-step='visibility']:focus-visible .eye-pupil {
+  animation: st-pupil 0.75s ease;
+}
+@keyframes st-blink {
+  45% {
+    transform: scaleY(0.08);
+  }
+  70% {
+    transform: scaleY(1);
+  }
+}
+@keyframes st-pupil {
+  35%,
+  62% {
+    opacity: 0;
+  }
+}
+
+/* 3 Early Detection, the warning blinks, the way an alert would. */
+.journey .step[data-step='detection']:hover .alert,
+.journey .step[data-step='detection']:focus-visible .alert {
+  animation: st-alert 0.85s ease;
+}
+@keyframes st-alert {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  60% {
+    opacity: 0.15;
+  }
+  40%,
+  80% {
+    opacity: 1;
+  }
+}
+
+/* 4 Guidance, the needle swings and settles, like a compass finding north. */
+.journey .step[data-step='guidance']:hover .needle,
+.journey .step[data-step='guidance']:focus-visible .needle {
+  animation: st-compass 1.1s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+@keyframes st-compass {
+  0% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(200deg);
+  }
+  65% {
+    transform: rotate(320deg);
+  }
+  85% {
+    transform: rotate(350deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 5 Stronger Performance, the trend line pops upward. */
+.journey .step[data-step='growth']:hover .trend,
+.journey .step[data-step='growth']:focus-visible .trend {
+  animation: st-pop 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+@keyframes st-pop {
+  45% {
+    transform: translate(1.5px, -2.5px) scale(1.12);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 6 Verified Track Record, the tick clears and redraws itself. */
+.journey .step[data-step='record'] .tick {
+  stroke-dasharray: 12;
+}
+.journey .step[data-step='record']:hover .tick,
+.journey .step[data-step='record']:focus-visible .tick {
+  animation: st-tick 0.7s ease forwards;
+}
+@keyframes st-tick {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  35% {
+    stroke-dashoffset: 12;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 7 Greater Financial Readiness, a small burst of confetti. */
+.journey .step .spark {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.journey .step .spark i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 1px;
+  background: var(--cyan);
+  opacity: 0;
+}
+.journey .step .spark i:nth-child(2) {
+  background: #ffd166;
+}
+.journey .step .spark i:nth-child(4) {
+  background: #4ade80;
+}
+.journey .step .spark i:nth-child(6) {
+  background: #fff;
+}
+.journey .step[data-step='readiness']:hover .spark i,
+.journey .step[data-step='readiness']:focus-visible .spark i {
+  animation: st-confetti 0.75s ease-out forwards;
+}
+.journey .step .spark i:nth-child(1) {
+  --tx: -17px;
+  --ty: -15px;
+  animation-delay: 0s !important;
+}
+.journey .step .spark i:nth-child(2) {
+  --tx: 0px;
+  --ty: -21px;
+  animation-delay: 0.04s !important;
+}
+.journey .step .spark i:nth-child(3) {
+  --tx: 17px;
+  --ty: -15px;
+  animation-delay: 0.02s !important;
+}
+.journey .step .spark i:nth-child(4) {
+  --tx: -20px;
+  --ty: 3px;
+  animation-delay: 0.07s !important;
+}
+.journey .step .spark i:nth-child(5) {
+  --tx: 20px;
+  --ty: 3px;
+  animation-delay: 0.05s !important;
+}
+.journey .step .spark i:nth-child(6) {
+  --tx: 0px;
+  --ty: 15px;
+  animation-delay: 0.09s !important;
+}
+@keyframes st-confetti {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1);
+  }
+}
+
+.journey .step:focus-visible .dot {
+  box-shadow: 0 0 0 3px rgba(34, 223, 245, 0.25);
+}
+
+.journey .step {
+  cursor: default;
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey .step * {
+    animation: none !important;
+  }
+}
+
+/* Arrow sits level with the icon circle, not the centre of the taller label. */
+.journey .arrow {
+  flex: 0 0 auto;
+  color: #5f79a0;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  margin: 0 -4px;
+}
+
+.journey .arrow svg {
+  width: 30px;
+  height: 11px;
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   The two role entry points
+   --------------------------------------------------------------------------- */
+.role-picks {
+  display: flex;
+  gap: 16px;
+  margin-top: clamp(18px, 3.2vh, 36px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.role-btn {
+  background: #fff;
+  color: var(--navy);
+  border: 0;
+  border-radius: 13px;
+  padding: clamp(13px, 2.2vh, 20px) 24px;
+  width: 250px;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  text-align: left;
+  transition: transform 0.1s;
+  display: block;
+  text-decoration: none;
+}
+
+.role-btn:hover {
+  transform: translateY(-2px);
+}
+
+.role-btn .rb-ico {
+  font-size: 20px;
+  line-height: 0;
+}
+
+.role-btn .rb-ico svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.role-btn .rb-title {
+  font-weight: 800;
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+.role-btn .rb-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.role-btn.accent {
+  background: var(--accent);
+  color: #fff;
+}
+
+.role-btn.accent .rb-sub {
+  color: #e4f6f9;
+}
+
+/* A quiet line under the role buttons, for the account link. */
+.landing-foot {
+  margin-top: clamp(14px, 2.4vh, 22px);
+  font-size: 12.5px;
+  color: #9fb6d1;
+  text-align: center;
+}
+
+.landing-foot a {
+  color: var(--cyan);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------------------
+   The sign-in card
+   --------------------------------------------------------------------------- */
+/* The mark, centred above the heading, so the card reads as Proven before it
+   reads as a form. */
+.auth-mark {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.auth-mark img {
+  display: block;
+  height: 52px;
+  width: auto;
+}
+
+.auth-head {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.auth-head h1 {
+  font-size: 21px;
+  margin-bottom: 5px;
+}
+
+.auth-head .sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* The demo account picker. A dashed border marks it as a convenience for a
+   demonstration rather than part of the product. */
+.demo-picker {
+  background: var(--bg);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 12px 13px 10px;
+  margin-bottom: 18px;
+}
+
+.demo-picker label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.demo-picker .hint {
+  margin-bottom: 0;
+}

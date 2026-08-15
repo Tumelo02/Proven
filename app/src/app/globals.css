@@ -1,0 +1,703 @@
+/**
+ * Proven design system.
+ *
+ * The shared palette and base elements. The contrast reasoning in these comments comes with them: the
+ * health-tier colours carry meaning, so they have to stay legible.
+ */
+
+:root {
+  --navy: #0a2540;
+  --navy-2: #123a63;
+  --navy-3: #1d5490;
+
+  /* Brand accent, drawn from the logo's cyan but darkened to pass contrast on
+     white. Kept distinct from --red so brand styling never reads as an alarm. */
+  --accent: #0b7c8c;
+  --accent-soft: #e4f6f9;
+  --accent-ink: #096975; /* darker teal for small text on --accent-soft (5.7:1) */
+  --cyan: #22dff5; /* raw logo cyan, large shapes on navy only, fails on white */
+
+  --bg: #eef2f8;
+  --card: #ffffff;
+  --ink: #0a2540;
+  --muted: #5d6f88;
+  --faint: #8b9bb0;
+
+  /* Health tiers. Never the only signal: every tier is also labelled in words,
+     so the score is readable without colour vision. */
+  --green: #12805c;
+  --green-soft: #e3f6ee;
+  --yellow: #a86a00;
+  --yellow-soft: #fdf1dc;
+  --red: #c0322b;
+  --red-soft: #fdeae8;
+  --blue: #1d5490;
+  --blue-soft: #e6eefb;
+  --grey: #5d6f88;
+  --grey-soft: #eef1f6;
+
+  --line: #dde5f0;
+  --line-2: #eaeff6;
+  --shadow: 0 1px 2px rgba(10, 37, 64, 0.06), 0 8px 24px rgba(10, 37, 64, 0.08);
+  --shadow-lg: 0 2px 4px rgba(10, 37, 64, 0.06), 0 16px 40px rgba(10, 37, 64, 0.12);
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  /* Nothing may push the page wider than the screen. A single overflowing
+     element otherwise makes every page on the site scroll sideways, which is
+     the failure that ruins a layout on a phone. Wide content, tables and
+     charts, scrolls inside its own box instead. */
+  overflow-x: hidden;
+}
+
+/* Images and media never exceed their column. */
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+/* Long words and pasted URLs wrap rather than forcing a column wider. */
+h1,
+h2,
+h3,
+h4,
+p,
+td,
+th,
+li {
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+a {
+  color: var(--accent-ink);
+}
+
+/* Keyboard focus must stay visible everywhere: this is a financial record, and
+   people fill it in on whatever device they have. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------------------
+   Layout
+   --------------------------------------------------------------------------- */
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 236px;
+  flex: 0 0 236px;
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.brand {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand .logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+/* Halo keeps the dark leaf readable against the navy sidebar. */
+.brand .mark {
+  width: 30px;
+  height: 30px;
+  display: block;
+  object-fit: contain;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.5))
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.25));
+}
+
+.brand h1 {
+  font-size: 16px;
+}
+
+.role-badge {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cbd8e8;
+}
+
+.switch-role {
+  margin-top: 12px;
+}
+
+.switch-role a {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #e6eefa;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.switch-role a:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.nav {
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: none;
+  border: 0;
+  color: #b9c9dd;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.sidebar-foot {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 11px;
+  color: #8ba0bb;
+  line-height: 1.6;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  padding: 16px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.topbar h2 {
+  font-size: 19px;
+}
+
+.topbar .sub {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+/* Full width, no cap. A funder reading a portfolio table with nine columns
+   needs the screen they have: capping the content left a band of empty page on
+   a wide monitor while the table itself was cramped. */
+.content {
+  padding: 22px 26px 60px;
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   Cards and grids
+   --------------------------------------------------------------------------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.card h3 {
+  font-size: 14.5px;
+  margin-bottom: 4px;
+}
+
+.card .card-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid.cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1080px) {
+  .grid.cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid.cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .app {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    flex: none;
+    height: auto;
+    position: static;
+  }
+  .nav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .grid.cols-2,
+  .grid.cols-3,
+  .grid.cols-4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .content {
+    padding: 16px 14px 48px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Stat tiles
+   --------------------------------------------------------------------------- */
+.stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 15px 16px;
+}
+
+.stat .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.stat .value {
+  font-size: 25px;
+  font-weight: 700;
+  margin-top: 6px;
+  letter-spacing: -0.02em;
+}
+
+.stat .foot {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ---------------------------------------------------------------------------
+   Tier pills and badges
+   --------------------------------------------------------------------------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pill.green {
+  background: var(--green-soft);
+  color: var(--green);
+}
+.pill.yellow {
+  background: var(--yellow-soft);
+  color: var(--yellow);
+}
+.pill.red {
+  background: var(--red-soft);
+  color: var(--red);
+}
+.pill.blue {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+.pill.grey {
+  background: var(--grey-soft);
+  color: var(--grey);
+}
+
+/* ---------------------------------------------------------------------------
+   Buttons
+   --------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 9px 15px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn.ghost {
+  background: var(--card);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.btn.ghost:hover:not(:disabled) {
+  background: var(--bg);
+  filter: none;
+}
+
+.btn.navy {
+  background: var(--navy);
+}
+
+.btn.sm {
+  padding: 6px 11px;
+  font-size: 12px;
+}
+
+.btn.block {
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   Forms
+   --------------------------------------------------------------------------- */
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+
+.field .hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='number'],
+input[type='date'],
+input[type='month'],
+select,
+textarea {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--card);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+  border-color: var(--accent);
+}
+
+/* Password box with a reveal toggle sitting inside it. */
+.password-wrap {
+  position: relative;
+}
+
+/* Room for the button, so a long password never runs underneath it. */
+.password-wrap input {
+  padding-right: 42px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.password-toggle:hover {
+  color: var(--ink);
+  background: var(--bg);
+}
+
+.password-toggle svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   Tables
+   --------------------------------------------------------------------------- */
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+td {
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--line-2);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  /* Never break a figure across two lines: "R10" above "790" reads as two
+     numbers. The table scrolls instead. */
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.mono {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+   Messages
+   --------------------------------------------------------------------------- */
+.notice {
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 13px;
+  border: 1px solid;
+  margin-bottom: 14px;
+}
+
+.notice.error {
+  background: var(--red-soft);
+  border-color: #f3c9c5;
+  color: var(--red);
+}
+
+.notice.ok {
+  background: var(--green-soft);
+  border-color: #bfe6d6;
+  color: var(--green);
+}
+
+.notice.info {
+  background: var(--accent-soft);
+  border-color: #bfe4ea;
+  color: var(--accent-ink);
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+
+.empty h3 {
+  font-size: 15px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+/* ---------------------------------------------------------------------------
+   Auth pages
+   --------------------------------------------------------------------------- */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(160deg, var(--navy) 0%, var(--navy-2) 55%, var(--navy-3) 100%);
+}
+
+.auth-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 30px;
+  width: 100%;
+  max-width: 410px;
+}
+
+.auth-card h1 {
+  font-size: 21px;
+  margin-bottom: 4px;
+}
+
+.auth-card .sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 22px;
+}
+
+.auth-foot {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-2);
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Utilities */
+.muted {
+  color: var(--muted);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.between {
+  justify-content: space-between;
+}
+.mt-0 { margin-top: 0; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
