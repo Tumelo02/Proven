@@ -56,18 +56,22 @@ export default async function DashboardPage() {
   const hasBusinesses = businesses.length > 0;
   const hasOrgs = orgs.length > 0;
 
-  /* Everyone goes straight to the one place they work. Making a person choose
-     between one option is a wasted click, and that includes Proven staff:
-     their work is the admin panel, so that is where they land. The picker
-     below is only reached by someone who genuinely holds more than one role. */
-  if (profile.is_platform_admin && !hasBusinesses && !hasOrgs) redirect('/admin');
+  /* Everyone goes straight to the one place they work.
+
+     Proven staff land on the admin panel, even when they also belong to an
+     organisation. Those are two different jobs: running the platform means
+     seeing who is enrolled and whether they are reporting, never a funder's
+     figures. Offering both on one screen invites a habit that the audit trail
+     is built to catch. Anyone who does hold both can still reach the other
+     side from the admin panel, deliberately rather than by default. */
+  if (profile.is_platform_admin) redirect('/admin');
+
   if (!hasBusinesses && !hasOrgs) redirect('/businesses/new');
-  if (hasBusinesses && !hasOrgs && !profile.is_platform_admin) {
-    redirect(`/business/${businesses[0]!.id}`);
-  }
-  if (!hasBusinesses && hasOrgs && !profile.is_platform_admin) {
-    redirect(`/funder/${orgs[0]!.org.id}`);
-  }
+  if (hasBusinesses && !hasOrgs) redirect(`/business/${businesses[0]!.id}`);
+  if (!hasBusinesses && hasOrgs) redirect(`/funder/${orgs[0]!.org.id}`);
+
+  /* Only reached by someone who genuinely runs a business AND sits on a
+     funder's staff, which is rare and worth asking about. */
 
   return (
     <div className="auth-page">

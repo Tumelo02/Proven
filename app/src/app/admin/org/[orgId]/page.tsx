@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getOrgDetail, isPlatformAdmin } from '@/lib/queries';
 import { Kpi } from '@/components/workspace';
+import { AccountForm } from './account-form';
 import type { OrgType } from '@/lib/database.types';
 import '../../../workspace.css';
 
@@ -109,6 +110,24 @@ export default async function AdminOrgPage({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Staff-side only. Never rendered on the funder's own profile. */}
+          <div className="panel" style={{ marginBottom: 16 }}>
+            <div className="panel-head">
+              <h3>Commercial standing</h3>
+              <span className="hint" style={{ marginLeft: 'auto' }}>
+                Not shown to the organisation
+              </span>
+            </div>
+            <div className="panel-body">
+              <AccountForm
+                orgId={org.id}
+                status={org.account_status}
+                until={org.account_until}
+                note={org.account_note}
+              />
             </div>
           </div>
 

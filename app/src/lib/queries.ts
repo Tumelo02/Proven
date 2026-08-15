@@ -30,6 +30,7 @@ import type {
   AuditSeverity,
   AuditTrailRow,
   Business,
+  Database,
   Document,
   FollowUp,
   FundingLink,
@@ -546,6 +547,24 @@ export async function getPlatformStats(): Promise<PlatformStats> {
 }
 
 /** Every organisation, with how many people and businesses it has. */
+/**
+ * Organisations with their commercial standing, for the admin panel only.
+ *
+ * Read through the view rather than the table, so the one place these columns
+ * are selected is obvious. A funder should never see their own account status
+ * on a screen they opened for something else.
+ */
+export async function getOrgAccounts(): Promise<
+  Database['public']['Views']['admin_org_accounts']['Row'][]
+> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('admin_org_accounts')
+    .select('*')
+    .order('name');
+  return data ?? [];
+}
+
 export async function getOrgSummaries(): Promise<OrgSummary[]> {
   const supabase = await createClient();
 

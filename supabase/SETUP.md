@@ -30,6 +30,7 @@ The files you will paste are in [`migrations/`](migrations/). Run them in
 | 8 | `20260815100008_follow_ups.sql` | A funder's own record of acting on a flagged business |
 | 9 | `20260815100009_org_profile.sql` | The organisation profile: logo, type, contact details |
 | 10 | `20260815100010_audit_trail.sql` | Who did what, when, and from where |
+| 11 | `20260815100011_org_account_status.sql` | Whether an organisation is on a pilot or paying |
 
 **Order matters.** Each builds on the one before, so file 2 fails if file 1 has
 not run.
@@ -481,6 +482,28 @@ Check it:
 select action, severity, count(*)
 from audit_log group by 1, 2 order by 3 desc;
 ```
+
+### Pilot or paying
+
+File 11 records whether an organisation is on a **pilot**, is **paying**, is
+**internal** (ours, for testing), or has **lapsed**. It shows on the admin
+organisation list and is set from that organisation's admin page.
+
+**It is never shown to the organisation itself.** A customer should not open
+their dashboard and read "pilot, expires in three weeks": that is a
+conversation, not a status line. The application only selects these columns
+through the `admin_org_accounts` view, which is the one place they are read.
+
+Being honest about the limit: `organisations` is readable by every signed-in
+user, and column-level rules cannot be layered on top of that, so a determined
+person querying the table directly could see the field. Nothing here would be
+damaging if seen; it would simply be a conversation happening in the wrong
+place. If that ever stops being true, the columns move to their own table with
+their own rule, as `org_contacts` already does.
+
+Only Proven staff can change it. `organisations` grants UPDATE to an
+organisation's own admins, so without the staff check in `setOrgAccount` a
+funder could mark themselves as paying.
 
 ### Onboarding a funder
 

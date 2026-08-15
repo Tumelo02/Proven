@@ -85,12 +85,21 @@ export type Profile = {
  */
 export type OrgType = 'funder' | 'incubator' | 'accelerator' | 'government' | 'other';
 
+/**
+ * Commercial standing. Proven staff only: a funder should not open their own
+ * profile and read "trial, expires in three weeks".
+ */
+export type AccountStatus = 'pilot' | 'paying' | 'internal' | 'lapsed';
+
 export type Organisation = {
   id: string;
   name: string;
   slug: string;
   created_at: string;
   org_type: OrgType;
+  account_status: AccountStatus;
+  account_until: string | null;
+  account_note: string;
   /** Object path in the `logos` bucket, always under the `org/` prefix. */
   logo_path: string | null;
   tagline: string;
@@ -452,6 +461,21 @@ export type Database = {
         Row: AuditTrailRow;
         Relationships: [];
       };
+      admin_org_accounts: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          org_type: OrgType;
+          account_status: AccountStatus;
+          account_until: string | null;
+          account_note: string;
+          created_at: string;
+          member_count: number;
+          business_count: number;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       /* Gathers everything held about the caller, for POPIA section 23. Takes
@@ -482,6 +506,7 @@ export type Database = {
       consent_kind: ConsentKind;
       employment_type: EmploymentType;
       org_type: OrgType;
+      account_status: AccountStatus;
     };
     CompositeTypes: Record<string, never>;
   };
