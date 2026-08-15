@@ -224,7 +224,15 @@ export default async function AdminPage() {
                     {orgs.map(({ org, members, confirmed, pending }) => (
                       <tr key={org.id}>
                         <td>
-                          <strong>{org.name}</strong>
+                          {/* Opens the organisation rather than showing every
+                              business on the platform at once: fifty funders
+                              and a thousand businesses is unusable flat. */}
+                          <Link
+                            href={`/admin/org/${org.id}`}
+                            style={{ textDecoration: 'none', color: 'var(--ink)' }}
+                          >
+                            <strong>{org.name}</strong>
+                          </Link>
                         </td>
                         <td className="muted mono">{org.slug}</td>
                         <td className="num mono">{members}</td>
@@ -247,18 +255,22 @@ export default async function AdminPage() {
             )}
           </div>
 
+          {/* Only the businesses NOT reachable through an organisation.
+              Funded ones live under their funder, one click from the table
+              above; repeating them here would make this page the flat list it
+              is meant to replace. */}
           <div className="panel">
             <div className="panel-head">
-              <h3>Businesses</h3>
+              <h3>Tracking independently</h3>
               <span className="hint" style={{ marginLeft: 'auto' }}>
-                {linked.length} funded &middot; {unlinked.length} tracking independently
+                {unlinked.length} of {businesses.length} businesses have no funder
               </span>
             </div>
 
-            {businesses.length === 0 ? (
+            {unlinked.length === 0 ? (
               <div className="panel-body">
                 <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
-                  No businesses enrolled yet.
+                  Every business is attached to an organisation.
                 </p>
               </div>
             ) : (
@@ -269,37 +281,24 @@ export default async function AdminPage() {
                       <th>Business</th>
                       <th>Industry</th>
                       <th>Region</th>
-                      <th>Funding</th>
                       <th className="num">Months</th>
                       <th>Joined</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {businesses.map(({ business, funderName, linkStatus, months }) => (
+                    {unlinked.map(({ business, linkStatus, months }) => (
                       <tr key={business.id}>
                         <td>
                           <strong>{business.name}</strong>
-                        </td>
-                        <td className="muted">{business.industry || '—'}</td>
-                        <td className="muted">{business.region || '—'}</td>
-                        <td>
-                          {funderName ? (
-                            <span className="chip green">
-                              <span className="dot" />
-                              {funderName}
-                            </span>
-                          ) : linkStatus === 'pending' ? (
-                            <span className="chip yellow">
+                          {linkStatus === 'pending' && (
+                            <span className="chip yellow" style={{ marginLeft: 6 }}>
                               <span className="dot" />
                               Awaiting confirmation
                             </span>
-                          ) : (
-                            <span className="chip blue">
-                              <span className="dot" />
-                              Not funded
-                            </span>
                           )}
                         </td>
+                        <td className="muted">{business.industry || '—'}</td>
+                        <td className="muted">{business.region || '—'}</td>
                         <td className="num mono">
                           {months === 0 ? <span className="muted">None</span> : months}
                         </td>

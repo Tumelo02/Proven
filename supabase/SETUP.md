@@ -477,9 +477,14 @@ database or not at all, so nobody can give it to themselves.
 | **Not funded** | Businesses tracking independently, the ones you are now also serving |
 | **Awaiting confirmation** | Businesses that named a funder who has not confirmed yet |
 
-Below the tiles, two tables: **every organisation** with its people count,
-businesses funded and requests waiting; and **every business** with its funder
-if it has one, how many months it has reported, and when it joined.
+Below the tiles, **every organisation** with its people count, businesses funded
+and requests waiting. **Click one to open it** and see its businesses, its
+people, and how many months each business has reported.
+
+Businesses are reached through their organisation rather than listed flat: a
+platform with fifty funders and a thousand businesses is unusable as one list.
+The only businesses shown on the main page are those **tracking independently**,
+because they belong to no organisation and would otherwise be invisible.
 
 A business that enrolled but has never reported is called out separately.
 Enrolment is not the same as being helped, and that gap is the number worth
