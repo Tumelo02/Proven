@@ -252,3 +252,84 @@ export async function removeOrgLogo(
   revalidatePath(`/funder/${orgId}`, 'layout');
   return { message: 'Logo removed.' };
 }
+
+const SUPPORT_KINDS = [
+  'grant',
+  'loan',
+  'equity',
+  'programme',
+  'mentorship',
+  'in_kind',
+  'other',
+];
+
+/**
+ * Record what this organisation is providing to one business.
+ *
+ * The amount already on a funding link was entered by the ENTREPRENEUR when
+ * they asked to be linked. That is a claim. This is the organisation's own
+ * figure, kept separately: a gap between the two is worth seeing rather than
+ * quietly overwriting.
+ *
+ * The row-level rules already limit the write to a member of this
+ * organisation, so there is no second check here.
+ */
+export async function saveSupportTerms(
+  _prev: OrgFormState,
+  formData: FormData,
+): Promise<OrgFormState> {
+  const linkId = orgText(formData, 'link_id');
+  const orgId = orgText(formData, 'org_id');
+  const businessId = orgText(formData, 'business_id');
+  const rawKind = orgText(formData, 'support_kind');
+
+  if (!linkId || !orgId) return { error: 'Missing funding link.' };
+
+  const kind = SUPPORT_KINDS.includes(rawKind) ? rawKind : 'grant';
+
+  /* Blank means "not recorded", which is different from zero: a mentorship
+     programme legitimately has no amount, and a portfolio total should not
+     confuse the two. */
+  function money(key: string): string | null {
+    const raw = orgText(formData, key);
+    if (raw === '') return null;
+    const n = Number.parseFloat(raw.replace(/[^\d.-]/g, ''));
+    return Number.isFinite(n) && n >= 0 ? String(n) : null;
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from('funding_links')
+    .update({
+      support_kind: kind as
+        | 'grant'
+        | 'loan'
+        | 'equity'
+        | 'programme'
+        | 'mentorship'
+        | 'in_kind'
+        | 'other',
+      committed_amount: money('committed_amount'),
+      released_amount: money('released_amount'),
+      support_starts_on: orgText(formData, 'support_starts_on') || null,
+      support_ends_on: orgText(formData, 'support_ends_on') || null,
+      terms: orgText(formData, 'terms'),
+    })
+    .eq('id', linkId);
+
+  if (error) return { error: `Could not save: ${error.message}` };
+
+  await recordEvent({
+    action: 'support_terms.updated',
+    entityType: 'funding_link',
+    entityId: linkId,
+    orgId,
+    severity: 'notice',
+    detail: { business_id: businessId, kind },
+  });
+
+  revalidatePath(`/funder/${orgId}/business/${businessId}`);
+  revalidatePath(`/funder/${orgId}`);
+  return { message: 'Saved.' };
+}

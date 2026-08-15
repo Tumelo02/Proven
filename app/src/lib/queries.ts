@@ -60,8 +60,14 @@ export interface ScoredBusiness {
   transactions: Transaction[];
   milestones: Milestone[];
   funder: Organisation | null;
-  /** From the confirmed funding link, when there is one. */
+  /**
+   * The organisation's own committed figure where it has recorded one, falling
+   * back to what the business stated when it asked. The funder's number is the
+   * more reliable of the two, so it wins.
+   */
   fundingAmount: number | null;
+  /** The confirmed link itself, for the funder's own support terms. */
+  fundingLink: FundingLink | null;
   /** Transaction ids that have a document attached, for evidence coverage. */
   documentedTransactionIds: string[];
 }
@@ -198,7 +204,14 @@ export async function getScoredBusiness(businessId: string): Promise<ScoredBusin
     transactions,
     milestones,
     funder: linkRes.data?.organisations ?? null,
-    fundingAmount: linkRes.data?.amount ? Number(linkRes.data.amount) : null,
+    /* The organisation's own figure first: what the business typed when asking
+       is a claim, and the funder's record is the one they report upward. */
+    fundingAmount: linkRes.data?.committed_amount
+      ? Number(linkRes.data.committed_amount)
+      : linkRes.data?.amount
+        ? Number(linkRes.data.amount)
+        : null,
+    fundingLink: linkRes.data ?? null,
     documentedTransactionIds: (docsRes.data ?? []).map((d) => d.transaction_id),
   };
 }

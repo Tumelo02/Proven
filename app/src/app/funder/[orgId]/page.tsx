@@ -20,6 +20,7 @@ import {
 import { FunderShell } from './shell';
 import { Kpi, Panel, TrendGlyph } from '@/components/workspace';
 import { HealthMix } from '@/components/HealthMix';
+import { SUPPORT_KIND_LABEL } from '@/lib/database.types';
 import { PortfolioToolbar } from './toolbar';
 import '../../workspace.css';
 
@@ -237,7 +238,19 @@ export default async function FunderPortfolioPage({
                           </div>
                         </div>
                       </td>
-                      <td className="mono">{funding ? moneyShort(funding) : '—'}</td>
+                      {/* A programme place carries no rand figure, so the kind
+                          of support stands in rather than a misleading dash. */}
+                      <td className="mono">
+                        {funding ? (
+                          moneyShort(funding)
+                        ) : b.fundingLink ? (
+                          <span className="tiny muted">
+                            {SUPPORT_KIND_LABEL[b.fundingLink.support_kind]}
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                       <td className="tiny">{currentMilestone(b.input.milestones)}</td>
                       <td>
                         <div className="scorebox">

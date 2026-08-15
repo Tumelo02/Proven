@@ -30,6 +30,7 @@ const HEAD = [
   'Industry',
   'Region',
   'Grant',
+  'Support',
   'Released %',
   'Score',
   'Band',
@@ -40,7 +41,7 @@ const HEAD = [
   'Months',
 ];
 
-const WIDTHS = [190, 130, 120, 110, 90, 70, 60, 70, 150, 100, 90, 60, 70];
+const WIDTHS = [190, 130, 120, 110, 90, 110, 70, 60, 70, 150, 100, 90, 60, 70];
 
 export async function GET(
   _request: Request,
@@ -136,6 +137,7 @@ export async function GET(
             (r.grant === null
               ? cell('—', 'tdnum')
               : `<Cell ss:StyleID="tdmoney"><Data ss:Type="Number">${r.grant}</Data></Cell>`) +
+            cell(r.supportKind, 'td') +
             cell(r.released, 'tdnum', 'Number') +
             cell(r.score, 'tdnum', 'Number') +
             cell(r.band, r.tier) +

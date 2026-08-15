@@ -7,6 +7,7 @@ import {
   tierLabel,
 } from '@proven/engine';
 import { getLogoUrl, getMyOrganisations, getPortfolio } from '@/lib/queries';
+import { SUPPORT_KIND_LABEL } from '@/lib/database.types';
 
 /**
  * The portfolio report, gathered once and shared by both export formats.
@@ -22,6 +23,8 @@ export interface ReportRow {
   industry: string;
   region: string;
   grant: number | null;
+  /** What kind of support, so a programme place is not reported as R0. */
+  supportKind: string;
   released: number;
   score: number;
   tier: 'green' | 'yellow' | 'red';
@@ -75,6 +78,9 @@ export async function getReportData(orgId: string): Promise<ReportData | null> {
         industry: b.business.industry,
         region: b.business.region,
         grant: b.fundingAmount,
+        supportKind: b.fundingLink
+          ? SUPPORT_KIND_LABEL[b.fundingLink.support_kind]
+          : '',
         released: fundingUtilisation(b.input.milestones),
         score: b.health.score,
         tier: b.health.tier,

@@ -23,10 +23,12 @@ import {
   getScoredBusiness,
 } from '@/lib/queries';
 import { FollowUpControl } from '../../follow-up';
+import { SupportForm } from '../../support-form';
 import { FunderShell } from '../../shell';
 import { Chip, Kpi, Panel, RecCard, ScoreRing } from '@/components/workspace';
 import { LineChart } from '@/components/LineChart';
 import { BusinessProfileCard } from '@/components/BusinessProfileCard';
+import { SUPPORT_KIND_LABEL } from '@/lib/database.types';
 import '../../../../workspace.css';
 
 /** The tabs, in the order a funder needs them. */
@@ -196,10 +198,21 @@ export default async function FunderBusinessProfilePage({
                   )}
                 </div>
                 <div className="ab">
-                  <div className="l">Funding</div>
+                  <div className="l">Support</div>
+                  {/* A programme place has no rand figure, and showing "R0"
+                      for one would be wrong rather than merely unhelpful. */}
                   <div className="v">
-                    {scored.fundingAmount ? money(scored.fundingAmount) : '—'}
+                    {scored.fundingAmount
+                      ? money(scored.fundingAmount)
+                      : scored.fundingLink
+                        ? SUPPORT_KIND_LABEL[scored.fundingLink.support_kind]
+                        : '—'}
                   </div>
+                  {scored.fundingLink && scored.fundingAmount ? (
+                    <div className="s">
+                      {SUPPORT_KIND_LABEL[scored.fundingLink.support_kind]}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="ab">
                   <div className="l">Released so far</div>
@@ -208,6 +221,18 @@ export default async function FunderBusinessProfilePage({
                 </div>
               </div>
             </Panel>
+
+            {/* The organisation's own record of what it provides. Kept beside
+                the business's own claim rather than replacing it. */}
+            {scored.fundingLink && (
+              <Panel title="What you provide" hint="Your own record">
+                <SupportForm
+                  link={scored.fundingLink}
+                  orgId={orgId}
+                  businessId={id}
+                />
+              </Panel>
+            )}
 
             <Panel title="Why we suggest this">
               <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
