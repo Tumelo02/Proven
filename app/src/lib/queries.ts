@@ -33,6 +33,7 @@ import type {
   FundingLink,
   Milestone,
   OrgContact,
+  OrgRole,
   Organisation,
   Profile,
   ReportingPeriod,
@@ -561,6 +562,77 @@ export async function getOrgSummaries(): Promise<OrgSummary[]> {
     confirmed: links.filter((l) => l.org_id === org.id && l.status === 'confirmed').length,
     pending: links.filter((l) => l.org_id === org.id && l.status === 'pending').length,
   }));
+}
+
+/**
+ * One organisation and the businesses attached to it, for Proven staff.
+ *
+ * The admin panel opens on organisations rather than on every business,
+ * because a platform with fifty funders and a thousand businesses is unusable
+ * as one flat list. This is what a row opens into.
+ */
+export async function getOrgDetail(orgId: string): Promise<{
+  org: Organisation;
+  contact: OrgContact | null;
+  logoUrl: string | null;
+  members: { profile: Profile; role: OrgRole }[];
+  businesses: AdminBusinessRow[];
+  pending: number;
+} | null> {
+  const supabase = await createClient();
+
+  const { data: org } = await supabase
+    .from('organisations')
+    .select('*')
+    .eq('id', orgId)
+    .single();
+
+  if (!org) return null;
+
+  const [contactRes, membershipRes, linksRes] = await Promise.all([
+    supabase.from('org_contacts').select('*').eq('org_id', orgId).maybeSingle(),
+    supabase
+      .from('memberships')
+      .select('role, profiles(*)')
+      .eq('org_id', orgId)
+      .returns<{ role: OrgRole; profiles: Profile }[]>(),
+    supabase
+      .from('funding_links')
+      .select('business_id, status, amount, businesses(*)')
+      .eq('org_id', orgId)
+      .returns<
+        { business_id: string; status: string; amount: string | null; businesses: Business }[]
+      >(),
+  ]);
+
+  const links = linksRes.data ?? [];
+  const confirmed = links.filter((l) => l.status === 'confirmed');
+
+  /* Reported months per business, so staff can see who enrolled and then went
+     quiet. Enrolment is not the same as being helped. */
+  const periodsRes = await supabase
+    .from('reporting_periods')
+    .select('business_id')
+    .in(
+      'business_id',
+      confirmed.length ? confirmed.map((l) => l.business_id) : ['00000000-0000-0000-0000-000000000000'],
+    );
+
+  const periods = periodsRes.data ?? [];
+
+  return {
+    org,
+    contact: contactRes.data ?? null,
+    logoUrl: await getLogoUrl(org.logo_path),
+    members: (membershipRes.data ?? []).map((m) => ({ profile: m.profiles, role: m.role })),
+    businesses: confirmed.map((l) => ({
+      business: l.businesses,
+      funderName: org.name,
+      linkStatus: l.status,
+      months: periods.filter((p) => p.business_id === l.business_id).length,
+    })),
+    pending: links.filter((l) => l.status === 'pending').length,
+  };
 }
 
 /** Every business on the platform, funded or not, with its funder if it has one. */
