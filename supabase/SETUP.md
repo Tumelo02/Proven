@@ -781,3 +781,47 @@ the confirmation gate, and a funder seeing figures they cannot edit.
 The standalone HTML prototype that preceded this app has been retired: every
 feature it had now lives in [`app/`](../app/), which is the only codebase from
 here. It remains in git history if it is ever needed.
+
+---
+
+## Deploying to Vercel
+
+This repository is an npm workspace: the app is in `app/`, and the scoring
+engine it imports is in `packages/engine/`. Two settings follow from that, and
+a deploy fails without them.
+
+**1. Root Directory must be `app`.**
+
+Vercel looks for `next` in the Root Directory's `package.json`. The repository
+root is a workspace container that does not depend on `next` itself, so a
+deploy from the root fails with *"No Next.js version detected"*.
+
+In **Settings → General → Root Directory**, set it to `app` and tick
+**Include files outside the root directory**. That last box matters: without
+it, `packages/engine` is not copied and the build cannot resolve
+`@proven/engine`.
+
+The install and build commands in [`app/vercel.json`](../app/vercel.json) then
+`cd ..` deliberately, because the engine has to be compiled to `dist/` before
+the app can import it, and `dist/` is not committed.
+
+**2. The three environment variables.**
+
+In **Settings → Environment Variables**:
+
+| Variable | Environments |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview, Development |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production, Preview, Development |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Production only** |
+
+The service-role key bypasses every security rule in file 2. Preview
+deployments get public URLs, so it does not belong there.
+
+**Redeploy after adding them.** Next reads environment variables at build time,
+so variables added to an existing deployment do nothing until the next build.
+
+If `SUPABASE_SERVICE_ROLE_KEY` is missing, sign-up still appears to work but
+records no consent, because that write uses the admin client and its failure is
+deliberately swallowed rather than stranding someone with an unusable account.
+Check with the `consents` query above after your first real sign-up.
