@@ -1,18 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
 
-  "//": [
-    "Vercel's Root Directory for this project is `app`, with 'Include files",
-    "outside the root directory' switched on. That is what lets Vercel find",
-    "`next` in app/package.json: it scans the root directory's manifest, and",
-    "the repository root is a workspace container that does not depend on next",
-    "itself.",
-    "",
-    "The install and build commands still run from the repository root, because",
-    "@proven/engine has to be compiled to dist/ before the app can import it,",
-    "and dist/ is not committed."
-  ],
-
   "installCommand": "npm install --prefix ..",
   "buildCommand": "npm run build --prefix ..",
   "outputDirectory": ".next",
