@@ -14,7 +14,7 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { recordEvent } from '@/lib/audit';
 import { REJECT_REASONS, type RejectReason } from '@/lib/database.types';
 
@@ -73,4 +73,88 @@ export async function reviewDocument(formData: FormData): Promise<void> {
 
   revalidatePath('/admin/review');
   revalidatePath('/admin');
+}
+
+export interface OrgCreateState {
+  error?: string;
+  message?: string;
+}
+
+/**
+ * Create a funding organisation.
+ *
+ * Until now this was an SQL insert, which meant no funder could be onboarded
+ * without a database console. That is fine for one demo organisation and
+ * impossible during a pilot.
+ *
+ * Written with the service-role client: `organisations` has no INSERT policy,
+ * deliberately, because nobody should be able to create an organisation for
+ * themselves and then claim to be its admin. The guard is the platform-admin
+ * check below, and the row is recorded in the audit trail.
+ */
+export async function createOrganisation(
+  _prev: OrgCreateState,
+  formData: FormData,
+): Promise<OrgCreateState> {
+  const name = String(formData.get('name') ?? '').trim();
+  const rawSlug = String(formData.get('slug') ?? '').trim().toLowerCase();
+  const orgType = String(formData.get('org_type') ?? 'funder');
+
+  if (!name) return { error: 'Give the organisation a name.' };
+
+  /* The code a business types to find them. Derived from the name when left
+     blank, so this is one field rather than two in the common case. */
+  const slug = (rawSlug || name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+
+  if (!slug) return { error: 'That name cannot be turned into a code. Enter one yourself.' };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not signed in.' };
+
+  /* Checked here rather than left to a policy, because the write below uses
+     the service-role client and bypasses policies entirely. */
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_platform_admin')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile?.is_platform_admin) return { error: 'Not permitted.' };
+
+  const admin = createAdminClient();
+  const { data: created, error } = await admin
+    .from('organisations')
+    .insert({
+      name,
+      slug,
+      org_type: orgType as 'funder' | 'incubator' | 'accelerator' | 'government' | 'other',
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      return { error: `The code "${slug}" is already taken. Enter a different one.` };
+    }
+    return { error: `Could not create: ${error.message}` };
+  }
+
+  await recordEvent({
+    action: 'organisation.created',
+    entityType: 'organisation',
+    entityId: created.id,
+    orgId: created.id,
+    severity: 'notice',
+    detail: { name, slug, type: orgType },
+  });
+
+  revalidatePath('/admin');
+  return { message: `${name} created. Its code is ${slug}.` };
 }

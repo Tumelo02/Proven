@@ -8,6 +8,7 @@ import {
   getPlatformStats,
 } from '@/lib/queries';
 import { signOut } from '@/app/(auth)/actions';
+import { NewOrganisation } from './new-org';
 import '../workspace.css';
 
 /**
@@ -197,6 +198,8 @@ export default async function AdminPage() {
           {/* ---------------------------------------------------------------
               The detail
               --------------------------------------------------------------- */}
+          <NewOrganisation />
+
           <div className="panel" style={{ marginBottom: 16 }}>
             <div className="panel-head">
               <h3>Funding organisations</h3>
