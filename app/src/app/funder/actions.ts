@@ -11,6 +11,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { recordEvent } from '@/lib/audit';
 
 export async function decideLinkRequest(formData: FormData): Promise<void> {
   const linkId = String(formData.get('link_id') ?? '');
@@ -34,12 +35,15 @@ export async function decideLinkRequest(formData: FormData): Promise<void> {
     .single();
 
   if (updated) {
-    await supabase.from('audit_log').insert({
-      actor_id: user.id,
-      org_id: orgId,
+    /* Confirming a link is the moment an organisation gains sight of a
+       business's figures. If access is ever questioned, this row is the
+       answer to "who granted it, and when". */
+    await recordEvent({
       action: decision === 'confirmed' ? 'funding_link.confirmed' : 'funding_link.rejected',
-      entity_type: 'funding_link',
-      entity_id: linkId,
+      entityType: 'funding_link',
+      entityId: linkId,
+      orgId,
+      severity: 'notice',
       detail: { business_id: updated.business_id },
     });
   }
@@ -149,6 +153,15 @@ export async function saveOrgProfile(
   if (contactError) {
     return { error: `Profile saved, but the contact details did not: ${contactError.message}` };
   }
+
+  await recordEvent({
+    action: 'organisation.updated',
+    entityType: 'organisation',
+    entityId: orgId,
+    orgId,
+    severity: 'notice',
+    detail: { name },
+  });
 
   revalidatePath(`/funder/${orgId}`, 'layout');
   return { message: 'Profile saved.' };

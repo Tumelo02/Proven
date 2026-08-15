@@ -29,6 +29,7 @@ The files you will paste are in [`migrations/`](migrations/). Run them in
 | 7 | `20260815100007_owners.sql` | More than one owner per business, with optional shares |
 | 8 | `20260815100008_follow_ups.sql` | A funder's own record of acting on a flagged business |
 | 9 | `20260815100009_org_profile.sql` | The organisation profile: logo, type, contact details |
+| 10 | `20260815100010_audit_trail.sql` | Who did what, when, and from where |
 
 **Order matters.** Each builds on the one before, so file 2 fails if file 1 has
 not run.
@@ -428,6 +429,41 @@ Check it:
 
 ```sql
 select name, org_type, logo_path is not null as has_logo from organisations;
+```
+
+---
+
+## The audit trail, what file 10 adds
+
+`audit_log` existed from the start but only two actions wrote to it and nothing
+displayed it. A trail nobody can read is not a trail.
+
+File 10 adds the columns needed to answer **who, from where, and what changed**:
+the actor's email copied at the time so the row still names someone after the
+account is deleted, the IP address and browser, and a severity so the view can
+surface what matters without reading every row.
+
+**What gets recorded now:** sign-ins, evidence decisions, funding links
+confirmed or declined, organisation profile changes, portfolio exports, and
+personal-data exports. The rule is anything that touches another party's data
+or changes who can see what. Ordinary reads of your own records are not logged:
+a trail that records everything is one nobody reads.
+
+**Who can read it.** Proven staff see everything, at **`/admin/audit`**. An
+organisation's *admins* see their own organisation's events, so a funder can
+tell whether one of their own staff exported a portfolio without asking us. A
+member cannot: reading the trail is itself a privilege. Entrepreneurs see
+nothing here; their own consent history is on their privacy page.
+
+**It still cannot be edited.** There is no UPDATE and no DELETE policy on
+`audit_log`, deliberately. An actor who can rewrite their own trail has no
+trail, and that applies to Proven staff too.
+
+Check it:
+
+```sql
+select action, severity, count(*)
+from audit_log group by 1, 2 order by 3 desc;
 ```
 
 ### Still to do before real users

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getReportData } from '../report-data';
+import { recordEvent } from '@/lib/audit';
 
 /**
  * The portfolio as a styled Excel workbook.
@@ -48,6 +49,17 @@ export async function GET(
   const { orgId } = await params;
   const data = await getReportData(orgId);
   if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  /* A copy of a whole portfolio leaving the platform. The most important kind
+     of event to have recorded when access is ever questioned. */
+  await recordEvent({
+    action: 'portfolio.exported',
+    entityType: 'organisation',
+    entityId: orgId,
+    orgId,
+    severity: 'notice',
+    detail: { format: 'excel', businesses: data.total },
+  });
 
   const spacer = '<Row ss:Height="8"/>';
 

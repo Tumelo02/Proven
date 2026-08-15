@@ -56,14 +56,17 @@ export default async function DashboardPage() {
   const hasBusinesses = businesses.length > 0;
   const hasOrgs = orgs.length > 0;
 
-  /* Proven staff always land on this screen rather than being forwarded, so
-     the admin panel is one click away wherever they go next. Everyone else is
-     sent straight to whichever single role they hold: making a person choose
-     between one option is a wasted click. */
-  if (!profile.is_platform_admin) {
-    if (!hasBusinesses && !hasOrgs) redirect('/businesses/new');
-    if (hasBusinesses && !hasOrgs) redirect(`/business/${businesses[0]!.id}`);
-    if (!hasBusinesses && hasOrgs) redirect(`/funder/${orgs[0]!.org.id}`);
+  /* Everyone goes straight to the one place they work. Making a person choose
+     between one option is a wasted click, and that includes Proven staff:
+     their work is the admin panel, so that is where they land. The picker
+     below is only reached by someone who genuinely holds more than one role. */
+  if (profile.is_platform_admin && !hasBusinesses && !hasOrgs) redirect('/admin');
+  if (!hasBusinesses && !hasOrgs) redirect('/businesses/new');
+  if (hasBusinesses && !hasOrgs && !profile.is_platform_admin) {
+    redirect(`/business/${businesses[0]!.id}`);
+  }
+  if (!hasBusinesses && hasOrgs && !profile.is_platform_admin) {
+    redirect(`/funder/${orgs[0]!.org.id}`);
   }
 
   return (

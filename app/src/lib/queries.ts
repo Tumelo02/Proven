@@ -27,6 +27,8 @@ import {
 
 import { createClient } from '@/lib/supabase/server';
 import type {
+  AuditSeverity,
+  AuditTrailRow,
   Business,
   Document,
   FollowUp,
@@ -633,6 +635,33 @@ export async function getOrgDetail(orgId: string): Promise<{
     })),
     pending: links.filter((l) => l.status === 'pending').length,
   };
+}
+
+/**
+ * The audit trail, newest first.
+ *
+ * Row-level security decides what comes back: Proven staff see everything, an
+ * organisation's admins see their own organisation's events, everyone else
+ * sees nothing. No filtering here beyond what the caller asked for.
+ */
+export async function getAuditTrail(opts?: {
+  orgId?: string;
+  severity?: AuditSeverity;
+  limit?: number;
+}): Promise<AuditTrailRow[]> {
+  const supabase = await createClient();
+
+  let q = supabase
+    .from('audit_trail')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(opts?.limit ?? 200);
+
+  if (opts?.orgId) q = q.eq('org_id', opts.orgId);
+  if (opts?.severity) q = q.eq('severity', opts.severity);
+
+  const { data } = await q;
+  return data ?? [];
 }
 
 /** Every business on the platform, funded or not, with its funder if it has one. */
