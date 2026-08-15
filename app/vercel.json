@@ -13,8 +13,8 @@
     "and dist/ is not committed."
   ],
 
-  "installCommand": "cd .. && npm install",
-  "buildCommand": "cd .. && npm run build",
+  "installCommand": "npm install --prefix ..",
+  "buildCommand": "npm run build --prefix ..",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "trailingSlash": false,
