@@ -31,6 +31,7 @@ The files you will paste are in [`migrations/`](migrations/). Run them in
 | 9 | `20260815100009_org_profile.sql` | The organisation profile: logo, type, contact details |
 | 10 | `20260815100010_audit_trail.sql` | Who did what, when, and from where |
 | 11 | `20260815100011_org_account_status.sql` | Whether an organisation is on a pilot or paying |
+| 12 | `20260815100012_support_terms.sql` | What each organisation provides, and how much |
 
 **Order matters.** Each builds on the one before, so file 2 fails if file 1 has
 not run.
@@ -504,6 +505,25 @@ their own rule, as `org_contacts` already does.
 Only Proven staff can change it. `organisations` grants UPDATE to an
 organisation's own admins, so without the staff check in `setOrgAccount` a
 funder could mark themselves as paying.
+
+### What an organisation provides
+
+The amount on a funding link was entered by the **entrepreneur** when they
+asked to be linked. That is a claim. File 12 lets the organisation record its
+**own** figure alongside it, on the business record under **What you provide**.
+
+Both are kept. If they differ, the page says so plainly: a gap between what a
+business says it received and what a funder says it gave is worth a
+conversation, not worth hiding by overwriting one with the other.
+
+It also records **what kind** of support this is: grant, loan, equity,
+programme place, mentorship, in-kind or other. An incubator giving a twelve-week
+place is not giving R0, and recording it as zero makes a portfolio total
+meaningless. For the kinds with no rand figure, the amount fields disappear and
+the support kind is shown in their place, on screen and in both exports.
+
+`committed_amount` being null means "not recorded", which is deliberately
+different from zero.
 
 ### Onboarding a funder
 

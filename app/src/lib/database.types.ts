@@ -228,6 +228,40 @@ export type StaffCount = {
   created_at: string;
 };
 
+/**
+ * What an organisation provides. Not every supporter gives money: an incubator
+ * offering a twelve-week place is not offering R0.
+ */
+export type SupportKind =
+  | 'grant'
+  | 'loan'
+  | 'equity'
+  | 'programme'
+  | 'mentorship'
+  | 'in_kind'
+  | 'other';
+
+export const SUPPORT_KIND_LABEL: Record<SupportKind, string> = {
+  grant: 'Grant',
+  loan: 'Loan',
+  equity: 'Equity',
+  programme: 'Programme place',
+  mentorship: 'Mentorship',
+  in_kind: 'In-kind support',
+  other: 'Other',
+};
+
+/** The kinds that carry a rand figure. The rest are support without money. */
+export const SUPPORT_KIND_HAS_AMOUNT: Record<SupportKind, boolean> = {
+  grant: true,
+  loan: true,
+  equity: true,
+  programme: false,
+  mentorship: false,
+  in_kind: true,
+  other: true,
+};
+
 export type FundingLink = {
   id: string;
   business_id: string;
@@ -236,10 +270,17 @@ export type FundingLink = {
   requested_by: string;
   confirmed_by: string | null;
   confirmed_at: string | null;
+  /** What the BUSINESS said it received when it asked. A claim, kept as stated. */
   amount: string | null;
   funded_on: string | null;
   terms: string;
   created_at: string;
+  support_kind: SupportKind;
+  /** What the ORGANISATION says it committed. Null until they record one. */
+  committed_amount: string | null;
+  released_amount: string | null;
+  support_starts_on: string | null;
+  support_ends_on: string | null;
 }
 
 export type ReportingPeriod = {
@@ -416,7 +457,24 @@ export type Database = {
         Pick<Business, 'owner_id' | 'name'> & Partial<Omit<Business, 'id' | 'created_at'>>,
         Partial<Business>
       >;
-      funding_links: Table<FundingLink, Omit<FundingLink, 'id' | 'created_at'>, Partial<FundingLink>>;
+      /* The support terms are optional on insert: a business requesting a link
+         says what it received, and the organisation records its own figures
+         afterwards. Every one has a database default. */
+      funding_links: Table<
+        FundingLink,
+        Omit<
+          FundingLink,
+          | 'id'
+          | 'created_at'
+          | 'support_kind'
+          | 'committed_amount'
+          | 'released_amount'
+          | 'support_starts_on'
+          | 'support_ends_on'
+        > &
+          Partial<Pick<FundingLink, 'support_kind' | 'committed_amount' | 'released_amount' | 'support_starts_on' | 'support_ends_on'>>,
+        Partial<FundingLink>
+      >;
       reporting_periods: Table<ReportingPeriod, Omit<ReportingPeriod, 'id' | 'created_at'>, Partial<ReportingPeriod>>;
       transactions: Table<Transaction, Omit<Transaction, 'id' | 'created_at'>, Partial<Transaction>>;
       documents: Table<Document, Omit<Document, 'id' | 'uploaded_at'>, Partial<Document>>;
@@ -507,6 +565,7 @@ export type Database = {
       employment_type: EmploymentType;
       org_type: OrgType;
       account_status: AccountStatus;
+      support_kind: SupportKind;
     };
     CompositeTypes: Record<string, never>;
   };

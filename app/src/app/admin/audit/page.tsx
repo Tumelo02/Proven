@@ -25,6 +25,7 @@ const ACTION_LABEL: Record<string, string> = {
   'funding_link.confirmed': 'Confirmed a funding link',
   'funding_link.rejected': 'Declined a funding link',
   'organisation.updated': 'Changed an organisation profile',
+  'support_terms.updated': 'Changed what they provide',
   'portfolio.exported': 'Exported a portfolio',
   'personal_data.exported': 'Downloaded their own data',
 };

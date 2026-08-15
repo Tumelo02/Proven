@@ -81,6 +81,7 @@ export default async function PortfolioReportPage({
               <th>Business</th>
               <th>Owner</th>
               <th className="r">Grant</th>
+              <th>Support</th>
               <th className="r">Rel.</th>
               <th className="r">Score</th>
               <th className="c">Band</th>
@@ -101,6 +102,7 @@ export default async function PortfolioReportPage({
                 </td>
                 <td>{r.owner || '—'}</td>
                 <td className="r">{r.grant === null ? '—' : money(r.grant)}</td>
+                <td className="sub">{r.supportKind || '—'}</td>
                 <td className="r">{r.released}%</td>
                 <td className="r">
                   <strong>{r.score}</strong>
