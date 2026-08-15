@@ -63,11 +63,34 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 
   /* Recorded before the redirect, which does not return. Sign-ins are where an
      intrusion first shows: one account from two countries in an hour is only
-     visible if both are written down. */
+     visible if both are written down.
+
+     A Proven staff sign-in is raised to `alert`. That account can see every
+     organisation on the platform, so it is the single highest-value target
+     here, and it should never scroll past unnoticed among ordinary traffic.
+     Read with the service-role client because this request's session cookies
+     are queued on the response and cannot be read back yet. */
+  let staffSignIn = false;
+  if (data.user) {
+    try {
+      const admin = createAdminClient();
+      const { data: p } = await admin
+        .from('profiles')
+        .select('is_platform_admin')
+        .eq('id', data.user.id)
+        .maybeSingle();
+      staffSignIn = p?.is_platform_admin === true;
+    } catch {
+      /* Unknown means recorded as ordinary. A missing severity is better than
+         a failed sign-in. */
+    }
+  }
+
   await recordEvent({
-    action: 'auth.signed_in',
+    action: staffSignIn ? 'auth.staff_signed_in' : 'auth.signed_in',
     entityType: 'profile',
     entityId: data.user?.id ?? null,
+    severity: staffSignIn ? 'alert' : 'info',
   });
 
   revalidatePath('/', 'layout');

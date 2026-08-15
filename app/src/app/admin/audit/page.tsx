@@ -16,6 +16,7 @@ import '../../workspace.css';
 /** Plain wording, so a row reads without knowing the action codes. */
 const ACTION_LABEL: Record<string, string> = {
   'auth.signed_in': 'Signed in',
+  'auth.staff_signed_in': 'Proven staff signed in',
   'auth.sign_in_failed': 'Failed sign-in',
   'organisation.created': 'Created an organisation',
   'organisation.account_changed': 'Changed a commercial standing',
