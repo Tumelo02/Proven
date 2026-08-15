@@ -10,7 +10,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
-import { recordEvent } from '@/lib/audit';
+import { recordEvent, recordFailedSignIn } from '@/lib/audit';
 import { POLICY_VERSION } from '@/lib/policy';
 
 export interface AuthState {
@@ -37,11 +37,16 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    /* Wrong credentials stay deliberately vague: naming which of the two was
-       wrong would confirm whether an email address has an account here.
-       Anything else is a fault on our side, and saying so plainly stops a
-       broken setup from masquerading as a forgotten password. */
+    /* A failure is worth more than a success when something is wrong: five in a
+       minute against one address is an attack, and it is invisible unless the
+       failures are written down. Recorded with the service-role client because
+       there is no session to write as, and marked `alert` so it surfaces
+       without anyone reading the whole trail.
+
+       The address is recorded as typed. That is the point, it is what was
+       tried, and it may well be an account that does not exist. */
     if (error.status === 400 || error.code === 'invalid_credentials') {
+      await recordFailedSignIn(email);
       return { error: 'That email address and password do not match an account.' };
     }
     return { error: `Could not sign in: ${error.message}` };

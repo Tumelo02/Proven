@@ -16,6 +16,8 @@ import '../../workspace.css';
 /** Plain wording, so a row reads without knowing the action codes. */
 const ACTION_LABEL: Record<string, string> = {
   'auth.signed_in': 'Signed in',
+  'auth.sign_in_failed': 'Failed sign-in',
+  'organisation.created': 'Created an organisation',
   'document.verified': 'Marked a document verified',
   'document.rejected': 'Turned a document down',
   'funding_link.confirmed': 'Confirmed a funding link',
@@ -77,11 +79,15 @@ export default async function AuditPage({
 
           <div className="toolbar" style={{ marginBottom: 16 }}>
             <div className="seg">
+              {/* Ordered by how often they are wanted. Successful sign-ins are
+                  the bulk of the traffic and rarely the thing being looked
+                  for, so "Everything" is available but not the default place
+                  the eye lands. */}
               {(
                 [
-                  ['', 'Everything'],
-                  ['notice', 'Worth knowing'],
                   ['alert', 'Needs attention'],
+                  ['notice', 'Worth knowing'],
+                  ['', 'Everything'],
                 ] as const
               ).map(([value, label]) => (
                 <Link

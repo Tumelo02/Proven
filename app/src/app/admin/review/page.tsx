@@ -115,7 +115,9 @@ export default async function ReviewPage({
                       <th className="num">Amount</th>
                       <th>Date</th>
                       <th>Document</th>
-                      <th>Decision</th>
+                      {/* Wide enough for both buttons side by side, and for the
+                          reason fields once "Reject" is pressed. */}
+                      <th style={{ minWidth: 260 }}>Decision</th>
                     </tr>
                   </thead>
                   <tbody>

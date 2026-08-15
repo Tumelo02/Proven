@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { headers } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 
 /**
  * Recording what happened.
@@ -87,5 +87,42 @@ export async function recordEvent(event: AuditEvent): Promise<void> {
     });
   } catch {
     /* Deliberately silent. See above. */
+  }
+}
+
+/**
+ * Record a sign-in that failed.
+ *
+ * Written with the service-role client because there is, by definition, no
+ * session to write as: the insert policy requires `actor_id = auth.uid()`, and
+ * a failed attempt has neither. This is the one event that legitimately has no
+ * actor, which is exactly why it needs recording.
+ *
+ * The email is stored as typed. It may name no account at all, and that is
+ * useful: someone guessing addresses looks different from someone with one
+ * wrong password.
+ *
+ * Never throws, for the same reason as `recordEvent`: a failed audit write must
+ * not turn a wrong password into a broken page.
+ */
+export async function recordFailedSignIn(email: string): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const { ip, agent } = await requestOrigin();
+
+    await admin.from('audit_log').insert({
+      actor_id: null,
+      actor_email: email.slice(0, 200),
+      org_id: null,
+      action: 'auth.sign_in_failed',
+      entity_type: 'profile',
+      entity_id: null,
+      severity: 'alert',
+      detail: {},
+      ip_address: ip,
+      user_agent: agent,
+    });
+  } catch {
+    /* Deliberately silent. */
   }
 }

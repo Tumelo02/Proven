@@ -443,11 +443,27 @@ the actor's email copied at the time so the row still names someone after the
 account is deleted, the IP address and browser, and a severity so the view can
 surface what matters without reading every row.
 
-**What gets recorded now:** sign-ins, evidence decisions, funding links
-confirmed or declined, organisation profile changes, portfolio exports, and
-personal-data exports. The rule is anything that touches another party's data
-or changes who can see what. Ordinary reads of your own records are not logged:
-a trail that records everything is one nobody reads.
+**What gets recorded, and nothing more:**
+
+| Event | Severity |
+|---|---|
+| Sign-in succeeded | info |
+| **Sign-in failed** | alert |
+| Document verified or turned down | notice |
+| Funding link confirmed or declined | notice |
+| Organisation created or changed | notice |
+| Portfolio exported | notice |
+| Personal data exported (POPIA) | notice |
+
+The rule is anything that touches another party's data or changes who can see
+what. Ordinary reads of your own records are not logged: a trail that records
+everything is one nobody reads.
+
+**Failed sign-ins are the one written with the service-role key**, because a
+failed attempt has no session to write as. Five against one address in a
+minute is an attack, and it is invisible unless the failures are recorded. The
+address is stored as typed, which may name no account at all: someone guessing
+addresses looks different from someone with one wrong password.
 
 **Who can read it.** Proven staff see everything, at **`/admin/audit`**. An
 organisation's *admins* see their own organisation's events, so a funder can
@@ -465,6 +481,15 @@ Check it:
 select action, severity, count(*)
 from audit_log group by 1, 2 order by 3 desc;
 ```
+
+### Onboarding a funder
+
+**Add an organisation** on the admin panel creates it, so no database console
+is needed. Their staff still need accounts: they sign up through the app like
+anyone else, then you add each person to `memberships` as in step 6 above.
+
+That last step stays in SQL deliberately. Granting someone sight of a funder's
+whole portfolio is not something a form should do casually.
 
 ### Still to do before real users
 

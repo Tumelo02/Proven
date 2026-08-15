@@ -501,9 +501,14 @@
   flex: 1;
 }
 
-.milestone-row .mactions {
+/* Two actions on one line, wherever they appear. This was scoped to
+   `.milestone-row` only, so the same markup in the review queue had no flex
+   rule at all and the buttons stacked as though the column were too narrow. */
+.mactions {
   display: flex;
+  align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 /* ---------------------------------------------------------------------------
