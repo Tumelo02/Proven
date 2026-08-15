@@ -313,15 +313,40 @@ type Table<Row, Insert, Update> = {
   Relationships: [];
 };
 
+export type AuditSeverity = 'info' | 'notice' | 'alert';
+
 export type AuditLogEntry = {
   id: string;
   actor_id: string | null;
+  /** Copied at the time, so the row still names someone after account deletion. */
+  actor_email: string;
   org_id: string | null;
   action: string;
   entity_type: string;
   entity_id: string | null;
   detail: Record<string, unknown>;
+  severity: AuditSeverity;
+  ip_address: string;
+  user_agent: string;
   created_at: string;
+};
+
+/** `audit_log` with actor and organisation names already resolved. */
+export type AuditTrailRow = {
+  id: string;
+  created_at: string;
+  severity: AuditSeverity;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  detail: Record<string, unknown>;
+  actor_id: string | null;
+  actor_name: string;
+  actor_email: string;
+  org_id: string | null;
+  org_name: string | null;
+  ip_address: string;
+  user_agent: string;
 };
 
 /** What a person can be asked to agree to. Mirrors the `consent_kind` enum. */
@@ -421,8 +446,13 @@ export type Database = {
     /* Empty objects, NOT `Record<string, ...>`. An index signature here makes
        every string a valid view name, so `.from('businesses')` matches the
        view overload before the table one and the row type resolves to `never`.
-       There are no views or functions yet; add them by name when there are. */
-    Views: {};
+       Add views by name, as below. */
+    Views: {
+      audit_trail: {
+        Row: AuditTrailRow;
+        Relationships: [];
+      };
+    };
     Functions: {
       /* Gathers everything held about the caller, for POPIA section 23. Takes
          no arguments on purpose: it reads `auth.uid()` itself, so there is no

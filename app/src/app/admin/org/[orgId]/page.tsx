@@ -143,6 +143,7 @@ export default async function AdminOrgPage({
                   <thead>
                     <tr>
                       <th>Business</th>
+                      <th>Who to contact</th>
                       <th>Industry</th>
                       <th>Region</th>
                       <th className="num">Months reported</th>
@@ -154,8 +155,20 @@ export default async function AdminOrgPage({
                       <tr key={b.business.id}>
                         <td>
                           <strong>{b.business.name}</strong>
-                          {b.business.owner_name && (
-                            <div className="tiny muted">{b.business.owner_name}</div>
+                        </td>
+                        {/* The person to call. Without this, following up on a
+                            business means going back to the funder to ask who
+                            runs it. */}
+                        <td className="tiny">
+                          {b.business.owner_name || (
+                            <span className="muted">Not filled in</span>
+                          )}
+                          {(b.business.owner_phone || b.business.owner_email) && (
+                            <div className="muted">
+                              {[b.business.owner_phone, b.business.owner_email]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </div>
                           )}
                         </td>
                         <td className="tiny">{b.business.industry || '—'}</td>

@@ -56,6 +56,9 @@ export default async function AdminPage() {
           </div>
           <div className="row">
             <span className="tiny muted">{profile.email}</span>
+            <Link className="btn ghost sm" href="/admin/audit">
+              Audit trail
+            </Link>
             <Link className="btn ghost sm" href="/dashboard">
               My dashboard
             </Link>

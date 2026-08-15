@@ -10,6 +10,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { recordEvent } from '@/lib/audit';
 import { POLICY_VERSION } from '@/lib/policy';
 
 export interface AuthState {
@@ -54,6 +55,15 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
      reports a failure that does not exist.
      The dashboard checks for the profile on the next request, where the
      session is real, and sends the user somewhere useful if it is missing. */
+
+  /* Recorded before the redirect, which does not return. Sign-ins are where an
+     intrusion first shows: one account from two countries in an hour is only
+     visible if both are written down. */
+  await recordEvent({
+    action: 'auth.signed_in',
+    entityType: 'profile',
+    entityId: data.user?.id ?? null,
+  });
 
   revalidatePath('/', 'layout');
   redirect(safeNext(formData.get('next')));

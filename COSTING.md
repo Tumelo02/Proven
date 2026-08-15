@@ -34,7 +34,7 @@ What it actually costs to keep the system running.
 |---|---|---|---|
 | Supabase Pro | Database, auth, file storage for receipts | ~R500 | R3,000 |
 | Vercel Pro | Hosting and serverless functions | ~R400 | R2,400 |
-| Domain and email | `proven.co.za` and a working inbox | ~R150 | R900 |
+| Domain and email | `provenfinance.co.za` and a working inbox | ~R150 | R900 |
 | WhatsApp Business API | Monthly check-ins, once built | ~R500 | R3,000 |
 | **Total** | | **~R1,550** | **~R9,300** |
 

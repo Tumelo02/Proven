@@ -15,6 +15,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { recordEvent } from '@/lib/audit';
 import { REJECT_REASONS, type RejectReason } from '@/lib/database.types';
 
 export async function reviewDocument(formData: FormData): Promise<void> {
@@ -55,12 +56,13 @@ export async function reviewDocument(formData: FormData): Promise<void> {
      correct outcome for anyone who is not Proven staff. */
   if (!updated) return;
 
-  await supabase.from('audit_log').insert({
-    actor_id: user.id,
-    org_id: null,
+  await recordEvent({
     action: decision === 'verified' ? 'document.verified' : 'document.rejected',
-    entity_type: 'document',
-    entity_id: documentId,
+    entityType: 'document',
+    entityId: documentId,
+    /* A decision on somebody's evidence, which is what a disputed record turns
+       on. Worth surfacing above routine traffic. */
+    severity: 'notice',
     detail: {
       transaction_id: updated.transaction_id,
       file_name: updated.file_name,

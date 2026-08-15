@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { recordEvent } from '@/lib/audit';
 
 /**
  * POPIA section 23: a person may ask what is held about them and receive it.
@@ -28,6 +29,14 @@ export async function GET() {
       { status: 500 },
     );
   }
+
+  await recordEvent({
+    action: 'personal_data.exported',
+    entityType: 'profile',
+    entityId: user.id,
+    severity: 'notice',
+    detail: { reason: 'POPIA section 23 request' },
+  });
 
   const stamp = new Date().toISOString().slice(0, 10);
 
