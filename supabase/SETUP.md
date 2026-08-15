@@ -790,7 +790,7 @@ This repository is an npm workspace: the app is in `app/`, and the scoring
 engine it imports is in `packages/engine/`. Two settings follow from that, and
 a deploy fails without them.
 
-**1. Root Directory must be `app`.**
+**1. Root Directory must be `app`, and the Framework Preset must be Next.js.**
 
 Vercel looks for `next` in the Root Directory's `package.json`. The repository
 root is a workspace container that does not depend on `next` itself, so a
@@ -801,9 +801,20 @@ In **Settings → General → Root Directory**, set it to `app` and tick
 it, `packages/engine` is not copied and the build cannot resolve
 `@proven/engine`.
 
-The install and build commands in [`app/vercel.json`](../app/vercel.json) then
-`cd ..` deliberately, because the engine has to be compiled to `dist/` before
+In **Settings → Build and Deployment**, set **Framework Preset** to
+**Next.js**. Left as *Other*, Vercel treats the result as a static site and
+fails with *"No Output Directory named `public` found"*, because it is looking
+for a folder a Next.js app does not produce.
+
+Vercel reads `vercel.json` from the **Root Directory only**, which is why the
+file lives at [`app/vercel.json`](../app/vercel.json) rather than at the
+repository root. Its install and build commands use `npm --prefix ..` so they
+run against the workspace root: the engine has to be compiled to `dist/` before
 the app can import it, and `dist/` is not committed.
+
+**Leave the Build, Output and Install command overrides switched off.** A
+command set in the dashboard silently replaces the one in `vercel.json`, and
+the two then disagree.
 
 **2. The three environment variables.**
 
