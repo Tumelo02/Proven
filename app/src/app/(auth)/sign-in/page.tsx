@@ -9,31 +9,6 @@ import { signIn, type AuthState } from '../actions';
 import { PasswordField } from '@/components/PasswordField';
 import '../../landing.css';
 
-/**
- * Demo accounts, seeded by `..._demo_data.sql`.
- *
- * Offered as a picker so a judge can be signed in with two clicks, without
- * anyone reading an email address out loud. They exist only if that migration
- * has been run; on a real deployment it is not, which is why the control is
- * clearly labelled as demo data.
- */
-const DEMO_PASSWORD = 'proven2026';
-
-const DEMO_ACCOUNTS = {
-  entrepreneur: [
-    { who: 'Nandi Beauty Studio', note: 'Healthy', email: 'nandi-beauty@demo.proven.co.za' },
-    { who: 'Soweto Sunrise Bakery', note: 'On watch', email: 'soweto-bakery@demo.proven.co.za' },
-    { who: 'Zola Deliveries', note: 'At risk', email: 'zola-deliveries@demo.proven.co.za' },
-  ],
-  funder: [
-    {
-      who: 'Absa Youth Entrepreneurship Fund',
-      note: 'All three businesses',
-      email: 'funder@demo.proven.co.za',
-    },
-  ],
-} as const;
-
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -47,52 +22,15 @@ function SignInForm() {
   const params = useSearchParams();
   const next = params.get('next') ?? '/dashboard';
 
-  /* The demo picker appears only when a role was actually chosen on the
-     landing screen. Arriving from anywhere else, notably `/admin`, means this
-     is not a walkthrough: Proven staff signing in should not be handed a list
-     of demo business logins, and neither should anyone who reached the form
-     by a direct link. */
   const roleParam = params.get('role');
   const role = roleParam === 'funder' ? 'funder' : roleParam === 'entrepreneur' ? 'entrepreneur' : null;
 
   const [state, formAction] = useActionState<AuthState, FormData>(signIn, {});
-
-  /* Controlled, so choosing a demo account can fill the form in. Typing still
-     works exactly as normal. */
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const accounts = role ? DEMO_ACCOUNTS[role] : [];
-
-  function chooseDemo(value: string) {
-    if (!value) return;
-    setEmail(value);
-    setPassword(DEMO_PASSWORD);
-  }
-
   return (
     <>
-      {role && (
-        <div className="field demo-picker">
-          <label htmlFor="demo">Demo account</label>
-          <select
-            id="demo"
-            value={accounts.some((a) => a.email === email) ? email : ''}
-            onChange={(e) => chooseDemo(e.target.value)}
-          >
-            <option value="">Choose one to fill this in…</option>
-            {accounts.map((a) => (
-              <option key={a.email} value={a.email}>
-                {a.who} &middot; {a.note}
-              </option>
-            ))}
-          </select>
-          <p className="hint">
-            For a walkthrough. Fills in the email and password below.
-          </p>
-        </div>
-      )}
-
       <form action={formAction}>
         {state.error && <div className="notice error">{state.error}</div>}
 
