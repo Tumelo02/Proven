@@ -12,6 +12,7 @@ import { revalidatePath } from 'next/cache';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { recordEvent, recordFailedSignIn } from '@/lib/audit';
 import { POLICY_VERSION } from '@/lib/policy';
+import { validatePasswordStrength } from '@/lib/password';
 
 export interface AuthState {
   error?: string;
@@ -100,15 +101,21 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
+  const confirmPassword = String(formData.get('confirm_password') ?? '');
   const fullName = String(formData.get('full_name') ?? '').trim();
   const agreed = formData.get('agree_terms') === 'on';
 
-  if (!email || !password || !fullName) {
-    return { error: 'Fill in your name, email address and a password.' };
+  if (!email || !password || !confirmPassword || !fullName) {
+    return { error: 'Fill in your name, email address, password and confirmation.' };
   }
 
-  if (password.length < 8) {
-    return { error: 'Your password needs to be at least 8 characters long.' };
+  if (password !== confirmPassword) {
+    return { error: 'The passwords do not match.' };
+  }
+
+  const passwordError = validatePasswordStrength(password);
+  if (passwordError) {
+    return { error: passwordError };
   }
 
   /* Checked on the server as well as in the browser. A required attribute is a

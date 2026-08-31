@@ -49,8 +49,18 @@ export default function SignUpPage() {
 
           <PasswordField
             autoComplete="new-password"
-            minLength={8}
-            hint="At least 8 characters."
+            minLength={12}
+            hint="At least 12 characters, including uppercase, lowercase, a number and a symbol."
+            showStrength
+          />
+
+          <PasswordField
+            id="confirm_password"
+            name="confirm_password"
+            label="Confirm password"
+            autoComplete="new-password"
+            minLength={12}
+            hint="Re-enter the same password to confirm it."
           />
 
           {/* Consent is recorded against the wording shown here, so this text

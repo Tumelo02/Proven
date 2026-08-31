@@ -252,10 +252,15 @@ create policy memberships_delete_admin on memberships
 create policy businesses_select on businesses
   for select using (can_read_business(id));
 
--- Anyone signed in may enrol a business, funded or not. The owner is forced to
--- be the current user, so a business cannot be created in someone else's name.
+-- Any authenticated user may enrol a business, funded or not. The owner is
+-- forced to the current user, so a business cannot be created in someone
+-- else's name, and the insert is explicitly limited to signed-in accounts.
 create policy businesses_insert_own on businesses
-  for insert with check (owner_id = (select auth.uid()));
+  for insert to authenticated
+  with check (
+    auth.uid() is not null
+    and owner_id = (select auth.uid())
+  );
 
 create policy businesses_update_own on businesses
   for update using (owner_id = (select auth.uid()))

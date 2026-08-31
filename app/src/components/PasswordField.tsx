@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 /**
  * A password box with a reveal toggle.
@@ -13,6 +13,29 @@ import { useState } from 'react';
  * and it carries `aria-pressed` so a screen reader announces the current
  * state rather than just "button".
  */
+function getPasswordStrength(password: string) {
+  if (!password) {
+    return { label: 'No password', tone: 'empty' };
+  }
+
+  let score = 0;
+  if (password.length >= 12) score += 1;
+  if (/[a-z]/.test(password)) score += 1;
+  if (/[A-Z]/.test(password)) score += 1;
+  if (/[0-9]/.test(password)) score += 1;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+  if (score <= 2) {
+    return { label: 'Weak', tone: 'weak' };
+  }
+
+  if (score <= 4) {
+    return { label: 'Medium', tone: 'medium' };
+  }
+
+  return { label: 'Strong', tone: 'strong' };
+}
+
 export function PasswordField({
   id = 'password',
   name = 'password',
@@ -22,6 +45,7 @@ export function PasswordField({
   hint,
   value,
   onChange,
+  showStrength = false,
 }: {
   id?: string;
   name?: string;
@@ -32,8 +56,20 @@ export function PasswordField({
   /** Optional, for forms that need to fill the field in programmatically. */
   value?: string;
   onChange?: (value: string) => void;
+  showStrength?: boolean;
 }) {
   const [revealed, setRevealed] = useState(false);
+  const [internalValue, setInternalValue] = useState(value ?? '');
+
+  const passwordValue = value !== undefined ? value : internalValue;
+  const strength = useMemo(() => getPasswordStrength(passwordValue), [passwordValue]);
+
+  const handleChange = (newValue: string) => {
+    if (value === undefined) {
+      setInternalValue(newValue);
+    }
+    onChange?.(newValue);
+  };
 
   return (
     <div className="field">
@@ -46,8 +82,8 @@ export function PasswordField({
           type={revealed ? 'text' : 'password'}
           autoComplete={autoComplete}
           {...(minLength !== undefined ? { minLength } : {})}
-          {...(value !== undefined ? { value } : {})}
-          {...(onChange ? { onChange: (e) => onChange(e.target.value) } : {})}
+          value={passwordValue}
+          onChange={(e) => handleChange(e.target.value)}
           required
         />
 
@@ -92,6 +128,12 @@ export function PasswordField({
           )}
         </button>
       </div>
+
+      {showStrength && (
+        <div className={`password-strength ${strength.tone}`} aria-live="polite">
+          Strength: <strong>{strength.label}</strong>
+        </div>
+      )}
 
       {hint && <p className="hint">{hint}</p>}
     </div>

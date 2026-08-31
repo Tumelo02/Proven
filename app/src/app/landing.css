@@ -510,23 +510,4 @@
   margin: 0;
 }
 
-/* The demo account picker. A dashed border marks it as a convenience for a
-   demonstration rather than part of the product. */
-.demo-picker {
-  background: var(--bg);
-  border: 1px dashed var(--line);
-  border-radius: 10px;
-  padding: 12px 13px 10px;
-  margin-bottom: 18px;
-}
 
-.demo-picker label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-
-.demo-picker .hint {
-  margin-bottom: 0;
-}
