@@ -26,7 +26,7 @@ function hashIPAddress(ip: string): string {
   if (!ip || ip === 'unknown') return '';
   const parts = ip.split('.');
   if (parts.length !== 4) return 'invalid';
-  return `${parts[0]}.${parts[1]}.*.* `;
+  return `${parts[0]}.${parts[1]}.*.*`;
 }
 
 /**
@@ -37,20 +37,19 @@ function hashIPAddress(ip: string): string {
  */
 function truncateUserAgent(agent: string): string {
   if (!agent) return '';
-  // Try to extract browser and version
-  const patterns = [
-    /Chrome\/(\d+)/,
-    /Firefox\/(\d+)/,
-    /Safari\/(\d+)/,
-    /Edge\/(\d+)/,
-    /Opera\/(\d+)/,
-  ];
 
-  for (const pattern of patterns) {
-    const match = agent.match(pattern);
+  const knownBrowsers = [
+    { name: 'Chrome', regex: /Chrome\/(\d+)/ },
+    { name: 'Firefox', regex: /Firefox\/(\d+)/ },
+    { name: 'Safari', regex: /Safari\/(\d+)/ },
+    { name: 'Edge', regex: /Edg\/(\d+)/ },
+    { name: 'Opera', regex: /Opera\/(\d+)/ },
+  ] as const;
+
+  for (const browser of knownBrowsers) {
+    const match = agent.match(browser.regex);
     if (match) {
-      const browserName = pattern.source.split('/')[0].replace(/[\\()/]/g, '');
-      return `${browserName} ${match[1]}`;
+      return `${browser.name} ${match[1]}`;
     }
   }
 
@@ -90,6 +89,11 @@ export async function recordEvent(event: AuditEvent): Promise<void> {
 
     const { ip, agent } = await requestOrigin();
     const correlationId = event.correlationId || crypto.randomUUID();
+    const detail = {
+      ...(event.detail ?? {}),
+      ...(event.correlationId ? { correlation_id: event.correlationId } : {}),
+      ...(event.resourceId ? { resource_id: event.resourceId } : {}),
+    };
 
     await supabase.from('audit_log').insert({
       actor_id: user.id,
@@ -99,11 +103,9 @@ export async function recordEvent(event: AuditEvent): Promise<void> {
       entity_type: event.entityType,
       entity_id: event.entityId ?? null,
       severity: event.severity ?? 'info',
-      detail: event.detail ?? {},
+      detail,
       ip_address: ip, // Now hashed
       user_agent: agent, // Now truncated
-      correlation_id: correlationId,
-      resource_id: event.resourceId,
     });
   } catch {
     // Deliberately silent - audit should never break user operations
@@ -127,7 +129,7 @@ export async function recordFailedSignIn(email: string): Promise<void> {
       entity_type: 'profile',
       entity_id: null,
       severity: 'alert',
-      detail: {},
+      detail: { attempted_email: email.slice(0, 200) },
       ip_address: ip, // Hashed
       user_agent: agent, // Truncated
     });
