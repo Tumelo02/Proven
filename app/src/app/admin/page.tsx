@@ -8,6 +8,7 @@ import {
   getPlatformStats,
 } from '@/lib/queries';
 import { signOut } from '@/app/(auth)/actions';
+import { setBusinessAccess } from './actions';
 import { NewOrganisation } from './new-org';
 import type { AccountStatus } from '@/lib/database.types';
 import '../workspace.css';
@@ -319,6 +320,7 @@ export default async function AdminPage() {
                       <th>Region</th>
                       <th className="num">Months</th>
                       <th>Joined</th>
+                      <th>Access</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -339,6 +341,26 @@ export default async function AdminPage() {
                           {months === 0 ? <span className="muted">None</span> : months}
                         </td>
                         <td className="muted tiny">{business.created_at.slice(0, 10)}</td>
+                        <td>
+                          <form action={setBusinessAccess} className="row" style={{ gap: 6 }}>
+                            <input type="hidden" name="business_id" value={business.id} />
+                            {business.access_disabled ? (
+                              <>
+                                <span className="chip red">Disabled</span>
+                                <button className="btn ghost sm" name="action" value="enable" type="submit">
+                                  Restore
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button className="btn ghost sm" name="action" value="disable" type="submit">
+                                  Disable
+                                </button>
+                                <input name="reason" placeholder="Reason (optional)" aria-label={`Reason for disabling ${business.name}`} />
+                              </>
+                            )}
+                          </form>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

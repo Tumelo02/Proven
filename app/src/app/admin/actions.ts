@@ -211,3 +211,51 @@ export async function setOrgAccount(formData: FormData): Promise<void> {
   revalidatePath('/admin');
   revalidatePath(`/admin/org/${orgId}`);
 }
+
+/** Suspend or restore one business owner's platform access. */
+export async function setBusinessAccess(formData: FormData): Promise<void> {
+  const businessId = String(formData.get('business_id') ?? '').trim();
+  const action = String(formData.get('action') ?? '');
+  const reason = String(formData.get('reason') ?? '').trim();
+
+  if (!businessId || (action !== 'disable' && action !== 'enable')) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_platform_admin')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (!profile?.is_platform_admin) return;
+
+  const admin = createAdminClient();
+  const { data: business } = await admin
+    .from('businesses')
+    .select('id, name, owner_id')
+    .eq('id', businessId)
+    .maybeSingle();
+  if (!business) return;
+
+  const disabled = action === 'disable';
+  const { error } = await admin
+    .from('businesses')
+    .update({ access_disabled: disabled, access_disabled_reason: disabled ? reason : '' })
+    .eq('id', businessId);
+  if (error) return;
+
+  await recordEvent({
+    action: disabled ? 'business.access_disabled' : 'business.access_enabled',
+    entityType: 'business',
+    entityId: businessId,
+    severity: disabled ? 'alert' : 'notice',
+    detail: { business_name: business.name, owner_id: business.owner_id, ...(reason ? { reason } : {}) },
+  });
+
+  revalidatePath('/admin');
+  revalidatePath(`/business/${businessId}`);
+}

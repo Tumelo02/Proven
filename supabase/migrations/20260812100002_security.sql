@@ -196,15 +196,18 @@ $$;
 -- it, and the cross-tenant admin read is a separate policy. Postgres ORs
 -- permissive policies together, so the pair means what one combined
 -- expression would have meant, without the interlock.
+drop policy if exists profiles_select_self on profiles;
 create policy profiles_select_self on profiles
-  for select using (id = (select auth.uid()));
+  for select using (id = auth.uid());
 
+drop policy if exists profiles_select_admin on profiles;
 create policy profiles_select_admin on profiles
   for select using (is_platform_admin_uncached());
 
+drop policy if exists profiles_update_self on profiles;
 create policy profiles_update_self on profiles
-  for update using (id = (select auth.uid()))
-  with check (id = (select auth.uid()));
+  for update using (id = auth.uid())
+  with check (id = auth.uid());
 
 -- No INSERT policy: profiles are created by the `handle_new_user` trigger,
 -- which bypasses RLS by being SECURITY DEFINER. A plain insert from anywhere
@@ -217,9 +220,11 @@ create policy profiles_update_self on profiles
 -- Every signed-in user may read the list: a business has to be able to find
 -- its funder by name in order to request a link. Only name and slug live here,
 -- so this exposes nothing about any organisation's portfolio.
+drop policy if exists organisations_select_all on organisations;
 create policy organisations_select_all on organisations
   for select to authenticated using (true);
 
+drop policy if exists organisations_update_admin on organisations;
 create policy organisations_update_admin on organisations
   for update using (id in (select my_admin_org_ids()))
   with check (id in (select my_admin_org_ids()));
@@ -228,20 +233,24 @@ create policy organisations_update_admin on organisations
 -- ---------------------------------------------------------------------------
 -- 6. memberships
 -- ---------------------------------------------------------------------------
+drop policy if exists memberships_select on memberships;
 create policy memberships_select on memberships
   for select using (
-    user_id = (select auth.uid())
+    user_id = auth.uid()
     or org_id in (select my_org_ids())
     or is_platform_admin_uncached()
   );
 
+drop policy if exists memberships_insert_admin on memberships;
 create policy memberships_insert_admin on memberships
   for insert with check (org_id in (select my_admin_org_ids()));
 
+drop policy if exists memberships_update_admin on memberships;
 create policy memberships_update_admin on memberships
   for update using (org_id in (select my_admin_org_ids()))
   with check (org_id in (select my_admin_org_ids()));
 
+drop policy if exists memberships_delete_admin on memberships;
 create policy memberships_delete_admin on memberships
   for delete using (org_id in (select my_admin_org_ids()));
 
@@ -249,30 +258,36 @@ create policy memberships_delete_admin on memberships
 -- ---------------------------------------------------------------------------
 -- 7. businesses
 -- ---------------------------------------------------------------------------
+drop policy if exists businesses_select on businesses;
 create policy businesses_select on businesses
   for select using (can_read_business(id));
+
+drop policy if exists businesses_select_own on businesses;
+create policy businesses_select_own on businesses
+  for select to authenticated using (owner_id = auth.uid());
 
 -- Any authenticated user may enrol a business, funded or not. The owner is
 -- forced to the current user, so a business cannot be created in someone
 -- else's name, and the insert is explicitly limited to signed-in accounts.
+drop policy if exists businesses_insert_own on businesses;
 create policy businesses_insert_own on businesses
   for insert to authenticated
-  with check (
-    auth.uid() is not null
-    and owner_id = (select auth.uid())
-  );
+  with check (owner_id = auth.uid());
 
+drop policy if exists businesses_update_own on businesses;
 create policy businesses_update_own on businesses
-  for update using (owner_id = (select auth.uid()))
-  with check (owner_id = (select auth.uid()));
+  for update using (owner_id = auth.uid())
+  with check (owner_id = auth.uid());
 
+drop policy if exists businesses_delete_own on businesses;
 create policy businesses_delete_own on businesses
-  for delete using (owner_id = (select auth.uid()));
+  for delete using (owner_id = auth.uid());
 
 
 -- ---------------------------------------------------------------------------
 -- 8. funding_links
 -- ---------------------------------------------------------------------------
+drop policy if exists funding_links_select on funding_links;
 create policy funding_links_select on funding_links
   for select using (
     owns_business(business_id)
@@ -282,20 +297,23 @@ create policy funding_links_select on funding_links
 
 -- Either side may propose a link: a business applying, or an organisation
 -- inviting a business it already funds.
+drop policy if exists funding_links_insert on funding_links;
 create policy funding_links_insert on funding_links
   for insert with check (
-    requested_by = (select auth.uid())
+    requested_by = auth.uid()
     and (owns_business(business_id) or org_id in (select my_org_ids()))
   );
 
 -- Confirming is the organisation's decision, so only its members may update
 -- the row. A business cannot confirm its own link and appear on a funder's
 -- portfolio uninvited.
+drop policy if exists funding_links_update_org on funding_links;
 create policy funding_links_update_org on funding_links
   for update using (org_id in (select my_org_ids()))
   with check (org_id in (select my_org_ids()));
 
 -- A business may withdraw its own request, but only while still pending.
+drop policy if exists funding_links_delete on funding_links;
 create policy funding_links_delete on funding_links
   for delete using (
     (owns_business(business_id) and status = 'pending')
@@ -309,33 +327,45 @@ create policy funding_links_delete on funding_links
 -- Same shape for all three: readable by owner, linked funder and Proven staff;
 -- writable by the owner alone.
 
+drop policy if exists reporting_periods_select on reporting_periods;
 create policy reporting_periods_select on reporting_periods
   for select using (can_read_business(business_id));
+drop policy if exists reporting_periods_insert_own on reporting_periods;
 create policy reporting_periods_insert_own on reporting_periods
   for insert with check (owns_business(business_id));
+drop policy if exists reporting_periods_update_own on reporting_periods;
 create policy reporting_periods_update_own on reporting_periods
   for update using (owns_business(business_id))
   with check (owns_business(business_id));
+drop policy if exists reporting_periods_delete_own on reporting_periods;
 create policy reporting_periods_delete_own on reporting_periods
   for delete using (owns_business(business_id));
 
+drop policy if exists transactions_select on transactions;
 create policy transactions_select on transactions
   for select using (can_read_business(business_id));
+drop policy if exists transactions_insert_own on transactions;
 create policy transactions_insert_own on transactions
   for insert with check (owns_business(business_id));
+drop policy if exists transactions_update_own on transactions;
 create policy transactions_update_own on transactions
   for update using (owns_business(business_id))
   with check (owns_business(business_id));
+drop policy if exists transactions_delete_own on transactions;
 create policy transactions_delete_own on transactions
   for delete using (owns_business(business_id));
 
+drop policy if exists milestones_select on milestones;
 create policy milestones_select on milestones
   for select using (can_read_business(business_id));
+drop policy if exists milestones_insert_own on milestones;
 create policy milestones_insert_own on milestones
   for insert with check (owns_business(business_id));
+drop policy if exists milestones_update_own on milestones;
 create policy milestones_update_own on milestones
   for update using (owns_business(business_id))
   with check (owns_business(business_id));
+drop policy if exists milestones_delete_own on milestones;
 create policy milestones_delete_own on milestones
   for delete using (owns_business(business_id));
 
@@ -344,6 +374,7 @@ create policy milestones_delete_own on milestones
 -- 10. documents
 -- ---------------------------------------------------------------------------
 -- Reached through the parent transaction, so access follows that business.
+drop policy if exists documents_select on documents;
 create policy documents_select on documents
   for select using (
     exists (
@@ -352,6 +383,7 @@ create policy documents_select on documents
     )
   );
 
+drop policy if exists documents_insert_own on documents;
 create policy documents_insert_own on documents
   for insert with check (
     exists (
@@ -360,6 +392,7 @@ create policy documents_insert_own on documents
     )
   );
 
+drop policy if exists documents_delete_own on documents;
 create policy documents_delete_own on documents
   for delete using (
     exists (
@@ -382,6 +415,7 @@ create policy documents_delete_own on documents
 --
 --   Proven staff    Yes. Neutral in the outcome, and the party whose name is
 --                   on the claim that evidence was checked.
+drop policy if exists documents_update_platform_admin on documents;
 create policy documents_update_platform_admin on documents
   for update
   using (is_platform_admin_uncached())
@@ -393,6 +427,7 @@ create policy documents_update_platform_admin on documents
 -- ---------------------------------------------------------------------------
 -- Read-only to everyone. Snapshots are written by the server with the service
 -- role after recomputation, so a score can never be edited into existence.
+drop policy if exists score_snapshots_select on score_snapshots;
 create policy score_snapshots_select on score_snapshots
   for select using (can_read_business(business_id));
 
@@ -403,11 +438,13 @@ create policy score_snapshots_select on score_snapshots
 -- Visible to an organisation for its own entries, and to Proven staff. An
 -- actor must not be able to edit their own trail, so there is no UPDATE or
 -- DELETE policy at all.
+drop policy if exists audit_log_select on audit_log;
 create policy audit_log_select on audit_log
   for select using (
     is_platform_admin_uncached()
     or (org_id is not null and org_id in (select my_admin_org_ids()))
   );
 
+drop policy if exists audit_log_insert on audit_log;
 create policy audit_log_insert on audit_log
-  for insert with check (actor_id = (select auth.uid()));
+  for insert with check (actor_id = auth.uid());
