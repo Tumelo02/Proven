@@ -32,6 +32,7 @@ const PUBLIC_PATHS = [
   '/sign-up',
   '/auth/callback',
   '/auth/sign-out',
+  '/access-disabled',
 ];
 
 function isPublic(pathname: string): boolean {
@@ -70,6 +71,26 @@ export default async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  if (user && pathname !== '/access-disabled') {
+    const { data: disabledBusiness, error } = await supabase
+      .from('businesses')
+      .select('id')
+      .eq('owner_id', user.id)
+      .eq('access_disabled', true)
+      .limit(1)
+      .maybeSingle();
+
+    /* Fail open if an older database has not received the status migration or
+       if Supabase is temporarily unavailable. The normal RLS checks remain
+       the security boundary for every page and write. */
+    if (!error && disabledBusiness) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/access-disabled';
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
+  }
 
   if (!user && !isPublic(pathname)) {
     const url = request.nextUrl.clone();

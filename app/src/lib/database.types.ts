@@ -167,6 +167,8 @@ export type Business = {
   bbbee_level: string;
   website: string;
   social_handle: string;
+  access_disabled: boolean;
+  access_disabled_reason: string;
 }
 
 /** How someone is employed. Mirrors the `employment_type` enum. */
@@ -454,7 +456,7 @@ export type Database = {
          finishes. Every one has a database default. */
       businesses: Table<
         Business,
-        Pick<Business, 'owner_id' | 'name'> & Partial<Omit<Business, 'id' | 'created_at'>>,
+        Pick<Business, 'owner_id' | 'name'> & Partial<Omit<Business, 'created_at'>>,
         Partial<Business>
       >;
       /* The support terms are optional on insert: a business requesting a link

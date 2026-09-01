@@ -1,12 +1,17 @@
-import { notFound } from 'next/navigation';
-import { getMyOrganisations, getScoredBusiness } from '@/lib/queries';
+import { notFound, redirect } from 'next/navigation';
+import { getBusinessShell, getMyOrganisations, getScoredBusiness } from '@/lib/queries';
 import { EntrepreneurShell } from '../shell';
 import { Panel, RecCard } from '@/components/workspace';
 import '../../../workspace.css';
 
 export default async function GuidancePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [scored, orgs] = await Promise.all([getScoredBusiness(id), getMyOrganisations()]);
+  const [shell, orgs] = await Promise.all([getBusinessShell(id), getMyOrganisations()]);
+
+  if (!shell) notFound();
+  if (!shell.periods.length) redirect(`/business/${id}`);
+
+  const scored = await getScoredBusiness(id);
 
   if (!scored) notFound();
 

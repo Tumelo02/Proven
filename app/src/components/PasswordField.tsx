@@ -129,7 +129,7 @@ export function PasswordField({
         </button>
       </div>
 
-      {showStrength && (
+      {showStrength && passwordValue && (
         <div className={`password-strength ${strength.tone}`} aria-live="polite">
           Strength: <strong>{strength.label}</strong>
         </div>

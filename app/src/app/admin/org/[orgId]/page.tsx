@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getOrgDetail, isPlatformAdmin } from '@/lib/queries';
 import { Kpi } from '@/components/workspace';
+import { setBusinessAccess } from '../../actions';
 import { AccountForm } from './account-form';
 import type { OrgType } from '@/lib/database.types';
 import '../../../workspace.css';
@@ -167,6 +168,7 @@ export default async function AdminOrgPage({
                       <th>Region</th>
                       <th className="num">Months reported</th>
                       <th>Joined</th>
+                      <th>Access</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -202,6 +204,26 @@ export default async function AdminOrgPage({
                           )}
                         </td>
                         <td className="tiny muted">{fmt(b.business.created_at)}</td>
+                        <td>
+                          <form action={setBusinessAccess} className="row" style={{ gap: 6 }}>
+                            <input type="hidden" name="business_id" value={b.business.id} />
+                            {b.business.access_disabled ? (
+                              <>
+                                <span className="chip red">Disabled</span>
+                                <button className="btn ghost sm" name="action" value="enable" type="submit">
+                                  Restore
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button className="btn ghost sm" name="action" value="disable" type="submit">
+                                  Disable
+                                </button>
+                                <input name="reason" placeholder="Reason (optional)" aria-label={`Reason for disabling ${b.business.name}`} />
+                              </>
+                            )}
+                          </form>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

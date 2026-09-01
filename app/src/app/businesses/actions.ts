@@ -12,7 +12,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { attachDocument } from './documents';
-import type { ReportStatus } from '@/lib/database.types';
+import type { FundingStatus, ReportStatus } from '@/lib/database.types';
 
 export interface FormState {
   error?: string;
@@ -54,25 +54,49 @@ export async function createBusiness(
   } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in');
 
-  const { data: business, error } = await supabase
+  const businessPayload = {
+    id: crypto.randomUUID(),
+    owner_id: user.id,
+    name,
+    industry,
+    region,
+    /* `applicant` until the organisation confirms, never `funded` on the
+       business's say-so alone. The trigger flips it when they confirm. */
+    funding_status: (isFunded ? 'applicant' : 'unfunded') as FundingStatus,
+    started_on: String(formData.get('started_on') ?? '') || null,
+    staff_count: Number.parseInt(String(formData.get('staff_count') ?? '0'), 10) || 0,
+    team_roles: String(formData.get('team_roles') ?? '').trim(),
+  };
+
+  const { error: insertError } = await supabase.from('businesses').insert(businessPayload);
+
+  if (insertError) {
+    console.error('[createBusiness] insert rejected', {
+      userId: user.id,
+      hasProfile: Boolean((await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle()).data),
+      payload: businessPayload,
+      error: insertError,
+    });
+    return {
+      error: `Business insert failed (${insertError.code ?? 'unknown'}): ${insertError.message}`,
+    };
+  }
+
+  const { data: business, error: selectError } = await supabase
     .from('businesses')
-    .insert({
-      owner_id: user.id,
-      name,
-      industry,
-      region,
-      /* `applicant` until the organisation confirms, never `funded` on the
-         business's say-so alone. The trigger flips it when they confirm. */
-      funding_status: isFunded ? 'applicant' : 'unfunded',
-      started_on: String(formData.get('started_on') ?? '') || null,
-      staff_count: Number.parseInt(String(formData.get('staff_count') ?? '0'), 10) || 0,
-      team_roles: String(formData.get('team_roles') ?? '').trim(),
-    })
-    .select()
+    .select('id')
+    .eq('id', businessPayload.id)
     .single();
 
-  if (error || !business) {
-    return { error: error?.message ?? 'Could not create the business. Try again.' };
+  if (selectError || !business) {
+    console.error('[createBusiness] insert succeeded but owner read failed', {
+      userId: user.id,
+      businessId: businessPayload.id,
+      error: selectError,
+    });
+    return {
+      error: `Business was inserted, but could not be read back (${selectError?.code ?? 'unknown'}): ${selectError?.message ?? 'No row returned.'}`,
+    };
   }
 
   if (isFunded && orgId) {

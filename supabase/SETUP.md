@@ -32,6 +32,8 @@ The files you will paste are in [`migrations/`](migrations/). Run them in
 | 10 | `20260815100010_audit_trail.sql` | Who did what, when, and from where |
 | 11 | `20260815100011_org_account_status.sql` | Whether an organisation is on a pilot or paying |
 | 12 | `20260815100012_support_terms.sql` | What each organisation provides, and how much |
+| 13 | `20260901100013_backfill_missing_profiles.sql` | Profiles for accounts created before the sign-up trigger |
+| 14 | `20260901100014_business_owner_select.sql` | Individual business access suspension and owner visibility |
 
 **Order matters.** Each builds on the one before, so file 2 fails if file 1 has
 not run.
