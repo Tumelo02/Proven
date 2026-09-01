@@ -19,8 +19,8 @@ export const emailSchema = z
   .toLowerCase()
   .refine(
     (email) => {
-      const domain = email.split('@')[1];
-      return !DISPOSABLE_EMAILS.includes(domain);
+      const domain = email.split('@')[1]?.toLowerCase();
+      return typeof domain === 'string' && !DISPOSABLE_EMAILS.includes(domain);
     },
     'Disposable email addresses are not allowed'
   );
