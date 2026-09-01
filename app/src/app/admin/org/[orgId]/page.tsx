@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getOrgDetail, isPlatformAdmin } from '@/lib/queries';
+import { getLogoUrls, getOrgDetail, isPlatformAdmin } from '@/lib/queries';
 import { Kpi } from '@/components/workspace';
+import { LogoPreview } from '@/components/logo-preview';
 import { setBusinessAccess } from '../../actions';
 import { AccountForm } from './account-form';
 import type { OrgType } from '@/lib/database.types';
@@ -53,6 +54,7 @@ export default async function AdminOrgPage({
   if (!detail) notFound();
 
   const { org, contact, logoUrl, members, businesses, pending } = detail;
+  const businessLogos = await getLogoUrls(businesses.map((b) => b.business.logo_path));
   const reporting = businesses.filter((b) => b.months > 0).length;
   const silent = businesses.filter((b) => b.months === 0);
 
@@ -166,66 +168,86 @@ export default async function AdminOrgPage({
                       <th>Who to contact</th>
                       <th>Industry</th>
                       <th>Region</th>
+                      <th>Email</th>
                       <th className="num">Months reported</th>
                       <th>Joined</th>
                       <th>Access</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {businesses.map((b) => (
-                      <tr key={b.business.id}>
-                        <td>
-                          <strong>{b.business.name}</strong>
-                        </td>
-                        {/* The person to call. Without this, following up on a
-                            business means going back to the funder to ask who
-                            runs it. */}
-                        <td className="tiny">
-                          {b.business.owner_name || (
-                            <span className="muted">Not filled in</span>
-                          )}
-                          {(b.business.owner_phone || b.business.owner_email) && (
-                            <div className="muted">
-                              {[b.business.owner_phone, b.business.owner_email]
-                                .filter(Boolean)
-                                .join(' · ')}
+                    {businesses.map((b) => {
+                      const logoUrl = b.business.logo_path ? businessLogos[b.business.logo_path] ?? null : null;
+
+                      return (
+                        <tr key={b.business.id}>
+                          <td>
+                            <div className="biz-cell" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <LogoPreview
+                                logoUrl={logoUrl}
+                                alt={`${b.business.name} logo`}
+                                fallback={initials(b.business.name)}
+                              />
+                              <div style={{ minWidth: 0 }}>
+                                <Link
+                                  href={`/admin/business/${b.business.id}`}
+                                  style={{ textDecoration: 'none', color: 'var(--ink)' }}
+                                >
+                                  <strong>{b.business.name}</strong>
+                                </Link>
+                              </div>
                             </div>
-                          )}
-                        </td>
-                        <td className="tiny">{b.business.industry || '—'}</td>
-                        <td className="tiny">{b.business.region || '—'}</td>
-                        <td className="num mono">
-                          {b.months === 0 ? (
-                            <span className="chip yellow">
-                              <span className="dot" />0
-                            </span>
-                          ) : (
-                            b.months
-                          )}
-                        </td>
-                        <td className="tiny muted">{fmt(b.business.created_at)}</td>
-                        <td>
-                          <form action={setBusinessAccess} className="row" style={{ gap: 6 }}>
-                            <input type="hidden" name="business_id" value={b.business.id} />
-                            {b.business.access_disabled ? (
-                              <>
-                                <span className="chip red">Disabled</span>
-                                <button className="btn ghost sm" name="action" value="enable" type="submit">
-                                  Restore
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button className="btn ghost sm" name="action" value="disable" type="submit">
-                                  Disable
-                                </button>
-                                <input name="reason" placeholder="Reason (optional)" aria-label={`Reason for disabling ${b.business.name}`} />
-                              </>
+                          </td>
+                          {/* The person to call. Without this, following up on a
+                              business means going back to the funder to ask who
+                              runs it. */}
+                          <td className="tiny">
+                            {b.business.owner_name || (
+                              <span className="muted">Not filled in</span>
                             )}
-                          </form>
-                        </td>
-                      </tr>
-                    ))}
+                            {(b.business.owner_phone || b.business.owner_email) && (
+                              <div className="muted">
+                                {[b.business.owner_phone, b.business.owner_email]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </div>
+                            )}
+                          </td>
+                          <td className="tiny">{b.business.industry || '—'}</td>
+                          <td className="tiny">{b.business.region || '—'}</td>
+                          <td className="tiny">{b.business.owner_email || '—'}</td>
+                          <td className="num mono">
+                            {b.months === 0 ? (
+                              <span className="chip yellow">
+                                <span className="dot" />0
+                              </span>
+                            ) : (
+                              b.months
+                            )}
+                          </td>
+                          <td className="tiny muted">{fmt(b.business.created_at)}</td>
+                          <td>
+                            <form action={setBusinessAccess} className="row" style={{ gap: 6 }}>
+                              <input type="hidden" name="business_id" value={b.business.id} />
+                              {b.business.access_disabled ? (
+                                <>
+                                  <span className="chip red">Disabled</span>
+                                  <button className="btn ghost sm" name="action" value="enable" type="submit">
+                                    Restore
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button className="btn ghost sm" name="action" value="disable" type="submit">
+                                    Disable
+                                  </button>
+                                  <input name="reason" placeholder="Reason (optional)" aria-label={`Reason for disabling ${b.business.name}`} />
+                                </>
+                              )}
+                            </form>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -13,6 +13,12 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: ['172.16.16.202'],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   /* The repository root, one level up. `@proven/engine` is a workspace package
      symlinked from `packages/engine`, which lives outside this directory:
      without this, Turbopack stops at the app folder and cannot resolve it. */
@@ -24,6 +30,27 @@ const nextConfig: NextConfig = {
      specifics, and building it once keeps the app build and the engine's own
      `npm test` honest about the same artefact. `npm run build` in the repo
      root builds the engine first. */
+
+  /* Security: Disable debug endpoints in production */
+  webpack: (config, { isServer, dev }) => {
+    if (isServer && !dev) {
+      // Exclude debug routes from production build
+      config.externals = config.externals || [];
+      config.externals.push(
+        (
+          _context: string,
+          request: string,
+          callback: (error?: Error | null, result?: string) => void,
+        ) => {
+          if (request?.includes('app/api/debug')) {
+            return callback(null, 'commonjs false');
+          }
+          callback();
+        },
+      );
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
