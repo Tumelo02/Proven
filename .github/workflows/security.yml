@@ -1,0 +1,264 @@
+name: Security Scanning
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  dependency-scanning:
+    name: Dependency & Vulnerability Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Install dependencies (app)
+        run: npm ci --prefix app
+
+      - name: Install dependencies (packages/engine)
+        run: npm ci --prefix packages/engine
+
+      - name: Run npm audit for vulnerabilities
+        run: |
+          echo "=== Root audit ==="
+          npm audit --audit-level=moderate || true
+          
+          echo "=== App audit ==="
+          npm audit --audit-level=moderate --prefix app || true
+          
+          echo "=== Engine audit ==="
+          npm audit --audit-level=moderate --prefix packages/engine || true
+
+      - name: Check for deprecated dependencies
+        run: |
+          npm outdated --all || true
+
+  sast-scanning:
+    name: SAST - Static Application Security Testing
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install ESLint security plugin
+        run: |
+          cd app
+          npm install --save-dev eslint-plugin-security
+
+      - name: Run ESLint with security checks
+        run: |
+          cd app
+          npx eslint "src/**/*.{ts,tsx}" --plugin security --rule 'security/*: error' || true
+
+  secret-scanning:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+  typescript-type-checking:
+    name: TypeScript Type Safety
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm ci --prefix app
+          npm ci --prefix packages/engine
+
+      - name: Type check root
+        run: npx tsc --noEmit
+
+      - name: Type check app
+        run: cd app && npx tsc --noEmit
+
+      - name: Type check engine
+        run: cd packages/engine && npx tsc --noEmit
+
+  sql-security:
+    name: SQL Security Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for SQL injection vulnerabilities in migrations
+        run: |
+          cd supabase/migrations
+          
+          # Check for common SQL injection patterns
+          echo "Scanning for SQL injection patterns..."
+          
+          # Look for unparameterized queries
+          grep -r "EXECUTE IMMEDIATE\|DYNAMIC SQL\|CONCAT\|||" *.sql | grep -v "^Binary" || true
+          
+          # Look for missing parameter usage
+          grep -r "WHERE.*=" *.sql | head -20
+
+  csp-policy-validation:
+    name: CSP Policy Validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate CSP in vercel.json
+        run: |
+          cd app
+          
+          # Extract and validate CSP header
+          csp=$(grep -o '"Content-Security-Policy"[^}]*}' vercel.json | head -1)
+          
+          if [ -z "$csp" ]; then
+            echo "Warning: CSP header not found in vercel.json"
+          else
+            echo "CSP Policy found:"
+            echo "$csp"
+            
+            # Check for unsafe-inline (should not be present)
+            if echo "$csp" | grep -q "unsafe-inline"; then
+              echo "WARNING: unsafe-inline found in CSP - this is a security risk"
+            fi
+            
+            # Check for nonce-based approach
+            if echo "$csp" | grep -q "nonce-"; then
+              echo "✓ Nonce-based CSP detected"
+            fi
+          fi
+
+  security-headers-validation:
+    name: Security Headers Validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate security headers in vercel.json
+        run: |
+          cd app
+          
+          required_headers=(
+            "Strict-Transport-Security"
+            "X-Content-Type-Options"
+            "X-Frame-Options"
+            "X-XSS-Protection"
+            "Referrer-Policy"
+            "Permissions-Policy"
+          )
+          
+          for header in "${required_headers[@]}"; do
+            if grep -q "\"$header\"" vercel.json; then
+              echo "✓ $header present"
+            else
+              echo "✗ $header MISSING"
+            fi
+          done
+
+  dependency-licensing:
+    name: Dependency License Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install license-checker
+        run: npm install -g license-checker
+
+      - name: Check app licenses
+        run: |
+          cd app
+          license-checker --onlyunknown --excludePrivatePackages || true
+          license-checker --production --csv | grep -E "(GPL|AGPL)" || echo "No GPL/AGPL licenses detected"
+
+  notify-results:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [dependency-scanning, sast-scanning, secret-scanning, typescript-type-checking]
+    if: always()
+    permissions:
+      contents: read
+
+    steps:
+      - name: Summary
+        run: |
+          echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependency Scanning: ${{ needs.dependency-scanning.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- SAST: ${{ needs.sast-scanning.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Secret Scanning: ${{ needs.secret-scanning.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Type Checking: ${{ needs.typescript-type-checking.result }}" >> $GITHUB_STEP_SUMMARY

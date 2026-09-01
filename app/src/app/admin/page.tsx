@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import {
   getAllBusinesses,
   getCurrentProfile,
+  getLogoUrls,
   getOrgSummaries,
   getPendingReviewCount,
   getPlatformStats,
@@ -10,6 +11,7 @@ import {
 import { signOut } from '@/app/(auth)/actions';
 import { setBusinessAccess } from './actions';
 import { NewOrganisation } from './new-org';
+import { TrackingTable } from './tracking-table';
 import type { AccountStatus } from '@/lib/database.types';
 import '../workspace.css';
 
@@ -58,6 +60,7 @@ export default async function AdminPage() {
   const unlinked = businesses.filter((b) => !b.funderName);
   const silent = businesses.filter((b) => b.months === 0);
   const pendingLinks = orgs.reduce((s, o) => s + o.pending, 0);
+  const unlinkedLogos = await getLogoUrls(unlinked.map((b) => b.business.logo_path));
 
   return (
     <div className="app">
@@ -296,78 +299,7 @@ export default async function AdminPage() {
               Funded ones live under their funder, one click from the table
               above; repeating them here would make this page the flat list it
               is meant to replace. */}
-          <div className="panel">
-            <div className="panel-head">
-              <h3>Tracking independently</h3>
-              <span className="hint" style={{ marginLeft: 'auto' }}>
-                {unlinked.length} of {businesses.length} businesses have no funder
-              </span>
-            </div>
-
-            {unlinked.length === 0 ? (
-              <div className="panel-body">
-                <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
-                  Every business is attached to an organisation.
-                </p>
-              </div>
-            ) : (
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Business</th>
-                      <th>Industry</th>
-                      <th>Region</th>
-                      <th className="num">Months</th>
-                      <th>Joined</th>
-                      <th>Access</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unlinked.map(({ business, linkStatus, months }) => (
-                      <tr key={business.id}>
-                        <td>
-                          <strong>{business.name}</strong>
-                          {linkStatus === 'pending' && (
-                            <span className="chip yellow" style={{ marginLeft: 6 }}>
-                              <span className="dot" />
-                              Awaiting confirmation
-                            </span>
-                          )}
-                        </td>
-                        <td className="muted">{business.industry || '—'}</td>
-                        <td className="muted">{business.region || '—'}</td>
-                        <td className="num mono">
-                          {months === 0 ? <span className="muted">None</span> : months}
-                        </td>
-                        <td className="muted tiny">{business.created_at.slice(0, 10)}</td>
-                        <td>
-                          <form action={setBusinessAccess} className="row" style={{ gap: 6 }}>
-                            <input type="hidden" name="business_id" value={business.id} />
-                            {business.access_disabled ? (
-                              <>
-                                <span className="chip red">Disabled</span>
-                                <button className="btn ghost sm" name="action" value="enable" type="submit">
-                                  Restore
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button className="btn ghost sm" name="action" value="disable" type="submit">
-                                  Disable
-                                </button>
-                                <input name="reason" placeholder="Reason (optional)" aria-label={`Reason for disabling ${business.name}`} />
-                              </>
-                            )}
-                          </form>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          <TrackingTable businesses={unlinked} logoUrls={unlinkedLogos} />
 
           <p className="tiny muted" style={{ marginTop: 16 }}>
             This view is read-only apart from evidence review. It shows who is

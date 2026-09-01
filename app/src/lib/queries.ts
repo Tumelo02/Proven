@@ -516,6 +516,7 @@ export interface AdminBusinessRow {
   funderName: string | null;
   linkStatus: string | null;
   months: number;
+  creatorEmail: string | null;
 }
 
 /** True when the signed-in user is Proven staff. */
@@ -664,6 +665,7 @@ export async function getOrgDetail(orgId: string): Promise<{
       funderName: org.name,
       linkStatus: l.status,
       months: periods.filter((p) => p.business_id === l.business_id).length,
+      creatorEmail: l.businesses.owner_email ?? null,
     })),
     pending: links.filter((l) => l.status === 'pending').length,
   };
@@ -700,17 +702,20 @@ export async function getAuditTrail(opts?: {
 export async function getAllBusinesses(): Promise<AdminBusinessRow[]> {
   const supabase = await createClient();
 
-  const [bizRes, linksRes, periodsRes] = await Promise.all([
+  const [bizRes, linksRes, periodsRes, profilesRes] = await Promise.all([
     supabase.from('businesses').select('*').order('created_at', { ascending: false }),
     supabase
       .from('funding_links')
       .select('business_id, status, organisations(name)')
       .returns<{ business_id: string; status: string; organisations: { name: string } | null }[]>(),
     supabase.from('reporting_periods').select('business_id'),
+    supabase.from('profiles').select('id, email'),
   ]);
 
   const links = linksRes.data ?? [];
   const periods = periodsRes.data ?? [];
+  const profiles = profilesRes.data ?? [];
+  const profileById = new Map(profiles.map((profile) => [profile.id, profile.email]));
 
   return (bizRes.data ?? []).map((business) => {
     /* A confirmed link is the one that counts; a pending one is shown as
@@ -724,6 +729,7 @@ export async function getAllBusinesses(): Promise<AdminBusinessRow[]> {
       funderName: link?.status === 'confirmed' ? (link.organisations?.name ?? null) : null,
       linkStatus: link?.status ?? null,
       months: periods.filter((p) => p.business_id === business.id).length,
+      creatorEmail: profileById.get(business.owner_id) ?? business.owner_email ?? null,
     };
   });
 }

@@ -1,13 +1,31 @@
+/**
+ * DEBUG ENDPOINT - DEVELOPMENT ONLY
+ *
+ * This endpoint should not be used in production.
+ * It provides debugging utilities for development and testing only.
+ */
+
 import { createAdminClient } from '@/lib/supabase/server';
 
+export async function GET() {
+  if (process.env.NODE_ENV !== 'development') {
+    return Response.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  return Response.json({ ok: true, mode: 'development-debug' });
+}
+
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV !== 'development') {
+    return Response.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const { email, action, userId, fullName } = await request.json();
 
   try {
     const admin = createAdminClient();
 
     if (action === 'check') {
-      // Get all users and find the one with matching email
       const { data: authData } = await admin.auth.admin.listUsers({
         page: 1,
         perPage: 1000,
@@ -22,8 +40,7 @@ export async function POST(request: Request) {
         });
       }
 
-      // Check if profile exists
-      const { data: profile, error: profileError } = await admin
+      const { data: profile } = await admin
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
@@ -49,14 +66,11 @@ export async function POST(request: Request) {
         return Response.json({ success: false, error: error.message });
       }
 
-      return Response.json({ success: true, message: 'Profile created' });
+      return Response.json({ success: true, message: 'Profile created', data });
     }
 
     return Response.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
-    return Response.json(
-      { error: String(error) },
-      { status: 500 },
-    );
+    return Response.json({ error: String(error) }, { status: 500 });
   }
 }
