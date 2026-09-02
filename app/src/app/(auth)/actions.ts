@@ -9,6 +9,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { recordEvent, recordFailedSignIn } from '@/lib/audit';
 import { POLICY_VERSION } from '@/lib/policy';
@@ -17,6 +18,17 @@ import { validatePasswordStrength } from '@/lib/password';
 export interface AuthState {
   error?: string;
   message?: string;
+}
+
+function siteOrigin(requestHeaders: Headers): string {
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, '');
+  if (configuredOrigin) return configuredOrigin;
+
+  const forwardedHost = requestHeaders.get('x-forwarded-host');
+  const host = forwardedHost ?? requestHeaders.get('host');
+  const forwardedProto = requestHeaders.get('x-forwarded-proto');
+  const protocol = forwardedProto?.split(',')[0]?.trim() || 'http';
+  return host ? `${protocol}://${host}` : 'http://localhost:3000';
 }
 
 /** Only allow relative paths, so `?next=` cannot bounce a user to another site. */
@@ -96,6 +108,59 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 
   revalidatePath('/', 'layout');
   redirect(safeNext(formData.get('next')));
+}
+
+export async function requestPasswordReset(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const email = String(formData.get('email') ?? '').trim();
+
+  if (!email) {
+    return { error: 'Enter your email address.' };
+  }
+
+  const requestHeaders = await headers();
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteOrigin(requestHeaders)}/auth/callback?next=/reset-password`,
+  });
+
+  if (error) {
+    return { error: `Could not send a reset email: ${error.message}` };
+  }
+
+  return {
+    message: 'If an account exists for that email, we sent a password reset link.',
+  };
+}
+
+export async function updatePassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const password = String(formData.get('password') ?? '');
+  const confirmPassword = String(formData.get('confirm_password') ?? '');
+
+  if (!password || !confirmPassword) {
+    return { error: 'Enter and confirm your new password.' };
+  }
+
+  if (password !== confirmPassword) {
+    return { error: 'The passwords do not match.' };
+  }
+
+  const passwordError = validatePasswordStrength(password);
+  if (passwordError) {
+    return { error: passwordError };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return { error: `Could not update your password: ${error.message}` };
+  }
+
+  revalidatePath('/', 'layout');
+  redirect('/sign-in?password=updated');
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {

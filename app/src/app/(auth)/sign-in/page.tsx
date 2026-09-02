@@ -21,6 +21,8 @@ function SubmitButton() {
 function SignInForm() {
   const params = useSearchParams();
   const next = params.get('next') ?? '/dashboard';
+  const callbackError = params.get('error');
+  const passwordUpdated = params.get('password') === 'updated';
 
   const roleParam = params.get('role');
   const role = roleParam === 'funder' ? 'funder' : roleParam === 'entrepreneur' ? 'entrepreneur' : null;
@@ -32,6 +34,9 @@ function SignInForm() {
   return (
     <>
       <form action={formAction}>
+        {passwordUpdated && <div className="notice ok">Your password was updated. Sign in with your new password.</div>}
+        {callbackError === 'invalid-link' && <div className="notice error">That sign-in link is invalid.</div>}
+        {callbackError === 'expired-link' && <div className="notice error">That sign-in link has expired. Request a new one.</div>}
         {state.error && <div className="notice error">{state.error}</div>}
 
         <input type="hidden" name="next" value={next} />
@@ -50,6 +55,10 @@ function SignInForm() {
         </div>
 
         <PasswordField value={password} onChange={setPassword} />
+
+        <p className="auth-inline-link">
+          <Link href="/forgot-password">Forgot password?</Link>
+        </p>
 
         <SubmitButton />
       </form>

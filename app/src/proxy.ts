@@ -30,6 +30,8 @@ const PUBLIC_PATHS = [
   '/platform',
   '/sign-in',
   '/sign-up',
+  '/forgot-password',
+  '/reset-password',
   '/auth/callback',
   '/auth/sign-out',
   '/access-disabled',
