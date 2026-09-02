@@ -11,7 +11,16 @@ import './home.css';
  * nobody is watching. The platform itself is one click further on, at
  * `/platform`.
  */
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>;
+}) {
+  const { code } = await searchParams;
+  if (code) {
+    redirect(`/auth/callback?code=${encodeURIComponent(code)}&next=/reset-password`);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
