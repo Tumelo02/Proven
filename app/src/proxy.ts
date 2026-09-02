@@ -74,6 +74,16 @@ export default async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  /* Older reset emails may point at the project Site URL (`/`) rather than
+     the callback route. Forward their one-time code into the same recovery
+     flow so users do not land on the public story page. */
+  if (pathname === '/' && request.nextUrl.searchParams.has('code')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/callback';
+    url.searchParams.set('next', '/reset-password');
+    return NextResponse.redirect(url);
+  }
+
   if (user && pathname !== '/access-disabled') {
     const { data: disabledBusiness, error } = await supabase
       .from('businesses')
