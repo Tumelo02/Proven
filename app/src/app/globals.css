@@ -707,6 +707,12 @@ tbody tr:last-child td {
   text-align: center;
 }
 
+.auth-inline-link {
+  margin: -4px 0 16px;
+  text-align: right;
+  font-size: 13px;
+}
+
 /* Utilities */
 .muted {
   color: var(--muted);
