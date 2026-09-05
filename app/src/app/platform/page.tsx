@@ -3,23 +3,26 @@ import { createClient } from '@/lib/supabase/server';
 import '../landing.css';
 
 /**
- * The landing screen: the seven-step journey, and the two entry points.
+ * The landing screen: the five-step journey, and the two entry points.
  *
  * A role picker rather than a menu. An entrepreneur and a funder need
  * different first screens, so the choice is made before sign-in.
  */
 
-/* Each icon depicts its own step: a coin for funding, an eye for visibility,
-   and so on through to the upward badge for readiness. Inline SVG, so there
-   is no icon font to load. */
+/* Each icon depicts its own step: a receipt for recording activity, an eye for
+   visibility, and so on through to the badge for credit readiness. Inline SVG,
+   so there is no icon font to load.
+
+   The sequence starts at everyday trading, not at funding: a business earns
+   its record first, and credit is what that record eventually unlocks. */
 const STEPS = [
   {
-    key: 'funding',
-    label: 'Funding',
+    key: 'record-activity',
+    label: 'Record Activity',
     path: (
       <>
-        <circle cx="12" cy="12" r="8" />
-        <path d="M12 8.5v7M10 10.5h3a1.5 1.5 0 0 1 0 3h-2a1.5 1.5 0 0 0 0 3h3" />
+        <path d="M6 3.2h12v17.6l-2.4-1.6-2.4 1.6-2.4-1.6-2.4 1.6L6 20.8V3.2Z" />
+        <path d="M9.2 8h5.6M9.2 12h5.6" />
       </>
     ),
   },
@@ -34,17 +37,6 @@ const STEPS = [
     ),
   },
   {
-    key: 'detection',
-    label: 'Early Detection',
-    path: (
-      <g className="alert">
-        <path d="M12 3.6 21 19.2H3L12 3.6Z" />
-        <path d="M12 10v4" />
-        <path d="M12 16.6h.01" />
-      </g>
-    ),
-  },
-  {
     key: 'guidance',
     label: 'Guidance',
     path: (
@@ -52,16 +44,6 @@ const STEPS = [
         <circle cx="12" cy="12" r="8.5" />
         <path className="needle" d="M15.2 8.8 13.4 13.4 8.8 15.2l1.8-4.6 4.6-1.8Z" />
       </>
-    ),
-  },
-  {
-    key: 'growth',
-    label: 'Stronger Business Performance',
-    path: (
-      <g className="trend">
-        <path d="M3 17.5 9 11l4 4 7.2-7.6" />
-        <path d="M15.6 7.4h4.8v4.8" />
-      </g>
     ),
   },
   {
@@ -77,7 +59,7 @@ const STEPS = [
   },
   {
     key: 'readiness',
-    label: 'Greater Financial Readiness',
+    label: 'Credit Readiness',
     path: (
       <>
         <circle cx="12" cy="9.4" r="5.4" />
@@ -128,12 +110,12 @@ export default async function PlatformPage() {
         <img src="/assets/logo_only__1_-removebg-preview.png" alt="Proven logo" />
       </div>
       <div className="brandname">PROVEN</div>
-      <div className="brandtag">Turning Potential into Proof</div>
+      <div className="brandtag">Turning Activity into Proof</div>
 
-      <h1>We don&rsquo;t just track where funding went.</h1>
+      <h1>Prove your business is working.</h1>
       <p className="tagline">
-        We help determine whether the funding is helping build a sustainable
-        business, and create the evidence to prove it.
+        Everyday trading becomes a verified digital record, so a business that
+        is already viable can finally show it.
       </p>
 
       <div className="journey">
@@ -190,8 +172,7 @@ export default async function PlatformPage() {
       </div>
 
       <p className="twosided-line">
-        Entrepreneurs see how to improve. Funders see whether improvement is
-        happening.
+        One system. Two views. The same evidence.
       </p>
 
       <div className="role-picks">
@@ -213,8 +194,8 @@ export default async function PlatformPage() {
           </div>
           <div className="rb-title">Enter as Entrepreneur</div>
           <div className="rb-sub">
-            Track your business health, understand your risk, and build a
-            verified track record.
+            Record what your business does, see your own health score, and build
+            a verified track record.
           </div>
         </Link>
 
@@ -237,8 +218,8 @@ export default async function PlatformPage() {
           </div>
           <div className="rb-title">Enter as Funder</div>
           <div className="rb-sub">
-            Monitor your full funded portfolio and see which businesses are
-            ready for what&rsquo;s next.
+            Review verified evidence from the businesses you back, and see which
+            are ready for what&rsquo;s next.
           </div>
         </Link>
       </div>
