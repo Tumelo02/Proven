@@ -31,29 +31,17 @@ jobs:
           node-version: 'lts/*'
           cache: 'npm'
 
-      - name: Install dependencies (root)
+      # One lockfile at the repository root covers every workspace; `npm ci`
+      # inside app/ or packages/engine has no lockfile of its own to read and
+      # fails outright.
+      - name: Install dependencies
         run: npm ci
 
-      - name: Install dependencies (app)
-        run: npm ci --prefix app
-
-      - name: Install dependencies (packages/engine)
-        run: npm ci --prefix packages/engine
-
       - name: Run npm audit for vulnerabilities
-        run: |
-          echo "=== Root audit ==="
-          npm audit --audit-level=moderate || true
-          
-          echo "=== App audit ==="
-          npm audit --audit-level=moderate --prefix app || true
-          
-          echo "=== Engine audit ==="
-          npm audit --audit-level=moderate --prefix packages/engine || true
+        run: npm audit --audit-level=moderate || true
 
       - name: Check for deprecated dependencies
-        run: |
-          npm outdated --all || true
+        run: npm outdated || true
 
   sast-scanning:
     name: SAST - Static Application Security Testing
@@ -98,17 +86,34 @@ jobs:
         id: trufflehog_range
         shell: bash
         run: |
+          head="${{ github.sha }}"
+
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "base=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
-            echo "head=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            # Nothing "changed" on a cron run: scan the whole history instead
+            # of a zero-length range.
+            base=""
           else
-            if [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
-              echo "base=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
-            else
-              echo "base=$(git rev-list --max-parents=0 HEAD)" >> "$GITHUB_OUTPUT"
+            base="${{ github.event.before }}"
+            # A new branch reports an all-zero "before", and a force-push can
+            # name a commit that no longer exists.
+            if [ "$base" = "0000000000000000000000000000000000000000" ] \
+              || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+              base=""
             fi
-            echo "head=${{ github.sha }}" >> "$GITHUB_OUTPUT"
           fi
+
+          # An empty or identical base makes TruffleHog fail rather than scan
+          # nothing, so fall back to the full history in both cases.
+          if [ -z "$base" ] || [ "$base" = "$head" ]; then
+            echo "No usable diff range; scanning full history."
+            base=""
+          fi
+
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
 
       - name: TruffleHog Secret Scan
         uses: trufflesecurity/trufflehog@main
@@ -116,7 +121,7 @@ jobs:
           path: ./
           base: ${{ steps.trufflehog_range.outputs.base }}
           head: ${{ steps.trufflehog_range.outputs.head }}
-          extra_args: --only-verified --no-update
+          extra_args: --only-verified
 
   typescript-type-checking:
     name: TypeScript Type Safety
@@ -135,19 +140,17 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: |
-          npm ci
-          npm ci --prefix app
-          npm ci --prefix packages/engine
+        run: npm ci
 
-      - name: Type check root
-        run: npx tsc --noEmit
+      # The app consumes @proven/engine as built output from its own dist/,
+      # so the engine has to be compiled before the app can be typechecked.
+      # There is no tsconfig.json at the repository root, so nothing to check
+      # there — `npm run typecheck` covers both real projects.
+      - name: Build engine
+        run: npm run build:engine
 
-      - name: Type check app
-        run: cd app && npx tsc --noEmit
-
-      - name: Type check engine
-        run: cd packages/engine && npx tsc --noEmit
+      - name: Type check
+        run: npm run typecheck
 
   sql-security:
     name: SQL Security Review
@@ -186,8 +189,16 @@ jobs:
         run: |
           cd app
 
-          # Extract and validate CSP header
-          csp=$(grep -o '"Content-Security-Policy"[^}]*}' vercel.json | head -1)
+          # Parsed as JSON, not grepped: the header's "key" and "value" sit on
+          # separate lines, so a line-oriented pattern never matches them
+          # together and the check silently "finds" nothing.
+          csp=$(node -e '
+            const cfg = require("./vercel.json");
+            const header = (cfg.headers ?? [])
+              .flatMap((entry) => entry.headers ?? [])
+              .find((h) => h.key === "Content-Security-Policy");
+            if (header) process.stdout.write(header.value);
+          ')
 
           if [ -z "$csp" ]; then
             echo "::error::CSP header not found in vercel.json"
