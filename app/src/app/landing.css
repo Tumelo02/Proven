@@ -178,9 +178,9 @@
   transform-origin: center;
 }
 
-/* 1 Funding, the coin gives a small confident nudge. */
-.journey .step[data-step='funding']:hover .ico,
-.journey .step[data-step='funding']:focus-visible .ico {
+/* 1 Record Activity, the receipt gives a small confident nudge. */
+.journey .step[data-step='record-activity']:hover .ico,
+.journey .step[data-step='record-activity']:focus-visible .ico {
   animation: st-nudge 0.5s ease;
 }
 @keyframes st-nudge {
@@ -219,27 +219,7 @@
   }
 }
 
-/* 3 Early Detection, the warning blinks, the way an alert would. */
-.journey .step[data-step='detection']:hover .alert,
-.journey .step[data-step='detection']:focus-visible .alert {
-  animation: st-alert 0.85s ease;
-}
-@keyframes st-alert {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  20%,
-  60% {
-    opacity: 0.15;
-  }
-  40%,
-  80% {
-    opacity: 1;
-  }
-}
-
-/* 4 Guidance, the needle swings and settles, like a compass finding north. */
+/* 3 Guidance, the needle swings and settles, like a compass finding north. */
 .journey .step[data-step='guidance']:hover .needle,
 .journey .step[data-step='guidance']:focus-visible .needle {
   animation: st-compass 1.1s cubic-bezier(0.3, 1.4, 0.5, 1);
@@ -262,21 +242,8 @@
   }
 }
 
-/* 5 Stronger Performance, the trend line pops upward. */
-.journey .step[data-step='growth']:hover .trend,
-.journey .step[data-step='growth']:focus-visible .trend {
-  animation: st-pop 0.55s cubic-bezier(0.3, 1.5, 0.5, 1);
-}
-@keyframes st-pop {
-  45% {
-    transform: translate(1.5px, -2.5px) scale(1.12);
-  }
-  100% {
-    transform: none;
-  }
-}
 
-/* 6 Verified Track Record, the tick clears and redraws itself. */
+/* 4 Verified Track Record, the tick clears and redraws itself. */
 .journey .step[data-step='record'] .tick {
   stroke-dasharray: 12;
 }
@@ -296,7 +263,7 @@
   }
 }
 
-/* 7 Greater Financial Readiness, a small burst of confetti. */
+/* 5 Credit Readiness, a small burst of confetti. */
 .journey .step .spark {
   position: absolute;
   inset: 0;
