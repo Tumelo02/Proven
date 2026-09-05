@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { CookieNotice } from '@/components/CookieNotice';
+import { SessionTimeoutProvider } from '@/components/SessionTimeoutProvider';
 import './globals.css';
 
 /**
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-ZA">
       <body>
-        {children}
+        <SessionTimeoutProvider>{children}</SessionTimeoutProvider>
         <CookieNotice />
       </body>
     </html>

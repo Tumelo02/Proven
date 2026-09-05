@@ -11,6 +11,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import {
+  checkPDFForJavaScript,
+  sanitizeFilename,
+  verifyMagicBytes,
+} from '@/lib/file-security';
 
 export interface UploadState {
   error?: string;
@@ -30,7 +35,7 @@ const MAX_BYTES = 10 * 1024 * 1024;
 
 /** Strips anything that could confuse a storage path or a download header. */
 function safeName(name: string): string {
-  return name.replace(/[^\w.\- ]+/g, '_').slice(0, 120) || 'receipt';
+  return sanitizeFilename(name) || 'receipt';
 }
 
 export async function attachDocument(
@@ -56,6 +61,25 @@ export async function attachDocument(
     return {
       error: `That file is ${(file.size / 1024 / 1024).toFixed(1)} MB. The limit is 10 MB, so a photo rather than a scan.`,
     };
+  }
+
+  /* The MIME type above is whatever the browser claimed when it built the
+     upload — trivial to forge from a script, since nothing checks it against
+     the bytes actually sent. Reading the file's real signature is what turns
+     that claim into a fact: something claiming to be a JPEG that is actually
+     an executable, or a script disguised with an image extension, fails here
+     even though its declared MIME type looked fine above. */
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!verifyMagicBytes(bytes, file.type)) {
+    return { error: 'That file does not look like a real photo or PDF. Try attaching it again.' };
+  }
+
+  /* A PDF can carry embedded JavaScript that runs when the file is opened.
+     Nothing here needs that capability — a receipt is meant to be looked at,
+     not executed — so a PDF asking for it is rejected outright rather than
+     trusted to behave. */
+  if (file.type === 'application/pdf' && checkPDFForJavaScript(bytes)) {
+    return { error: 'That PDF contains embedded content that is not allowed. Try a plain scan or photo instead.' };
   }
 
   const supabase = await createClient();
