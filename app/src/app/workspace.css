@@ -214,6 +214,36 @@
   background: var(--navy-3);
 }
 
+/* The middle block of a score-hero row: chip, trend, stage progress (or, on
+   the funder/admin side, tier and reporting chips). A class rather than an
+   inline style, so its width can actually be overridden at narrow widths —
+   an inline style attribute beats any stylesheet rule regardless of media
+   query, which is what let this block ignore its own responsive fix. */
+.hero-detail {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* An organisation's header on the admin org page: its mark, its name/code, and
+   (staff-only) a contact block. Same shape as score-hero, so it gets the same
+   treatment: two flexible siblings each need room to wrap to their own line
+   independently rather than being squeezed by each other's minimum. */
+.org-header-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.org-header-name {
+  flex: 1;
+  min-width: 220px;
+}
+
+.org-header-contact {
+  text-align: right;
+}
+
 /* Credit readiness sits beside the score, so what the record is earning is
    visible without scrolling: it is the entrepreneur's reason to keep going. */
 .cr-side {
@@ -389,6 +419,16 @@
   background: var(--card);
   border: 1px solid var(--line);
   border-left: 3px solid var(--line);
+}
+
+/* Only used beside a score-hero ring, where this block is one of several
+   competing for the same row. flex-basis: 300px is a min-width in disguise —
+   it resists shrinking below 300px exactly as a min-width would — so it needs
+   the same narrow-screen override as .hero-detail and .cr-side. Kept off the
+   base .decision rule because the guidance-list use of that class is already a
+   single block with nothing to compete with. */
+.decision-hero {
+  flex: 1 1 300px;
 }
 
 .decision.release { border-left-color: var(--green); }
@@ -1403,9 +1443,48 @@
   }
 
   /* The score, its detail and credit readiness stack instead of competing for
-     a row that cannot hold them. */
+     a row that cannot hold them.
+     Two of this row's children carry a min-width from the desktop layout: the
+     middle text block (220px or 200px, set inline per page) and .cr-side /
+     .decision (210px here, sized by content there). Below ~500px combined
+     those minimums exceed the space left after the ring, so flex-wrap forces
+     one of them onto its own line but still tries to honour its minimum,
+     which is wider than the row — the overflow is what read as text running
+     under its neighbour. Dropping every inline min-width and letting each
+     text block use the full row removes the competition entirely; only the
+     round ring keeps its own fixed size. */
   .score-hero {
     gap: 14px;
+  }
+
+  .hero-detail {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .cr-side {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .decision-hero {
+    flex-basis: 100%;
+  }
+
+  /* Same fix as score-hero: the name block's 220px minimum and the
+     right-aligned contact block were left competing for one row once the
+     org-mark's fixed width ate into what a phone screen has left. The contact
+     block also stops being right-aligned once it has its own full row —
+     right-aligned text on a line by itself reads as randomly indented rather
+     than as "paired with the block above it". */
+  .org-header-name {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .org-header-contact {
+    width: 100%;
+    text-align: left;
   }
 
   .att-head {

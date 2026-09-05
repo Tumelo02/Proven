@@ -14,6 +14,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { recordEvent, recordFailedSignIn } from '@/lib/audit';
 import { POLICY_VERSION } from '@/lib/policy';
 import { validatePasswordStrength } from '@/lib/password';
+import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rateLimit';
 
 export interface AuthState {
   error?: string;
@@ -44,6 +45,20 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 
   if (!email || !password) {
     return { error: 'Enter your email address and password.' };
+  }
+
+  /* Keyed on the email being tried, not the caller's IP: an attacker spread
+     across many addresses is still limited per account, which is the thing
+     actually at risk. Checked before Supabase is asked anything, so a limited
+     caller cannot even spend an auth attempt once refused. */
+  const withinLimit = await checkRateLimit(
+    `signin:${email.toLowerCase()}`,
+    RATE_LIMITS.signIn.max,
+    RATE_LIMITS.signIn.windowSeconds,
+  );
+  if (!withinLimit) {
+    await recordFailedSignIn(email);
+    return { error: 'Too many attempts. Please wait 15 minutes and try again.' };
   }
 
   const supabase = await createClient();
@@ -120,6 +135,25 @@ export async function requestPasswordReset(
     return { error: 'Enter your email address.' };
   }
 
+  /* This sends real email through Supabase's mailer, so an unlimited version
+     of this action is a way to flood one inbox, or run up the project's email
+     quota by repeating it against many addresses. Keyed on the email, so it
+     limits the target being reset, not just the caller. */
+  const withinLimit = await checkRateLimit(
+    `reset:${email.toLowerCase()}`,
+    RATE_LIMITS.passwordReset.max,
+    RATE_LIMITS.passwordReset.windowSeconds,
+  );
+  if (!withinLimit) {
+    /* Same message as success, deliberately: telling a limited caller "too
+       many requests for that address" would confirm the address has an
+       account, which is exactly what the vague success message below is
+       written to avoid. */
+    return {
+      message: 'If an account exists for that email, we sent a password reset link.',
+    };
+  }
+
   const requestHeaders = await headers();
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -188,6 +222,19 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
      to be genuinely given, so an account cannot be created without it. */
   if (!agreed) {
     return { error: 'Please agree to the terms and privacy notice to continue.' };
+  }
+
+  /* Keyed on IP rather than email: the account being created is new by
+     definition, so there is no existing identity to key against. This limits
+     how many accounts one source can create, which is the actual risk. */
+  const ip = await getClientIP();
+  const withinLimit = await checkRateLimit(
+    `signup:${ip}`,
+    RATE_LIMITS.signUp.max,
+    RATE_LIMITS.signUp.windowSeconds,
+  );
+  if (!withinLimit) {
+    return { error: 'Too many accounts created from this connection. Please try again later.' };
   }
 
   const supabase = await createClient();

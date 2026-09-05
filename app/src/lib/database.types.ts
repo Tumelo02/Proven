@@ -553,6 +553,13 @@ export type Database = {
         Args: { target_business_id: string };
         Returns: number;
       };
+      /* Increments the attempt count for p_key in the current window and
+         returns whether it is still within p_max_attempts. See
+         supabase/migrations/20260905100015_rate_limits.sql. */
+      check_rate_limit: {
+        Args: { p_key: string; p_max_attempts: number; p_window_seconds: number };
+        Returns: boolean;
+      };
     };
     Enums: {
       report_status: ReportStatus;

@@ -120,7 +120,7 @@ export default async function FunderBusinessProfilePage({
       <div className="panel score-hero">
         <ScoreRing score={health.score} tier={health.tier} />
 
-        <div style={{ flex: 1, minWidth: 200 }}>
+        <div className="hero-detail">
           <div className="tiny muted">
             {[business.industry, business.region].filter(Boolean).join(' · ')}
           </div>
@@ -140,7 +140,7 @@ export default async function FunderBusinessProfilePage({
           </div>
         </div>
 
-        <div className={`decision ${decision.kind}`} style={{ flex: '1 1 300px', margin: 0 }}>
+        <div className={`decision decision-hero ${decision.kind}`} style={{ margin: 0 }}>
           <div className="glyph">
             {decision.kind === 'release' ? '✔' : decision.kind === 'hold' ? '⏸' : '⚠'}
           </div>
