@@ -105,7 +105,7 @@ export default async function BusinessOverviewPage({
       <div className="panel score-hero" style={{ marginBottom: 16 }}>
         <ScoreRing score={health.score} tier={health.tier} />
 
-        <div style={{ flex: 1, minWidth: 220 }}>
+        <div className="hero-detail">
           <Chip tier={health.tier}>{
             health.tier === 'green' ? 'Healthy' : health.tier === 'yellow' ? 'Watch' : 'At Risk'
           }</Chip>

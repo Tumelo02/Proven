@@ -79,7 +79,7 @@ export default async function AdminOrgPage({
 
           <div className="panel" style={{ marginBottom: 16 }}>
             <div className="panel-body">
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="org-header-row">
                 <div className="org-mark" style={{ width: 52, height: 52, flex: '0 0 52px' }}>
                   {logoUrl ? (
                     /* eslint-disable-next-line @next/next/no-img-element -- signed URL */
@@ -88,7 +88,7 @@ export default async function AdminOrgPage({
                     initials(org.name)
                   )}
                 </div>
-                <div style={{ flex: 1, minWidth: 220 }}>
+                <div className="org-header-name">
                   <div style={{ fontWeight: 800, fontSize: 15 }}>{org.name}</div>
                   {org.tagline && (
                     <div className="tiny muted" style={{ marginTop: 2 }}>
@@ -102,7 +102,7 @@ export default async function AdminOrgPage({
                   </div>
                 </div>
                 {contact?.contact_name && (
-                  <div style={{ textAlign: 'right' }}>
+                  <div className="org-header-contact">
                     <div className="tiny muted">Contact</div>
                     <div style={{ fontSize: 13 }}>{contact.contact_name}</div>
                     <div className="tiny muted">

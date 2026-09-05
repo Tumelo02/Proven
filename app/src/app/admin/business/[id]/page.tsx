@@ -72,7 +72,7 @@ export default async function AdminBusinessSummaryPage({
 
             <ScoreRing score={health.score} tier={health.tier} />
 
-            <div style={{ flex: 1, minWidth: 220 }}>
+            <div className="hero-detail">
               <div className="tiny muted">
                 {[business.industry, business.region].filter(Boolean).join(' · ')}
               </div>
@@ -84,7 +84,7 @@ export default async function AdminBusinessSummaryPage({
               </div>
             </div>
 
-            <div className={`decision ${decision.kind}`} style={{ flex: '1 1 280px', margin: 0 }}>
+            <div className={`decision decision-hero ${decision.kind}`} style={{ margin: 0 }}>
               <div className="glyph">
                 {decision.kind === 'release' ? '✔' : decision.kind === 'hold' ? '⏸' : '⚠'}
               </div>

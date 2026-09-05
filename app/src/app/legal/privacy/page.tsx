@@ -104,12 +104,33 @@ export default function PrivacyPage() {
           </li>
         </ul>
 
+        <h2 id="cookies">Cookies</h2>
+        <p>
+          Proven sets one cookie: the session that keeps you signed in between
+          pages. Without it you would have to log in again on every screen.
+        </p>
+        <p>
+          <strong>We do not use tracking, analytics or advertising cookies.</strong>{' '}
+          Nothing here follows you to another site, builds an advertising
+          profile, or is sold to anyone. Because the session cookie is required
+          for the service to function at all, we do not ask you to accept or
+          decline it — there is no working version of Proven without it — but we
+          are telling you plainly that it exists and exactly what it does.
+        </p>
+
         <h2>Security</h2>
         <p>
           Access is enforced by the database itself, not only by the app, so a
           mistake in our code cannot expose one business&apos;s figures to another.
           Documents are stored privately and served through short-lived links that
           expire.
+        </p>
+        <p>
+          Every connection to Proven is encrypted in transit (HTTPS), and your
+          browser is instructed to never fall back to an unencrypted connection.
+          Everything we store is encrypted at rest by our infrastructure
+          provider. Repeated wrong sign-in attempts against an account are
+          limited automatically.
         </p>
 
         <h2>Changes</h2>
