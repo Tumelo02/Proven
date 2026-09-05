@@ -46,10 +46,10 @@ export default async function HomePage({
       <section className="hero">
         <div className="wrap">
           <div className="step">Turning Potential into Proof</div>
-          <h1>A business can start failing long before anyone sees it.</h1>
+          <h1>A business can be working perfectly and still be invisible to a lender.</h1>
           <p className="lede">
-            Funding creates potential. But between check-ins, problems can grow
-            silently.
+            It is not a lack of customers or income that closes the door. It is
+            a lack of proof.
           </p>
 
           {/* The pitch is told by clicking, not by reading. */}
