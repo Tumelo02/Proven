@@ -1,8 +1,14 @@
-# Security Integration — Status
+# Security — Status
 
-This replaces an earlier draft of this document that described integration
-steps for features that, at the time, were built but not wired into the app.
-Everything below reflects what is actually live.
+The single, current security document for this project. It replaces six
+earlier ones (`SECURITY_ASSESSMENT.md`, `SECURITY_REMEDIATION.md`,
+`SECURITY_TESTING.md`, `SECURITY_IMPLEMENTATION.md`, `DEPLOYMENT_SUMMARY.md`,
+and an earlier draft of this file) that had drifted out of sync with each
+other and with the code — several described a debug route, a nonce-based CSP,
+and an audit-logging approach that were since deleted or deliberately not
+taken. Their genuinely useful content (the original findings, the testing
+checklist) is folded in below with a current status against each item, rather
+than kept as five more files to re-verify the next time something changes.
 
 ## What's live
 
@@ -36,9 +42,9 @@ Password strength is enforced by the existing `src/lib/password.ts`
 ### Rate limiting
 
 **Not Upstash Redis.** An earlier plan called for `@upstash/ratelimit` +
-`@upstash/redis` (both are installed as dependencies but unused — left in
-place rather than uninstalled, since removing them is low-value and
-low-risk either way). Rate limiting is instead backed by Postgres:
+`@upstash/redis`; both were installed but never used, and have since been
+removed from `app/package.json` during a later cleanup pass. Rate limiting is
+instead backed by Postgres:
 `supabase/migrations/20260905100015_rate_limits.sql` plus
 `src/lib/rateLimit.ts`, already wired into `signIn`, `signUp`, and
 `requestPasswordReset` in `src/app/(auth)/actions.ts`. This needs no external
@@ -128,7 +134,82 @@ additionally forbid this app's own inline styles.
 - [x] Audit log records exact IP and user agent (by decision, not omission)
 - [x] HSTS header present via `vercel.json`
 
+## Findings register
+
+From the original security assessment (1 September 2026), one row per finding
+with its current, verified status — not the status the original remediation
+plan assumed it would reach.
+
+| # | Finding | Status |
+|---|---|---|
+| 1 | Debug endpoint reachable in production | **Fixed.** Route deleted entirely, not gated. |
+| 2 | CSP allows `unsafe-inline` | **Kept deliberately**, not fixed as originally suggested — see [Content-Security-Policy](#content-security-policy) above. |
+| 3 | (duplicate of #2 in the original numbering) | — |
+| 4 | Session token expiry not explicit | **Partially addressed.** `createClient()` still relies on `@supabase/ssr`'s documented defaults rather than an explicit `auth: {}` block — low impact, since those defaults are sane, but not made explicit. The suggested fix (redirect based on `user.created_at`) was itself wrong and was not used; see [Session idle timeout](#session-idle-timeout) for what was built instead. |
+| 5 | Insufficient input validation | **Fixed** for email (format + disposable-domain block on sign-up). Redirect targets were already validated by `safeNext()` before this review. Slugs are not yet validated with `slugSchema` — open. |
+| 6 | No rate limiting | **Fixed.** Postgres-backed, not Upstash — see [Rate limiting](#rate-limiting) above. |
+| 7 | Weak CORS / no origin validation | **Open.** No CORS headers are set in `vercel.json`. Same-origin requests (the only kind this app's own frontend makes) are unaffected either way; this matters if a third party is ever meant to call these routes directly. |
+| 8 | Audit log detail / privacy | **Decided, not fixed as suggested.** Exact IPs and user agents are kept intentionally — see [Audit logging](#audit-logging) above. |
+| 9 | Missing HSTS / secure headers | **Fixed.** Present in `vercel.json`. |
+| 10 | File upload gaps | **Fixed**: magic-byte verification, PDF JS detection. **Not done**: malware/antivirus scanning (ClamAV or similar) and the file-size reduction to 5 MB — the limit is still 10 MB, unchanged. |
+| 11 | Raw database error codes shown to users | **Open.** `app/src/app/businesses/actions.ts` still returns messages like `` Business insert failed (${insertError.code}): ${insertError.message} `` directly to the caller. |
+| 12 | No request-ID tracking on API routes | **Open.** No route sets `X-Request-ID`. |
+| 13 | No automated dependency scanning | **Fixed.** `.github/workflows/security.yml` runs `npm audit`, TruffleHog secret scanning, and a license check on every push. No `dependabot.yml` exists, so version-bump PRs are not automatic — only the audit/scan is. |
+| 14 | Auth events other than sign-in not logged | **Open.** `signUp`, `signOut`, and `updatePassword` do not call `recordEvent`; only `signIn` (and its failure path) do. |
+
+## Remaining open items, in rough priority order
+
+1. **#11 — raw DB error codes.** Small, contained fix: map known Postgres
+   error codes (e.g. `23505` unique violation) to a plain sentence before
+   returning them from a Server Action.
+2. **#14 — log sign-up/sign-out/password-change.** The `recordEvent` call
+   already exists as a pattern in `signIn`; the same three lines apply to the
+   other auth actions.
+3. **#7 — CORS.** Only matters if something outside this app's own frontend
+   is expected to call it directly. If that's not a real use case, this can
+   stay open indefinitely rather than add headers for a scenario that doesn't
+   exist.
+4. **#5 (slug), #10 (malware scan, 5 MB limit), #12 (request IDs)** — lower
+   priority; none are exploitable on their own, they narrow an existing
+   defence rather than close a hole.
+
+## Testing checklist
+
+Trimmed from the original testing guide to the items that are either
+currently verifiable facts about this codebase, or worth checking after a
+real deploy. Aspirational process items (penetration testing, incident
+response plans, team training) are left out — they're organisational
+decisions, not something a checklist in this repo enforces.
+
+- [x] RLS enabled on every table (verified in `supabase/migrations/`)
+- [x] Service-role key confined to `createAdminClient()`, never imported into
+      a Client Component
+- [x] File uploads land in the private `proofs` bucket; signed URLs, not
+      public links
+- [x] `.env.local` files gitignored at every level (root, `app/`, `supabase/`)
+- [x] Password requirements enforced server-side (12+ chars, mixed case,
+      number, symbol) — not just in the browser
+- [x] Sign-in rate-limited (5 / 15 min, keyed per email)
+- [x] Sign-up rate-limited (3 / hr, keyed per IP)
+- [x] Password-reset rate-limited (3 / hr, keyed per email)
+- [x] Magic-byte check rejects a file whose content doesn't match its
+      declared type, HEIC included
+- [x] PDF upload containing embedded JavaScript is rejected
+- [x] HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy,
+      Permissions-Policy all present (`curl -I` against the deployed site)
+- [ ] `npm audit` clean of high/critical findings (`.github/workflows/security.yml`
+      runs this on every push — check the Actions tab, not a local run)
+- [ ] Idle timeout warning appears after 25 minutes of no mouse/keyboard/
+      scroll/touch activity while signed in, and signs out at 30
+
 ## Still outside this integration
 
 - Nonce-based CSP (would need the inline-style migration described above)
-- Any use of `@upstash/ratelimit`/`@upstash/redis` (installed, unused)
+- CORS headers (#7 — open only if a third party needs to call these routes
+  directly)
+- Malware/antivirus scanning of uploaded files (#10)
+- File-size reduction to 5 MB (#10 — still 10 MB)
+- Request-ID tracking on responses (#12)
+- Sign-up / sign-out / password-change audit events (#14)
+- A `dependabot.yml` for automatic version-bump PRs (the CI audit itself
+  is live; this would additionally open PRs)
