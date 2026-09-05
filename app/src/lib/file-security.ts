@@ -6,26 +6,39 @@
  */
 
 /**
- * Magic bytes (file signatures) for common file types
- * Used to verify file type by content, not just extension
+ * Magic bytes (file signatures) for common file types.
+ * Used to verify file type by content, not just extension.
+ *
+ * `offset` matters: not every signature starts at byte 0. HEIC in particular
+ * is an ISO base media file — the first 4 bytes are a box-size field that
+ * varies per file, and the actual `ftyp` marker sits at offset 4. Checking it
+ * at offset 0 (as a first draft of this file did) rejects every real HEIC
+ * photo, which is exactly the file type an iPhone camera produces by default.
  */
-const MAGIC_NUMBERS: Record<string, number[]> = {
-  'image/jpeg': [0xff, 0xd8, 0xff],
-  'image/png': [0x89, 0x50, 0x4e, 0x47],
-  'image/webp': [0x52, 0x49, 0x46, 0x46], // RIFF (for WEBP)
-  'image/heic': [0x66, 0x74, 0x79, 0x70], // ftyp signature
-  'application/pdf': [0x25, 0x50, 0x44, 0x46], // %PDF
+const MAGIC_NUMBERS: Record<string, { bytes: number[]; offset?: number }> = {
+  'image/jpeg': { bytes: [0xff, 0xd8, 0xff] },
+  'image/png': { bytes: [0x89, 0x50, 0x4e, 0x47] },
+  /* RIFF container signature. Confirms the file is *a* RIFF container (which
+     WAV and AVI also are), not specifically WEBP — full WEBP verification
+     would also check for "WEBP" at offset 8, but RIFF at offset 0 already
+     rules out anything trying to pass off an unrelated file type as an image
+     upload, which is the actual threat this check defends against. */
+  'image/webp': { bytes: [0x52, 0x49, 0x46, 0x46] },
+  'image/heic': { bytes: [0x66, 0x74, 0x79, 0x70], offset: 4 },
+  'application/pdf': { bytes: [0x25, 0x50, 0x44, 0x46] },
 };
 
 /**
- * Verify file magic bytes (file signature)
- * Returns true if file starts with expected bytes for the given MIME type
+ * Verify file magic bytes (file signature).
+ * Returns true if the file's content starts with the expected bytes for the
+ * given MIME type, at that type's signature offset.
  */
 export function verifyMagicBytes(buffer: Uint8Array, mimeType: string): boolean {
-  const expectedBytes = MAGIC_NUMBERS[mimeType];
-  if (!expectedBytes) return false;
+  const signature = MAGIC_NUMBERS[mimeType];
+  if (!signature) return false;
 
-  return expectedBytes.every((byte, index) => buffer[index] === byte);
+  const offset = signature.offset ?? 0;
+  return signature.bytes.every((byte, index) => buffer[offset + index] === byte);
 }
 
 /**

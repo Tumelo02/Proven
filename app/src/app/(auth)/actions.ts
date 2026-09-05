@@ -15,6 +15,8 @@ import { recordEvent, recordFailedSignIn } from '@/lib/audit';
 import { POLICY_VERSION } from '@/lib/policy';
 import { validatePasswordStrength } from '@/lib/password';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rateLimit';
+import { emailSchema } from '@/lib/validation';
+import { z } from 'zod';
 
 export interface AuthState {
   error?: string;
@@ -40,12 +42,23 @@ function safeNext(next: FormDataEntryValue | null): string {
 }
 
 export async function signIn(_prev: AuthState, formData: FormData): Promise<AuthState> {
-  const email = String(formData.get('email') ?? '').trim();
+  const rawEmail = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
 
-  if (!email || !password) {
+  if (!rawEmail || !password) {
     return { error: 'Enter your email address and password.' };
   }
+
+  /* Format only, checked with plain z.string().email() rather than the full
+     emailSchema: that schema also blocks disposable domains, which is right
+     for creating a new account but wrong here — a wrong password against an
+     existing account made with a disposable address is still a legitimate
+     sign-in attempt, and this path must not reject people out of an account
+     they already have. */
+  if (!z.string().email().safeParse(rawEmail).success) {
+    return { error: 'Enter a valid email address.' };
+  }
+  const email = rawEmail.toLowerCase();
 
   /* Keyed on the email being tried, not the caller's IP: an attacker spread
      across many addresses is still limited per account, which is the thing
@@ -198,15 +211,24 @@ export async function updatePassword(_prev: AuthState, formData: FormData): Prom
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
-  const email = String(formData.get('email') ?? '').trim();
+  const rawEmail = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
   const confirmPassword = String(formData.get('confirm_password') ?? '');
   const fullName = String(formData.get('full_name') ?? '').trim();
   const agreed = formData.get('agree_terms') === 'on';
 
-  if (!email || !password || !confirmPassword || !fullName) {
+  if (!rawEmail || !password || !confirmPassword || !fullName) {
     return { error: 'Fill in your name, email address, password and confirmation.' };
   }
+
+  /* The full schema here, disposable-domain block included: this is the one
+     path where it belongs, since it decides whether a NEW account gets
+     created, not whether an existing one may sign in. */
+  const emailCheck = emailSchema.safeParse(rawEmail);
+  if (!emailCheck.success) {
+    return { error: emailCheck.error.issues[0]?.message ?? 'Enter a valid email address.' };
+  }
+  const email = emailCheck.data;
 
   if (password !== confirmPassword) {
     return { error: 'The passwords do not match.' };
