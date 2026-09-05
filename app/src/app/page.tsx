@@ -56,9 +56,8 @@ export default async function HomePage({
           <Story />
 
           <p className="closer">
-            <b>Proven breaks the gap.</b>
-            By making business performance visible while there is still time to
-            act, to the entrepreneur and the funder at the same time.
+            <b>Proven breaks the invisibility.</b>
+            Turning everyday cash activity into verifiable proof, from day one.
           </p>
 
           <div className="hero-cta">
