@@ -187,12 +187,18 @@ export default async function AdminOrgPage({
                                 alt={`${b.business.name} logo`}
                                 fallback={initials(b.business.name)}
                               />
-                              <div style={{ minWidth: 0 }}>
+                              {/* overflow-wrap: normal overrides the global
+                                  `td { overflow-wrap: anywhere }` rule, which
+                                  otherwise breaks the name at any character once
+                                  this shrinks to min-width: 0, stacking it one
+                                  letter per line on a narrow screen instead of
+                                  wrapping at word boundaries. */}
+                              <div style={{ minWidth: 0, overflowWrap: 'normal', wordBreak: 'normal' }}>
                                 <Link
                                   href={`/admin/business/${b.business.id}`}
                                   style={{ textDecoration: 'none', color: 'var(--ink)' }}
                                 >
-                                  <strong>{b.business.name}</strong>
+                                  <strong style={{ overflowWrap: 'break-word' }}>{b.business.name}</strong>
                                 </Link>
                               </div>
                             </div>
