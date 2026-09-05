@@ -5,9 +5,10 @@ import { useEffect, useState } from 'react';
 /**
  * The pitch, told one beat at a time instead of as a paragraph.
  *
- * This is the story as it runs *without* Proven: each beat a month nobody was
- * watching. It ends where most of them end. The product is deliberately not
- * shown here, because the closing line is the turn.
+ * This is the story as it runs *without* Proven: a genuinely good business
+ * that never gets the chance, because none of what makes it good shows up
+ * anywhere a lender could check. The product is deliberately not shown here,
+ * because the closing line is the turn.
  */
 const BEATS = [
   {
@@ -16,9 +17,9 @@ const BEATS = [
     colour: '#4ade80',
     tag: 'Healthy',
     tagBg: 'rgba(74,222,128,.16)',
-    title: 'The money lands',
-    body: 'The business gets funded and starts strong. Everyone feels confident.',
-    note: 'The plan is signed off. The next formal check-in is months away.',
+    title: 'Doing everything right',
+    body: 'Real customers, steady income, people employed. A genuinely good business.',
+    note: 'None of it exists on paper anywhere a lender could check.',
   },
   {
     month: 'Month 3',
@@ -26,9 +27,9 @@ const BEATS = [
     colour: '#facc15',
     tag: 'Watch',
     tagBg: 'rgba(250,204,21,.16)',
-    title: 'The first warning',
-    body: 'A supplier issue delays stock and sales dip. The business keeps going, but something has changed.',
-    note: 'Nobody outside the business sees it yet.',
+    title: 'The shock hits',
+    body: 'Costs spike, or a supplier problem bites. A small loan would bridge it easily.',
+    note: 'If there were anything to apply with.',
   },
   {
     month: 'Month 5',
@@ -36,9 +37,9 @@ const BEATS = [
     colour: '#fb923c',
     tag: 'At Risk',
     tagBg: 'rgba(251,146,60,.18)',
-    title: 'The pattern grows',
-    body: 'Costs rise and sales fall for a second month. The business is still operating, so the problem remains largely invisible.',
-    note: 'The entrepreneur needs help. The funder needs visibility.',
+    title: 'Turned away',
+    body: 'Applies for credit. Denied. Not because the business isn’t viable — because nothing proves it is.',
+    note: '74.4% of businesses like this hit the same wall.',
   },
   {
     month: 'Month 7',
@@ -47,8 +48,8 @@ const BEATS = [
     tag: 'Closed',
     tagBg: 'rgba(139,155,176,.18)',
     title: 'Too late',
-    body: 'The funding is gone. The business closes, but nobody can clearly see when intervention could have changed the outcome.',
-    note: 'The problem wasn’t that nobody cared. It was that nobody saw it in time.',
+    body: 'The business folds. Jobs go with it.',
+    note: 'The problem was never that it wasn’t working. It was that nobody could prove it was.',
     final: true,
   },
 ] as const;
