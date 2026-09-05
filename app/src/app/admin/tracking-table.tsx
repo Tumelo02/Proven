@@ -68,12 +68,19 @@ export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]
                           alt={`${business.name} logo`}
                           fallback={initials(business.name)}
                         />
-                        <div style={{ minWidth: 0 }}>
+                        {/* min-width: 0 lets this shrink inside the flex row, but
+                            combined with the global `td { overflow-wrap: anywhere }`
+                            rule it let the browser break the name at any character
+                            once squeezed, stacking it one letter per line instead of
+                            wrapping at word boundaries. overflow-wrap: normal here
+                            restores ordinary word wrap; break-word still catches a
+                            single word too long for the column on its own. */}
+                        <div style={{ minWidth: 0, overflowWrap: 'normal', wordBreak: 'normal' }}>
                           <Link
                             href={`/admin/business/${business.id}`}
                             style={{ textDecoration: 'none', color: 'var(--ink)' }}
                           >
-                            <strong>{business.name}</strong>
+                            <strong style={{ overflowWrap: 'break-word' }}>{business.name}</strong>
                           </Link>
                           {linkStatus === 'pending' && (
                             <span className="chip yellow" style={{ marginLeft: 6 }}>
