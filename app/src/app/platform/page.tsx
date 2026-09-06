@@ -192,36 +192,17 @@ export default async function PlatformPage() {
               <path d="M9.4 19.2v-5h5.2v5" />
             </svg>
           </div>
-          <div className="rb-title">Enter as Entrepreneur</div>
+          <div className="rb-title">Enter as Entrepreneur (SMME)</div>
           <div className="rb-sub">
             Record what your business does, see your own health score, and build
             a verified track record.
           </div>
         </Link>
 
-        <Link className="role-btn" href="/sign-in?role=funder">
-          <div className="rb-ico">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M3.2 20.4h17.6" />
-              <path d="M4.8 20.4v-6.2M9.6 20.4V9.4M14.4 20.4v-8.2M19.2 20.4V5.6" />
-              <path d="m4.8 11.2 4.8-4.4 4.8 2.6 5.4-5.2" />
-              <path d="M15.6 3.9h4.2v4.2" />
-            </svg>
-          </div>
-          <div className="rb-title">Enter as Funder</div>
-          <div className="rb-sub">
-            Review verified evidence from the businesses you back, and see which
-            are ready for what&rsquo;s next.
-          </div>
-        </Link>
+        {/* The funder entry point is hidden while the pitch leads SMME-first.
+            Nothing is gated by it: `?role=` only changes the sign-in heading,
+            and an existing funder signing in at /sign-in still reaches their
+            own portfolio, because routing comes from the account's role. */}
       </div>
 
       <p className="landing-foot">
@@ -232,7 +213,7 @@ export default async function PlatformPage() {
         ) : (
           <>
             Running your own business?{' '}
-            <Link href="/sign-up">Create an account</Link>, funded or not.
+            <Link href="/sign-up">Create an account</Link>.
           </>
         )}
         {/* Safe to show: `/admin` returns not-found to anyone without the
