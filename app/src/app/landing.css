@@ -397,6 +397,13 @@
   transform: translateY(-2px);
 }
 
+/* A single card left on its own reads as thin against the full-width column
+   above it, so it takes a little more room. Reverts by itself if a second
+   entry point returns. */
+.role-btn:only-child {
+  width: 320px;
+}
+
 .role-btn .rb-ico {
   font-size: 20px;
   line-height: 0;
