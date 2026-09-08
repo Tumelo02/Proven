@@ -977,17 +977,25 @@ export async function getAdminIntelligence(): Promise<AdminIntelligence> {
     };
   });
 
-  /* Enrolment by calendar month, oldest first. Both series are cumulative
-     totals rather than per-month additions: the question a funder or a board
-     asks is "how big is the platform now", and a bar of new sign-ups answers a
-     different one. `reporting` counts businesses that had reported at least one
-     month by that point, so the gap between the two lines is the number that
-     enrolled and then went quiet — the platform's real health. */
+  /* Platform growth by calendar month, oldest first.
+
+     Both series are cumulative totals rather than per-month additions: the
+     question a board asks is "how big is the platform now", and a bar of new
+     sign-ups answers a different one. The gap between the two lines is the
+     number that enrolled and then went quiet — the platform's real health.
+
+     Both are counted on when the thing HAPPENED on the platform, which for a
+     report is when it was sent, not the month it describes. An earlier version
+     used `period_month` for the reporting line, so a business that enrolled
+     this month and back-filled two years of history moved the line two years
+     into the past — and the chart showed more businesses reporting than had
+     ever signed up, which cannot happen. */
   const monthKey = (iso: string) => iso.slice(0, 7);
+
   const firstReportBy = new Map<string, string>();
   for (const [businessId, own] of periodsBy) {
     const earliest = own.reduce(
-      (a, b) => (a === null || b.period_month < a ? b.period_month : a),
+      (a, b) => (a === null || b.created_at < a ? b.created_at : a),
       null as string | null,
     );
     if (earliest) firstReportBy.set(businessId, monthKey(earliest));
@@ -997,12 +1005,13 @@ export async function getAdminIntelligence(): Promise<AdminIntelligence> {
   for (const b of businesses) months.add(monthKey(b.created_at));
   for (const m of firstReportBy.values()) months.add(m);
 
+  const firstReports = [...firstReportBy.values()];
   const enrolment = [...months]
     .sort()
     .map((month) => ({
       month: `${month}-01`,
       businesses: businesses.filter((b) => monthKey(b.created_at) <= month).length,
-      reporting: [...firstReportBy.values()].filter((m) => m <= month).length,
+      reporting: firstReports.filter((m) => m <= month).length,
     }));
 
   return {
