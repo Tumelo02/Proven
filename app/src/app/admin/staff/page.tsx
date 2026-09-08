@@ -27,7 +27,7 @@ const ROLE_CHIP: Record<string, string> = {
  * admin who could hand it out could hand it to themselves.
  */
 export default async function AdminStaffPage() {
-  const { profile, badges, hide } = await requireAdmin();
+  const { profile, badges, hide } = await requireAdmin({ intelligence: false });
   const access = await getMyStaffAccess();
 
   /* Same reasoning as the rest of the panel: a staff account that may not
@@ -79,10 +79,9 @@ export default async function AdminStaffPage() {
           </span>
         </div>
 
-        <Paged items={staff} label="accounts">
-          {(pageStaff) => (
-            <div className="staff-list">
-              {pageStaff.map((member) => {
+        <div className="staff-list">
+          <Paged label="accounts">
+            {staff.map((member) => {
                 const isSelf = member.profile.id === profile.id;
                 const held = CAPABILITIES.filter(
                   (c) => member.capabilities[c.key as keyof typeof member.capabilities],
@@ -134,12 +133,11 @@ export default async function AdminStaffPage() {
                         </div>
                       )}
                     </div>
-                  </details>
-                );
-              })}
-            </div>
-          )}
-        </Paged>
+                </details>
+              );
+            })}
+          </Paged>
+        </div>
       </div>
 
       <p className="tiny muted">

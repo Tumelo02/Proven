@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { LogoPreview } from '@/components/logo-preview';
-import { Paged } from '@/components/Paged';
+import { PagedRows } from '@/components/Paged';
 import { setBusinessAccess } from './actions';
 
 function initials(name: string): string {
@@ -30,8 +30,6 @@ export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]
           </p>
         </div>
       ) : (
-        <Paged items={businesses} label="businesses">
-          {(pageBusinesses) => (
           <div className="table-wrap">
             <table>
               <thead>
@@ -45,8 +43,8 @@ export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]
                   <th>Access</th>
                 </tr>
               </thead>
-              <tbody>
-                {pageBusinesses.map(({ business, linkStatus, months, creatorEmail }) => {
+              <PagedRows label="businesses" columns={7}>
+                {businesses.map(({ business, linkStatus, months, creatorEmail }) => {
                   const logoUrl = business.logo_path ? logoUrls[business.logo_path] ?? null : null;
 
                   return (
@@ -118,12 +116,9 @@ export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]
                   </tr>
                   );
                 })}
-              </tbody>
+              </PagedRows>
             </table>
           </div>
-
-          )}
-        </Paged>
       )}
     </div>
   );

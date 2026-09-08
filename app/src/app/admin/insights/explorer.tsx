@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Paged } from '@/components/Paged';
+import { PagedRows } from '@/components/Paged';
 
 /** The slice of an insight row this component needs, kept serialisable. */
 export interface ExplorerRow {
@@ -283,8 +283,6 @@ export function InsightsExplorer({ rows }: { rows: ExplorerRow[] }) {
             Best score first
           </span>
         </div>
-        <Paged items={ranked} label="businesses">
-          {(pageRows) => (
         <div className="table-wrap">
           <table>
             <thead>
@@ -297,15 +295,8 @@ export function InsightsExplorer({ rows }: { rows: ExplorerRow[] }) {
                 <th className="num">Score</th>
               </tr>
             </thead>
-            <tbody>
-              {pageRows.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="muted" style={{ textAlign: 'center', padding: '18px 8px' }}>
-                    Nothing matches these filters.
-                  </td>
-                </tr>
-              ) : (
-                pageRows.map((r) => (
+            <PagedRows label="businesses" columns={6} empty="Nothing matches these filters.">
+              {ranked.map((r) => (
                   <tr key={r.id}>
                     <td>
                       <Link
@@ -326,14 +317,11 @@ export function InsightsExplorer({ rows }: { rows: ExplorerRow[] }) {
                         <span className={`chip ${r.tier}`}>{r.score}</span>
                       )}
                     </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
+                </tr>
+              ))}
+            </PagedRows>
           </table>
         </div>
-          )}
-        </Paged>
       </div>
     </>
   );

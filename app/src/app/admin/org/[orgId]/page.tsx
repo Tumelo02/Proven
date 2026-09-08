@@ -51,7 +51,7 @@ export default async function AdminOrgPage({
 
   /* Not found rather than forbidden, so nobody who should not have this can
      learn that the page exists. */
-  const { profile, badges, hide } = await requireAdmin();
+  const { profile, badges, hide } = await requireAdmin({ intelligence: false });
 
   const detail = await getOrgDetail(orgId);
   if (!detail) notFound();

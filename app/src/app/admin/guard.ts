@@ -11,6 +11,18 @@ import type { AdminIntelligence } from '@/lib/queries';
 import type { Profile } from '@/lib/database.types';
 import type { AdminTab } from './admin-shell';
 
+/* Stands in when a page does not need the platform-wide scoring. The drawer's
+   alert badge is then only the evidence queue, which is the part that page can
+   still act on; overstating it would be worse than understating it. */
+const EMPTY_INTELLIGENCE: AdminIntelligence = {
+  rows: [],
+  enrolment: [],
+  documentsPending: 0,
+  documentsVerified: 0,
+  documentsRejected: 0,
+  pendingLinks: 0,
+};
+
 /**
  * The staff check every admin screen starts with, plus the counts the drawer
  * badges need.
@@ -20,8 +32,13 @@ import type { AdminTab } from './admin-shell';
  * exist. It is also the second guard, not the only one — row-level security
  * returns nothing to a non-admin regardless of what renders.
  */
-export async function requireAdmin(): Promise<{
+export async function requireAdmin(options?: { intelligence?: boolean }): Promise<{
   profile: Profile;
+  /**
+   * Platform-wide scoring. Only fetched when a page asks for it: it reads
+   * five tables whole, so pages that never touch it (organisations, staff,
+   * the audit trail) should not pay for it on every load.
+   */
   intel: AdminIntelligence;
   badges: { alerts: number; evidence: number; health: number };
   access: Awaited<ReturnType<typeof getMyStaffAccess>>;
@@ -31,8 +48,10 @@ export async function requireAdmin(): Promise<{
   const profile = await getCurrentProfile();
   if (!profile?.is_platform_admin) notFound();
 
+  const wantsIntel = options?.intelligence !== false;
+
   const [intel, pendingReviews, access] = await Promise.all([
-    getAdminIntelligence(),
+    wantsIntel ? getAdminIntelligence() : Promise.resolve(EMPTY_INTELLIGENCE),
     getPendingReviewCount(),
     getMyStaffAccess(),
   ]);

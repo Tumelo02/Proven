@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { getAuditTrail } from '@/lib/queries';
 import { requireAdmin } from '../guard';
 import { AdminShell } from '../admin-shell';
-import { Paged } from '@/components/Paged';
+import { PagedRows } from '@/components/Paged';
 import type { AuditSeverity } from '@/lib/database.types';
 import '../../workspace.css';
 import '../../admin.css';
@@ -55,7 +55,7 @@ export default async function AuditPage({
 }: {
   searchParams: Promise<{ severity?: string }>;
 }) {
-  const { profile, badges, hide, access } = await requireAdmin();
+  const { profile, badges, hide, access } = await requireAdmin({ intelligence: false });
   if (!access.can.view_audit) notFound();
 
   const { severity } = await searchParams;
@@ -107,9 +107,7 @@ export default async function AuditPage({
                 </p>
               </div>
             ) : (
-              <Paged items={rows} label="entries">
-                {(pageRows) => (
-                <div className="table-wrap">
+              <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
@@ -120,8 +118,8 @@ export default async function AuditPage({
                       <th>From</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {pageRows.map((r) => (
+                  <PagedRows label="entries" columns={5}>
+                    {rows.map((r) => (
                       <tr key={r.id}>
                         <td className="tiny muted" style={{ whiteSpace: 'nowrap' }}>
                           {when(r.created_at)}
@@ -146,11 +144,9 @@ export default async function AuditPage({
                         <td className="tiny muted mono">{r.ip_address || '—'}</td>
                       </tr>
                     ))}
-                  </tbody>
+                  </PagedRows>
                 </table>
-                </div>
-                )}
-              </Paged>
+              </div>
             )}
           </div>
 

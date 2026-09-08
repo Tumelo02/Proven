@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { monthLabel } from '@proven/engine';
 import { requireAdmin } from '../guard';
 import { AdminShell } from '../admin-shell';
-import { Paged } from '@/components/Paged';
+import { PagedRows } from '@/components/Paged';
 import type { AdminInsightRow } from '@/lib/queries';
 import '../../workspace.css';
 import '../../admin.css';
@@ -37,10 +37,12 @@ function HealthTable({
 
   /* Paged, because these lists are unbounded: every business on the platform
      lands in exactly one of them, so a thousand businesses is a thousand rows
-     to scroll past. */
+     to scroll past.
+
+     The rows are rendered here and handed to `PagedRows` as elements. Passing
+     it a function instead would mean this Server Component sending a function
+     across the client boundary, which React cannot serialise. */
   return (
-    <Paged items={rows} label="businesses">
-      {(pageRows) => (
     <div className="table-wrap">
       <table>
         <thead>
@@ -54,8 +56,8 @@ function HealthTable({
             <th>Reporting</th>
           </tr>
         </thead>
-        <tbody>
-          {pageRows.map((r) => (
+        <PagedRows label="businesses" columns={7}>
+          {rows.map((r) => (
             <tr key={r.business.id}>
               <td>
                 <Link
@@ -101,11 +103,9 @@ function HealthTable({
               </td>
             </tr>
           ))}
-        </tbody>
+        </PagedRows>
       </table>
     </div>
-      )}
-    </Paged>
   );
 }
 

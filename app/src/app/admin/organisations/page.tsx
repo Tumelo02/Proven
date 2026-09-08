@@ -4,7 +4,7 @@ import { getOrgSummaries } from '@/lib/queries';
 import { requireAdmin } from '../guard';
 import { AdminShell } from '../admin-shell';
 import { NewOrganisation } from '../new-org';
-import { Paged } from '@/components/Paged';
+import { PagedRows } from '@/components/Paged';
 import type { AccountStatus } from '@/lib/database.types';
 import '../../workspace.css';
 import '../../admin.css';
@@ -33,7 +33,7 @@ const ACCOUNT_CHIP: Record<AccountStatus, string> = {
  * checking who is enrolled and reporting.
  */
 export default async function AdminOrganisationsPage() {
-  const { profile, badges, hide, access } = await requireAdmin();
+  const { profile, badges, hide, access } = await requireAdmin({ intelligence: false });
   if (!access.can.manage_organisations) notFound();
   const orgs = await getOrgSummaries();
 
@@ -95,9 +95,7 @@ export default async function AdminOrganisationsPage() {
             </p>
           </div>
         ) : (
-          <Paged items={orgs} label="organisations">
-            {(pageOrgs) => (
-            <div className="table-wrap">
+          <div className="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -109,8 +107,8 @@ export default async function AdminOrganisationsPage() {
                   <th className="num">Requests waiting</th>
                 </tr>
               </thead>
-              <tbody>
-                {pageOrgs.map(({ org, members: memberCount, confirmed: confirmedCount, pending: pendingCount }) => (
+              <PagedRows label="organisations" columns={access.can.view_commercial ? 6 : 5}>
+                {orgs.map(({ org, members: memberCount, confirmed: confirmedCount, pending: pendingCount }) => (
                   <tr key={org.id}>
                     <td>
                       {/* Opens the organisation rather than showing every
@@ -154,11 +152,9 @@ export default async function AdminOrganisationsPage() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
+              </PagedRows>
             </table>
-            </div>
-            )}
-          </Paged>
+          </div>
         )}
       </div>
     </AdminShell>
