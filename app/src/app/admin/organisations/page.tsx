@@ -96,7 +96,18 @@ export default async function AdminOrganisationsPage() {
           </div>
         ) : (
           <div className="table-wrap">
-            <table>
+            <table className="fixed-cols">
+              {/* Standing is only rendered for a staff account granted it, so
+                  its column has to appear and disappear with the header, or the
+                  widths would land on the wrong columns for everyone else. */}
+              <colgroup>
+                <col style={{ width: access.can.view_commercial ? '30%' : '34%' }} />
+                {access.can.view_commercial && <col style={{ width: '14%' }} />}
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: access.can.view_commercial ? '8%' : '18%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Organisation</th>

@@ -114,7 +114,14 @@ export default async function AdminAlertsPage() {
           </div>
         ) : (
           <div className="table-wrap">
-            <table>
+            <table className="fixed-cols">
+              <colgroup>
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '26%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '12%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Business</th>
@@ -173,7 +180,14 @@ export default async function AdminAlertsPage() {
           </div>
         ) : (
           <div className="table-wrap">
-            <table>
+            <table className="fixed-cols">
+              <colgroup>
+                <col style={{ width: '30%' }} />
+                <col style={{ width: '26%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '16%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Business</th>
@@ -219,7 +233,13 @@ export default async function AdminAlertsPage() {
             </span>
           </div>
           <div className="table-wrap">
-            <table>
+            <table className="fixed-cols">
+              <colgroup>
+                <col style={{ width: '46%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '18%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Business</th>

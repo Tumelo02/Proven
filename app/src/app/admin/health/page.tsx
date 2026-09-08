@@ -44,7 +44,16 @@ function HealthTable({
      across the client boundary, which React cannot serialise. */
   return (
     <div className="table-wrap">
-      <table>
+      <table className="fixed-cols">
+        <colgroup>
+          <col style={{ width: '26%' }} />
+          <col style={{ width: '14%' }} />
+          <col style={{ width: '16%' }} />
+          <col style={{ width: '9%' }} />
+          <col style={{ width: '10%' }} />
+          <col style={{ width: '12%' }} />
+          <col style={{ width: '13%' }} />
+        </colgroup>
         <thead>
           <tr>
             <th>Business</th>

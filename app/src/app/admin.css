@@ -858,3 +858,56 @@
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Table columns that do not move between pages
+
+   `table-layout: fixed` makes the browser honour the <colgroup> widths instead
+   of measuring the cells. Without it, column widths are derived from whatever
+   rows happen to be on the current page, so page three of the same table came
+   out a different shape from page one — a long business name there was enough
+   to squeeze the Access column until its buttons stacked and the rows grew.
+   --------------------------------------------------------------------------- */
+
+.adm-main table.fixed-cols {
+  table-layout: fixed;
+}
+
+/* The global rule lets any cell break mid-word, which is right for a long
+   business name and wrong for a date: it turned "2026-09-03" into "2026-09-"
+   over "03". Values that are meaningless when split keep their own line. */
+.adm-main table.fixed-cols td.nowrap,
+.adm-main .access-cell {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+/* Controls on one line, always. The wrap was the visible symptom of the column
+   being squeezed; keeping it off means a narrow column shows a shorter reason
+   box rather than a taller row. */
+.access-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  padding: 6px 0;
+}
+
+.access-cell form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.access-cell .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Allowed to shrink to nothing before anything else gives way, since it is
+   optional and the only field here that can afford to. */
+.access-cell input[name='reason'] {
+  min-width: 0;
+  flex: 1 1 60px;
+}
