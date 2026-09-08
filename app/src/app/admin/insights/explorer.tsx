@@ -284,15 +284,7 @@ export function InsightsExplorer({ rows }: { rows: ExplorerRow[] }) {
           </span>
         </div>
         <div className="table-wrap">
-          <table className="fixed-cols">
-            <colgroup>
-              <col style={{ width: '28%' }} />
-              <col style={{ width: '16%' }} />
-              <col style={{ width: '18%' }} />
-              <col style={{ width: '18%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '10%' }} />
-            </colgroup>
+          <table>
             <thead>
               <tr>
                 <th>Business</th>

@@ -108,14 +108,7 @@ export default async function AuditPage({
               </div>
             ) : (
               <div className="table-wrap">
-                <table className="fixed-cols">
-                  <colgroup>
-                    <col style={{ width: '15%' }} />
-                    <col style={{ width: '20%' }} />
-                    <col style={{ width: '35%' }} />
-                    <col style={{ width: '15%' }} />
-                    <col style={{ width: '15%' }} />
-                  </colgroup>
+                <table>
                   <thead>
                     <tr>
                       <th>When</th>

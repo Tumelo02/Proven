@@ -31,23 +31,7 @@ export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]
         </div>
       ) : (
           <div className="table-wrap">
-            <table className="fixed-cols">
-              {/* Explicit widths, because the browser otherwise re-measures
-                  every column against whatever happens to be on the current
-                  page. That made each page of the same table a different
-                  shape: one long business name or region on page three was
-                  enough to squeeze the Access column until its buttons wrapped
-                  onto separate lines and the row grew taller. Fixed columns
-                  mean paging changes the rows and nothing else. */}
-              <colgroup>
-                <col style={{ width: '24%' }} />
-                <col style={{ width: '12%' }} />
-                <col style={{ width: '15%' }} />
-                <col style={{ width: '18%' }} />
-                <col style={{ width: '7%' }} />
-                <col style={{ width: '9%' }} />
-                <col style={{ width: '15%' }} />
-              </colgroup>
+            <table>
               <thead>
                 <tr>
                   <th>Business</th>
@@ -103,9 +87,9 @@ export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]
                     <td className="num mono">
                       {months === 0 ? <span className="muted">None</span> : months}
                     </td>
-                    <td className="muted tiny nowrap">{business.created_at.slice(0, 10)}</td>
+                    <td className="muted tiny">{business.created_at.slice(0, 10)}</td>
                     <td>
-                      <div className="access-cell">
+                      <div className="row" style={{ gap: 6, alignItems: 'center', flexWrap: 'wrap', padding: '6px 0' }}>
                         <Link className="btn ghost sm" href={`/admin/business/${business.id}`}>
                           Summary
                         </Link>
