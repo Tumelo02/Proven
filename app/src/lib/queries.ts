@@ -977,42 +977,57 @@ export async function getAdminIntelligence(): Promise<AdminIntelligence> {
     };
   });
 
-  /* Platform growth by calendar month, oldest first.
+  /* Platform growth, by the month the figures COVER.
 
-     Both series are cumulative totals rather than per-month additions: the
-     question a board asks is "how big is the platform now", and a bar of new
-     sign-ups answers a different one. The gap between the two lines is the
-     number that enrolled and then went quiet — the platform's real health.
+     Both series are cumulative and both are measured the same way, which is
+     the part that matters. An earlier version counted enrolment by sign-up
+     date and reporting by the month reported on — two different clocks — and
+     the reporting line ran years ahead of the enrolment one, showing more
+     businesses reporting than had ever joined. Measuring both against the
+     reported month makes that impossible by construction: a business is only
+     counted as enrolled once its own record starts.
 
-     Both are counted on when the thing HAPPENED on the platform, which for a
-     report is when it was sent, not the month it describes. An earlier version
-     used `period_month` for the reporting line, so a business that enrolled
-     this month and back-filled two years of history moved the line two years
-     into the past — and the chart showed more businesses reporting than had
-     ever signed up, which cannot happen. */
+     The reported month is the right axis for this chart. Every business here
+     signed up in the same week, so a sign-up axis collapses the whole platform
+     into a single point and says nothing; what the platform actually holds is
+     ten months of trading history, and that is the growth worth plotting.
+
+     `businesses` is how many have a record covering that month or earlier —
+     the platform's reach. `reporting` is how many had actually sent that month
+     by then. The gap between them is the businesses whose record has gone
+     quiet, which is the number the caption calls out. */
   const monthKey = (iso: string) => iso.slice(0, 7);
 
-  const firstReportBy = new Map<string, string>();
+  /* The earliest month each business has any figures for: the point its record
+     begins, and so the point it starts counting toward the platform. */
+  const recordStart = new Map<string, string>();
+  const reportedMonths = new Map<string, Set<string>>();
   for (const [businessId, own] of periodsBy) {
-    const earliest = own.reduce(
-      (a, b) => (a === null || b.created_at < a ? b.created_at : a),
-      null as string | null,
-    );
-    if (earliest) firstReportBy.set(businessId, monthKey(earliest));
+    let earliest: string | null = null;
+    const covered = new Set<string>();
+    for (const period of own) {
+      const key = monthKey(period.period_month);
+      covered.add(key);
+      if (earliest === null || key < earliest) earliest = key;
+    }
+    if (earliest) recordStart.set(businessId, earliest);
+    reportedMonths.set(businessId, covered);
   }
 
-  const months = new Set<string>();
-  for (const b of businesses) months.add(monthKey(b.created_at));
-  for (const m of firstReportBy.values()) months.add(m);
+  const months = [...new Set([...recordStart.values()])].sort();
 
-  const firstReports = [...firstReportBy.values()];
-  const enrolment = [...months]
-    .sort()
-    .map((month) => ({
-      month: `${month}-01`,
-      businesses: businesses.filter((b) => monthKey(b.created_at) <= month).length,
-      reporting: firstReports.filter((m) => m <= month).length,
-    }));
+  const starts = [...recordStart.values()];
+  const enrolment = months.map((month) => ({
+    month: `${month}-01`,
+    /* Businesses whose record had begun by this month. */
+    businesses: starts.filter((m) => m <= month).length,
+    /* Of those, the ones that actually reported this particular month, so a
+       business that stops sending figures pulls the lower line away from the
+       upper one exactly when it goes quiet. */
+    reporting: [...reportedMonths.entries()].filter(
+      ([id, covered]) => (recordStart.get(id) ?? '9999') <= month && covered.has(month),
+    ).length,
+  }));
 
   return {
     rows,

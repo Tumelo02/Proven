@@ -35,6 +35,9 @@ const SERIES = [
 export function LineChart({ history }: { history: Period[] }) {
   const [range, setRange] = useState<string>('1y');
   const [active, setActive] = useState<number | null>(null);
+  /* Which single point is under the pointer. Separate from the month, so one
+     series can be singled out where the two lines run close together. */
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
 
   const h = useMemo(() => {
     const months = RANGES.find((r) => r.key === range)?.months ?? null;
@@ -153,7 +156,10 @@ export function LineChart({ history }: { history: Period[] }) {
           role="img"
           aria-label="Money in and money out, by month"
           onMouseMove={pointFromEvent}
-          onMouseLeave={() => setActive(null)}
+          onMouseLeave={() => {
+            setActive(null);
+            setHoverKey(null);
+          }}
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'ArrowRight') {
@@ -256,6 +262,29 @@ export function LineChart({ history }: { history: Period[] }) {
             ),
           )}
 
+          {/* One invisible target per point, so a single month's money in or
+              money out can be picked out on its own. Generous radius, because
+              a 3px dot is not a hit target. */}
+          {SERIES.map((s) =>
+            h.map((d, i) => (
+              <circle
+                key={`hit-${s.key}${i}`}
+                cx={x(i).toFixed(1)}
+                cy={y(d[s.key]).toFixed(1)}
+                r="12"
+                fill="transparent"
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={() => {
+                  setActive(i);
+                  setHoverKey(s.key);
+                }}
+                onMouseLeave={() => setHoverKey(null)}
+              >
+                <title>{`${monthLabel(d.date)} — ${s.label}: ${money(d[s.key])}`}</title>
+              </circle>
+            )),
+          )}
+
           {/* Real month names on the axis, instead of P1, P2, P3. */}
           {h.map((d, i) =>
             i % step === 0 || i === n - 1 ? (
@@ -271,6 +300,51 @@ export function LineChart({ history }: { history: Period[] }) {
                 {monthShort(d.date)}
               </text>
             ) : null,
+          )}
+          {/* The exact figure beside the point, flipped near the right edge so
+              it never runs off the plot. */}
+          {active !== null && hoverKey && h[active] && (
+            (() => {
+              const point = h[active]!;
+              const series = SERIES.find((s) => s.key === hoverKey)!;
+              const px = x(active);
+              const py = y(point[series.key]);
+              const flip = px > W - 160;
+              /* Below the point when there is no room above it, so a value at
+                 the top of the axis is not cut off by the edge of the plot. */
+              const below = py < 44;
+              const boxY = below ? py + 10 : py - 34;
+              return (
+                <g pointerEvents="none">
+                  <rect
+                    x={(flip ? px - 146 : px + 12).toFixed(1)}
+                    y={boxY.toFixed(1)}
+                    width="134"
+                    height="40"
+                    rx="8"
+                    fill="#0a2540"
+                    opacity="0.95"
+                  />
+                  <text
+                    x={(flip ? px - 136 : px + 22).toFixed(1)}
+                    y={(boxY + 16).toFixed(1)}
+                    fontSize="10"
+                    fill="#9fb3ca"
+                  >
+                    {monthLabel(point.date)}
+                  </text>
+                  <text
+                    x={(flip ? px - 136 : px + 22).toFixed(1)}
+                    y={(boxY + 30).toFixed(1)}
+                    fontSize="12"
+                    fontWeight="700"
+                    fill="#fff"
+                  >
+                    {`${series.label}: ${money(point[series.key])}`}
+                  </text>
+                </g>
+              );
+            })()
           )}
         </svg>
       </div>

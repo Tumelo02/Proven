@@ -42,6 +42,10 @@ const SERIES = [
 export function GrowthChart({ data }: { data: GrowthPoint[] }) {
   const [range, setRange] = useState<string>('all');
   const [active, setActive] = useState<number | null>(null);
+  /* Which single point is under the pointer, if any. Separate from `active`
+     (the month) so a reader can single out one series' value where the two
+     lines run close together. */
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
 
   const d = useMemo(() => {
     const months = RANGES.find((r) => r.key === range)?.months ?? null;
@@ -163,7 +167,10 @@ export function GrowthChart({ data }: { data: GrowthPoint[] }) {
           role="img"
           aria-label={`Platform growth: ${latest.businesses} businesses enrolled, ${latest.reporting} reporting`}
           onMouseMove={pointFromEvent}
-          onMouseLeave={() => setActive(null)}
+          onMouseLeave={() => {
+            setActive(null);
+            setHoverKey(null);
+          }}
           tabIndex={0}
           onKeyDown={(e) => {
             /* The same reading by keyboard, so the figures are not locked
@@ -268,6 +275,31 @@ export function GrowthChart({ data }: { data: GrowthPoint[] }) {
             ),
           )}
 
+          {/* One invisible target per point, over everything else, so a single
+              point can be picked out rather than only the month beneath the
+              pointer. Generous radius, because a 3px dot is not a hit target. */}
+          {SERIES.map((s) =>
+            d.map((p, i) => (
+              <circle
+                key={`hit-${s.key}${i}`}
+                cx={x(i).toFixed(1)}
+                cy={y(p[s.key]).toFixed(1)}
+                r="12"
+                fill="transparent"
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={() => {
+                  setActive(i);
+                  setHoverKey(s.key);
+                }}
+                onMouseLeave={() => setHoverKey(null)}
+              >
+                <title>
+                  {`${monthLabel(p.month)} — ${s.label}: ${p[s.key]}`}
+                </title>
+              </circle>
+            )),
+          )}
+
           {d.map((p, i) =>
             i % step === 0 || i === n - 1 ? (
               <text
@@ -282,6 +314,51 @@ export function GrowthChart({ data }: { data: GrowthPoint[] }) {
                 {monthLabel(p.month)}
               </text>
             ) : null,
+          )}
+          {/* The exact figure, beside the point it belongs to. Flipped to the
+              left near the right-hand edge so it never runs off the plot. */}
+          {active !== null && hoverKey && d[active] && (
+            (() => {
+              const point = d[active]!;
+              const series = SERIES.find((s) => s.key === hoverKey)!;
+              const px = x(active);
+              const py = y(point[series.key]);
+              const flip = px > W - 150;
+              /* Below the point when there is no room above it, so a value at
+                 the top of the axis is not cut off by the edge of the plot. */
+              const below = py < 44;
+              const boxY = below ? py + 10 : py - 34;
+              return (
+                <g pointerEvents="none">
+                  <rect
+                    x={(flip ? px - 136 : px + 12).toFixed(1)}
+                    y={boxY.toFixed(1)}
+                    width="124"
+                    height="40"
+                    rx="8"
+                    fill="#0a2540"
+                    opacity="0.95"
+                  />
+                  <text
+                    x={(flip ? px - 126 : px + 22).toFixed(1)}
+                    y={(boxY + 16).toFixed(1)}
+                    fontSize="10"
+                    fill="#9fb3ca"
+                  >
+                    {monthLabel(point.month)}
+                  </text>
+                  <text
+                    x={(flip ? px - 126 : px + 22).toFixed(1)}
+                    y={(boxY + 30).toFixed(1)}
+                    fontSize="12"
+                    fontWeight="700"
+                    fill="#fff"
+                  >
+                    {`${series.label}: ${point[series.key]}`}
+                  </text>
+                </g>
+              );
+            })()
           )}
         </svg>
       </div>
