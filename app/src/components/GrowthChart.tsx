@@ -56,7 +56,7 @@ export function GrowthChart({ data }: { data: GrowthPoint[] }) {
      months of data promises something the chart cannot show. "All" always
      stays, so there is never a moment with nothing to press. */
   const available = RANGES.filter(
-    (r) => r.months === null || data.length > r.months,
+    (r) => r.months === null || data.length >= r.months,
   );
 
   /* Only a platform with nothing on it at all has nothing to draw. One month

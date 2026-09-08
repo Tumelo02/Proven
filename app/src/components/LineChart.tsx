@@ -33,7 +33,7 @@ const SERIES = [
  * gridline is not an answer.
  */
 export function LineChart({ history }: { history: Period[] }) {
-  const [range, setRange] = useState<string>('1y');
+  const [range, setRange] = useState<string>('all');
   const [active, setActive] = useState<number | null>(null);
   /* Which single point is under the pointer. Separate from the month, so one
      series can be singled out where the two lines run close together. */
@@ -44,10 +44,17 @@ export function LineChart({ history }: { history: Period[] }) {
     return months === null ? history : history.slice(-months);
   }, [history, range]);
 
-  /* Only offer a range there is history for, so a button never promises a
-     stretch the chart cannot show. */
+  /* A range is offered when it would actually hide something — that is, when
+     there is more history than it covers. `>=` rather than `>` was wrong here:
+     at exactly six months the 6M button was withheld, and since every other
+     range needs even more history, a business with half a year of figures saw
+     no range control at all.
+
+     "All" is always present, so the row never renders with a single dead
+     button, and the default below is "all" so the selected range is always one
+     the reader can see and change. */
   const available = RANGES.filter(
-    (r) => r.months === null || history.length > r.months,
+    (r) => r.months === null || history.length >= r.months,
   );
 
   /* A business with one reported month gets that month drawn, not a blank
