@@ -103,10 +103,13 @@ export async function getReportData(orgId: string): Promise<ReportData | null> {
   return {
     orgName: membership.org.name,
     orgLogoUrl: await getLogoUrl(membership.org.logo_path),
+    /* Zoned, so a report run in the evening is not dated yesterday: this runs
+       on the server, whose clock is UTC. */
     generatedOn: new Date().toLocaleDateString('en-ZA', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
+      timeZone: 'Africa/Johannesburg',
     }),
     total: rows.length,
     totalFunding: rows.reduce((s, r) => s + (r.grant ?? 0), 0),

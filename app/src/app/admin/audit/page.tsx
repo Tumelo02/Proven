@@ -40,6 +40,16 @@ const SEVERITY_CHIP: Record<AuditSeverity, string> = {
   alert: 'red',
 };
 
+/**
+ * Timestamps are stored as UTC and read here in South African time.
+ *
+ * The zone has to be named. Without it the formatter uses whatever zone the
+ * machine is set to, and this renders on the server — which on Vercel is UTC,
+ * so every entry read two hours behind the clock on the wall. Naming the zone
+ * also means the trail says the same thing whoever opens it and wherever it is
+ * deployed, which matters for a record whose whole purpose is answering "when
+ * did this happen".
+ */
 function when(iso: string): string {
   return new Date(iso).toLocaleString('en-ZA', {
     day: 'numeric',
@@ -47,6 +57,7 @@ function when(iso: string): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Africa/Johannesburg',
   });
 }
 

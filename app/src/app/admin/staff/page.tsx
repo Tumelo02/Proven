@@ -3,7 +3,8 @@ import { getMyStaffAccess, getStaffMembers } from '@/lib/queries';
 import { requireAdmin } from '../guard';
 import { AdminShell } from '../admin-shell';
 import { AddStaff } from './add-staff';
-import { StaffRoleForm, RemoveStaffForm, ROLE_LABEL, ROLE_BLURB, CAPABILITIES } from './staff-form';
+import { StaffRoleForm, RemoveStaffForm } from './staff-form';
+import { ROLE_LABEL, ROLE_BLURB, CAPABILITIES } from './roles';
 import '../../workspace.css';
 import '../../admin.css';
 

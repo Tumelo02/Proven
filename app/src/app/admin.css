@@ -37,11 +37,22 @@
   z-index: 60;
 
   transform: translateX(-100%);
+
+  /* Deliberately no `will-change: transform`.
+
+     It was here to keep the drawer on its own GPU layer, and it did — which is
+     exactly what made the text look blurry. A permanently composited layer is
+     rasterised without subpixel antialiasing, so the labels softened and, since
+     the hint was never withdrawn, stayed soft while the drawer sat still.
+
+     The browser promotes the layer on its own for the duration of a transform
+     transition and drops it afterwards, which is what we actually want: crisp
+     text at rest, a composited layer only while it moves. */
+
   /* Eases out gently rather than arriving hard. The earlier curve was fast off
      the mark and stopped abruptly, which reads as harsh even when every frame
      lands on time. */
   transition: transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
-  will-change: transform;
 }
 
 .drawer-open .adm-drawer {

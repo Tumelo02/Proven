@@ -15,10 +15,14 @@ function SaveButton({ label }: { label: string }) {
 }
 
 function fmt(iso: string): string {
+  /* Named zone, not the machine's. These are full timestamps, and this renders
+     on the server, so without it anything recorded late in the evening showed
+     the previous day. */
   return new Date(iso).toLocaleDateString('en-ZA', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Africa/Johannesburg',
   });
 }
 
