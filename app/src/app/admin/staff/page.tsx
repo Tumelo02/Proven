@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { getMyStaffAccess, getStaffMembers } from '@/lib/queries';
 import { requireAdmin } from '../guard';
 import { AdminShell } from '../admin-shell';
-import { Paged } from '@/components/Paged';
 import { AddStaff } from './add-staff';
 import { StaffRoleForm, RemoveStaffForm, ROLE_LABEL, ROLE_BLURB, CAPABILITIES } from './staff-form';
 import '../../workspace.css';
@@ -79,9 +78,14 @@ export default async function AdminStaffPage() {
           </span>
         </div>
 
+        {/* Not paged. Every row here carries its own forms, which are Client
+            Components, and handing that subtree through another client
+            component to be sliced is the indirection that broke this page. The
+            roster is also the one admin list with a natural ceiling — it is
+            Proven's own staff, not the platform's businesses — so there is
+            nothing here for a pager to save. */}
         <div className="staff-list">
-          <Paged label="accounts">
-            {staff.map((member) => {
+          {staff.map((member) => {
                 const isSelf = member.profile.id === profile.id;
                 const held = CAPABILITIES.filter(
                   (c) => member.capabilities[c.key as keyof typeof member.capabilities],
@@ -136,7 +140,6 @@ export default async function AdminStaffPage() {
                 </details>
               );
             })}
-          </Paged>
         </div>
       </div>
 

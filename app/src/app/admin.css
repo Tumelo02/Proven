@@ -37,7 +37,10 @@
   z-index: 60;
 
   transform: translateX(-100%);
-  transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  /* Eases out gently rather than arriving hard. The earlier curve was fast off
+     the mark and stopped abruptly, which reads as harsh even when every frame
+     lands on time. */
+  transition: transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: transform;
 }
 
@@ -45,23 +48,41 @@
   transform: translateX(0);
 }
 
-/* The content simply starts further across when the drawer is open.
+/* The content moves with a transform, not a margin.
 
-   `container-type: inline-size` makes this the yardstick the panels below
-   measure against, rather than the window: opening the drawer takes 264px away
-   from this column, and tiles laid out on viewport breakpoints would keep four
-   across a space that can no longer hold them. */
+   This is the half of the slide that was still stuttering. Animating
+   `margin-left` re-lays-out this column on every frame, and because it is also
+   a query container, each of those frames re-evaluates the container queries
+   and re-flows every table and tile inside it. Transforming instead moves the
+   painted column as one layer: nothing is measured again until it lands.
+
+   The column is widened by the drawer width and pulled back by the same
+   amount, so its resting layout is unchanged; only the paint offset moves. */
 .adm-main {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  margin-left: 0;
-  transition: margin-left 220ms cubic-bezier(0.32, 0.72, 0, 1);
   container-type: inline-size;
   container-name: admmain;
 }
 
 @media (min-width: 1101px) {
+  /* The content column gives the drawer its space with a left margin.
+
+     This one property does change layout, and that is deliberate: the column
+     genuinely becomes narrower, and no transform can express a size change —
+     a transform would only scale or slide the same box, squashing the text or
+     pushing it off-screen. So rather than animate it badly, it is not animated
+     at all. The margin snaps while the drawer glides over the top of it, and
+     because the drawer is opaque and covers exactly that strip, the snap
+     happens underneath it where there is nothing to see.
+
+     The result reads as one panel sliding in: the only thing the eye can
+     follow is the drawer, and that is pure composited transform. */
+  .adm-main {
+    margin-left: 0;
+  }
+
   .drawer-open .adm-main {
     margin-left: var(--drawer-w);
   }
