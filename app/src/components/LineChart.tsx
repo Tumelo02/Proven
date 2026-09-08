@@ -47,7 +47,11 @@ export function LineChart({ history }: { history: Period[] }) {
     (r) => r.months === null || history.length > r.months,
   );
 
-  if (h.length < 2) return null;
+  /* A business with one reported month gets that month drawn, not a blank
+     space where a chart should be. It returned null before, so the panel
+     around it sat empty with no explanation — the worst of both. A line
+     appears as soon as there is a second month to join to. */
+  if (h.length === 0) return null;
 
   const W = 760;
   const H = 200;
@@ -189,20 +193,27 @@ export function LineChart({ history }: { history: Period[] }) {
             </g>
           ))}
 
-          <path d={area('revenue')} fill="url(#revFill)" />
-          <path d={area('expenses')} fill="url(#expFill)" />
+          {n > 1 && (
+            <>
+              <path d={area('revenue')} fill="url(#revFill)" />
+              <path d={area('expenses')} fill="url(#expFill)" />
+            </>
+          )}
 
-          {SERIES.map((s) => (
-            <path
-              key={s.key}
-              d={path(s.key)}
-              fill="none"
-              stroke={s.colour}
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          ))}
+          {/* One month strokes nothing — the path is a single `M` with no `L`
+              after it — so the marker below carries it instead. */}
+          {n > 1 &&
+            SERIES.map((s) => (
+              <path
+                key={s.key}
+                d={path(s.key)}
+                fill="none"
+                stroke={s.colour}
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
 
           {active !== null && h[active] && (
             <g>
@@ -236,10 +247,10 @@ export function LineChart({ history }: { history: Period[] }) {
                   key={`${s.key}${i}`}
                   cx={x(i).toFixed(1)}
                   cy={y(d[s.key]).toFixed(1)}
-                  r="3.5"
+                  r={n === 1 ? 5 : 3.5}
                   fill="#fff"
                   stroke={s.colour}
-                  strokeWidth="2"
+                  strokeWidth={n === 1 ? 2.6 : 2}
                 />
               ),
             ),

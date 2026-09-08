@@ -55,11 +55,15 @@ export function GrowthChart({ data }: { data: GrowthPoint[] }) {
     (r) => r.months === null || data.length > r.months,
   );
 
-  if (d.length < 2) {
+  /* Only a platform with nothing on it at all has nothing to draw. One month
+     is drawn as one month: the point is plotted, the figures are stated, and
+     the reader sees the record that exists rather than a sentence explaining
+     why they cannot see it. A line appears once there is a second month to
+     join it to. */
+  if (d.length === 0) {
     return (
       <p className="muted" style={{ fontSize: 13, margin: 0 }}>
-        Growth needs at least two months of enrolments to show a line. There
-        {data.length === 1 ? ' is one month' : ' are none'} so far.
+        No businesses have enrolled yet.
       </p>
     );
   }
@@ -195,20 +199,29 @@ export function GrowthChart({ data }: { data: GrowthPoint[] }) {
             </g>
           ))}
 
-          <path d={area('businesses')} fill="url(#growthEnrolled)" />
-          <path d={area('reporting')} fill="url(#growthReporting)" />
+          {n > 1 && (
+            <>
+              <path d={area('businesses')} fill="url(#growthEnrolled)" />
+              <path d={area('reporting')} fill="url(#growthReporting)" />
+            </>
+          )}
 
-          {SERIES.map((s) => (
-            <path
-              key={s.key}
-              d={path(s.key)}
-              fill="none"
-              stroke={s.colour}
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          ))}
+          {/* A single month strokes nothing: the path is one `M` with no `L`
+              after it, so there is no segment to draw. Its marker below is what
+              carries it, drawn a little larger so one point still reads as a
+              deliberate mark rather than a speck. */}
+          {n > 1 &&
+            SERIES.map((s) => (
+              <path
+                key={s.key}
+                d={path(s.key)}
+                fill="none"
+                stroke={s.colour}
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
 
           {/* The hovered month, marked down the whole plot so both series are
               read at the same instant rather than two separate guesses. */}
@@ -246,10 +259,10 @@ export function GrowthChart({ data }: { data: GrowthPoint[] }) {
                   key={`${s.key}${i}`}
                   cx={x(i).toFixed(1)}
                   cy={y(p[s.key]).toFixed(1)}
-                  r="3.2"
+                  r={n === 1 ? 5 : 3.2}
                   fill="#fff"
                   stroke={s.colour}
-                  strokeWidth="2"
+                  strokeWidth={n === 1 ? 2.6 : 2}
                 />
               ),
             ),
