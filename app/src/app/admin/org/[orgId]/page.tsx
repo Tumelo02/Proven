@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getLogoUrls, getOrgDetail, isPlatformAdmin } from '@/lib/queries';
+import { getLogoUrls, getOrgDetail } from '@/lib/queries';
+import { requireAdmin } from '../../guard';
+import { AdminShell } from '../../admin-shell';
 import { Kpi } from '@/components/workspace';
 import { LogoPreview } from '@/components/logo-preview';
 import { setBusinessAccess } from '../../actions';
 import { AccountForm } from './account-form';
 import type { OrgType } from '@/lib/database.types';
 import '../../../workspace.css';
+import '../../../admin.css';
 
 const ORG_TYPE_LABEL: Record<OrgType, string> = {
   funder: 'Funder',
@@ -48,7 +51,7 @@ export default async function AdminOrgPage({
 
   /* Not found rather than forbidden, so nobody who should not have this can
      learn that the page exists. */
-  if (!(await isPlatformAdmin())) notFound();
+  const { profile, badges } = await requireAdmin();
 
   const detail = await getOrgDetail(orgId);
   if (!detail) notFound();
@@ -59,23 +62,20 @@ export default async function AdminOrgPage({
   const silent = businesses.filter((b) => b.months === 0);
 
   return (
-    <div className="app">
-      <main className="main">
-        <div className="topbar">
-          <div>
-            <h2>{org.name}</h2>
-            <div className="sub">{ORG_TYPE_LABEL[org.org_type]}</div>
-          </div>
-        </div>
-
-        <div className="content">
-          <Link
-            href="/admin"
-            className="tiny"
-            style={{ display: 'inline-block', marginBottom: 13, textDecoration: 'none' }}
-          >
-            ← Back to admin
-          </Link>
+    <AdminShell
+      active="organisations"
+      email={profile.email}
+      badges={badges}
+      title={org.name}
+      subtitle={ORG_TYPE_LABEL[org.org_type]}
+    >
+      <Link
+        href="/admin/organisations"
+        className="tiny"
+        style={{ display: 'inline-block', marginBottom: 13, textDecoration: 'none' }}
+      >
+        ← Back to organisations
+      </Link>
 
           <div className="panel" style={{ marginBottom: 16 }}>
             <div className="panel-body">
@@ -300,8 +300,6 @@ export default async function AdminOrgPage({
               </div>
             )}
           </div>
-        </div>
-      </main>
-    </div>
+    </AdminShell>
   );
 }

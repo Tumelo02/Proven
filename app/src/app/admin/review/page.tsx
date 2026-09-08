@@ -1,11 +1,12 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { fmtDate, money } from '@proven/engine';
-import { getCurrentProfile, getReviewQueue } from '@/lib/queries';
+import { getReviewQueue } from '@/lib/queries';
+import { requireAdmin } from '../guard';
+import { AdminShell } from '../admin-shell';
 import { ReviewDecision } from './decision';
 import { REJECT_REASONS } from '@/lib/database.types';
-import { signOut } from '@/app/(auth)/actions';
 import '../../workspace.css';
+import '../../admin.css';
 
 /**
  * The evidence review queue.
@@ -19,8 +20,7 @@ export default async function ReviewPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  const profile = await getCurrentProfile();
-  if (!profile?.is_platform_admin) notFound();
+  const { profile, badges } = await requireAdmin();
 
   const { status } = await searchParams;
   const filter =
@@ -29,31 +29,13 @@ export default async function ReviewPage({
   const items = await getReviewQueue(filter);
 
   return (
-    <div className="app">
-      <main className="main">
-        <div className="topbar">
-          <div className="admin-brand">
-            {/* eslint-disable-next-line @next/next/no-img-element -- brand mark */}
-            <img src="/assets/logo_only__1_-removebg-preview.png" alt="" />
-            <div>
-              <Link href="/admin" style={{ fontSize: 12, textDecoration: 'none' }}>
-                ← Back to admin
-              </Link>
-              <h2 style={{ marginTop: 2 }}>Evidence review</h2>
-              <div className="sub">
-                Proven checks whether a document matches what was logged.
-                Neither the business nor its funder can do this.
-              </div>
-            </div>
-          </div>
-          <form action={signOut}>
-            <button className="btn ghost sm" type="submit">
-              Sign out
-            </button>
-          </form>
-        </div>
-
-        <div className="content">
+    <AdminShell
+      active="evidence"
+      email={profile.email}
+      badges={badges}
+      title="Evidence review"
+      subtitle="Proven checks whether a document matches what was logged"
+    >
           <div className="toolbar" style={{ marginBottom: 14 }}>
             <div className="seg">
               {(
@@ -196,8 +178,6 @@ export default async function ReviewPage({
             the underlying trade took place. Every decision is written to the
             audit log with who made it.
           </p>
-        </div>
-      </main>
-    </div>
+    </AdminShell>
   );
 }

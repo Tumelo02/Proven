@@ -14,6 +14,7 @@ import {
   creditReadiness,
   decisionFor,
   getGuidance,
+  reportingStatus,
   scoreDelta,
   toBusinessInput,
   trendOf,
@@ -22,6 +23,7 @@ import {
   type Decision,
   type GuidanceItem,
   type HealthResult,
+  type ReportingState,
   type Trend,
 } from '@proven/engine';
 
@@ -831,4 +833,183 @@ export async function getBusinessLinks(
     .returns<(FundingLink & { organisations: Organisation })[]>();
 
   return data ?? [];
+}
+
+/* ---------------------------------------------------------------------------
+   Admin intelligence
+   ---------------------------------------------------------------------------
+
+   Everything the staff panel needs to answer "who is doing well, who needs an
+   eye, and what is waiting on us" in one pass over the platform.
+
+   Deliberately one query rather than one per business. Scoring the whole
+   platform by calling `getScoredBusiness` in a loop would be a round trip per
+   row, which is fine for the ten demo businesses and unusable at a thousand.
+   The three tables are read whole, grouped in memory, and scored with the same
+   engine the entrepreneur and funder sides use, so a business cannot read as
+   healthy here and at risk there.
+   --------------------------------------------------------------------------- */
+
+/** One business as the admin panel sees it: identity, standing, and score. */
+export interface AdminInsightRow {
+  business: Business;
+  funderName: string | null;
+  linkStatus: string | null;
+  months: number;
+  /** Null when the business has never reported: unscored, not scored zero. */
+  score: number | null;
+  tier: 'green' | 'yellow' | 'red' | null;
+  trend: Trend | null;
+  delta: number;
+  /** Whether the month this reporting cycle covers has been sent. */
+  reportingState: ReportingState;
+  reportingLabel: string;
+  /** Latest reported month, ISO date, for recency ordering. */
+  lastReported: string | null;
+  documents: number;
+  pendingDocuments: number;
+  rejectedDocuments: number;
+  /** The account that created it, for chasing a business that went quiet. */
+  creatorEmail: string | null;
+}
+
+export interface AdminIntelligence {
+  rows: AdminInsightRow[];
+  /** Businesses created per month, oldest first, for the enrolment chart. */
+  enrolment: { month: string; businesses: number; reporting: number }[];
+  documentsPending: number;
+  documentsVerified: number;
+  documentsRejected: number;
+  pendingLinks: number;
+}
+
+export async function getAdminIntelligence(): Promise<AdminIntelligence> {
+  const supabase = await createClient();
+
+  const [bizRes, periodsRes, milestonesRes, linksRes, docsRes, profilesRes] = await Promise.all([
+    supabase.from('businesses').select('*').order('created_at', { ascending: false }),
+    supabase
+      .from('reporting_periods')
+      .select('*')
+      .order('period_month', { ascending: true }),
+    supabase.from('milestones').select('*').order('sort_order', { ascending: true }),
+    supabase
+      .from('funding_links')
+      .select('business_id, status, organisations(name)')
+      .returns<{ business_id: string; status: string; organisations: { name: string } | null }[]>(),
+    /* Joined through the parent transaction, because a document knows which
+       entry it evidences but not which business that entry belongs to. */
+    supabase
+      .from('documents')
+      .select('review_status, transactions!inner(business_id)')
+      .returns<{ review_status: ReviewStatus; transactions: { business_id: string } }[]>(),
+    supabase.from('profiles').select('id, email'),
+  ]);
+
+  const businesses = bizRes.data ?? [];
+  const periods = periodsRes.data ?? [];
+  const milestones = milestonesRes.data ?? [];
+  const links = linksRes.data ?? [];
+  const docs = docsRes.data ?? [];
+  const profileEmail = new Map((profilesRes.data ?? []).map((p) => [p.id, p.email]));
+
+  /* Grouped once into maps rather than filtered per business inside the loop,
+     which would be quadratic over the platform. */
+  const periodsBy = new Map<string, ReportingPeriod[]>();
+  for (const p of periods) {
+    const list = periodsBy.get(p.business_id);
+    if (list) list.push(p);
+    else periodsBy.set(p.business_id, [p]);
+  }
+
+  const milestonesBy = new Map<string, Milestone[]>();
+  for (const m of milestones) {
+    const list = milestonesBy.get(m.business_id);
+    if (list) list.push(m);
+    else milestonesBy.set(m.business_id, [m]);
+  }
+
+  const docsBy = new Map<string, { pending: number; verified: number; rejected: number }>();
+  for (const d of docs) {
+    const id = d.transactions?.business_id;
+    if (!id) continue;
+    const entry = docsBy.get(id) ?? { pending: 0, verified: 0, rejected: 0 };
+    if (d.review_status === 'pending') entry.pending += 1;
+    else if (d.review_status === 'verified') entry.verified += 1;
+    else if (d.review_status === 'rejected') entry.rejected += 1;
+    docsBy.set(id, entry);
+  }
+
+  const rows: AdminInsightRow[] = businesses.map((business) => {
+    const own = periodsBy.get(business.id) ?? [];
+    const input = toBusinessInput({
+      periods: own,
+      milestones: milestonesBy.get(business.id) ?? [],
+      transactions: [],
+    });
+
+    const link =
+      links.find((l) => l.business_id === business.id && l.status === 'confirmed') ??
+      links.find((l) => l.business_id === business.id);
+
+    const counts = docsBy.get(business.id) ?? { pending: 0, verified: 0, rejected: 0 };
+    const rep = reportingStatus(input);
+    const scored = own.length > 0;
+    const health = scored ? computeHealth(input) : null;
+
+    return {
+      business,
+      funderName: link?.status === 'confirmed' ? (link.organisations?.name ?? null) : null,
+      linkStatus: link?.status ?? null,
+      months: own.length,
+      score: health ? health.score : null,
+      tier: health ? health.tier : null,
+      trend: scored ? trendOf(input) : null,
+      delta: scored ? scoreDelta(input) : 0,
+      reportingState: rep.state,
+      reportingLabel: rep.label,
+      lastReported: own.length ? own[own.length - 1]!.period_month : null,
+      documents: counts.pending + counts.verified + counts.rejected,
+      pendingDocuments: counts.pending,
+      rejectedDocuments: counts.rejected,
+      creatorEmail: profileEmail.get(business.owner_id) ?? business.owner_email ?? null,
+    };
+  });
+
+  /* Enrolment by calendar month, oldest first. Both series are cumulative
+     totals rather than per-month additions: the question a funder or a board
+     asks is "how big is the platform now", and a bar of new sign-ups answers a
+     different one. `reporting` counts businesses that had reported at least one
+     month by that point, so the gap between the two lines is the number that
+     enrolled and then went quiet — the platform's real health. */
+  const monthKey = (iso: string) => iso.slice(0, 7);
+  const firstReportBy = new Map<string, string>();
+  for (const [businessId, own] of periodsBy) {
+    const earliest = own.reduce(
+      (a, b) => (a === null || b.period_month < a ? b.period_month : a),
+      null as string | null,
+    );
+    if (earliest) firstReportBy.set(businessId, monthKey(earliest));
+  }
+
+  const months = new Set<string>();
+  for (const b of businesses) months.add(monthKey(b.created_at));
+  for (const m of firstReportBy.values()) months.add(m);
+
+  const enrolment = [...months]
+    .sort()
+    .map((month) => ({
+      month: `${month}-01`,
+      businesses: businesses.filter((b) => monthKey(b.created_at) <= month).length,
+      reporting: [...firstReportBy.values()].filter((m) => m <= month).length,
+    }));
+
+  return {
+    rows,
+    enrolment,
+    documentsPending: docs.filter((d) => d.review_status === 'pending').length,
+    documentsVerified: docs.filter((d) => d.review_status === 'verified').length,
+    documentsRejected: docs.filter((d) => d.review_status === 'rejected').length,
+    pendingLinks: links.filter((l) => l.status === 'pending').length,
+  };
 }

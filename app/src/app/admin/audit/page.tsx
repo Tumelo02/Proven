@@ -1,8 +1,10 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { getAuditTrail, isPlatformAdmin } from '@/lib/queries';
+import { getAuditTrail } from '@/lib/queries';
+import { requireAdmin } from '../guard';
+import { AdminShell } from '../admin-shell';
 import type { AuditSeverity } from '@/lib/database.types';
 import '../../workspace.css';
+import '../../admin.css';
 
 /**
  * What has happened on the platform, newest first.
@@ -51,7 +53,7 @@ export default async function AuditPage({
 }: {
   searchParams: Promise<{ severity?: string }>;
 }) {
-  if (!(await isPlatformAdmin())) notFound();
+  const { profile, badges } = await requireAdmin();
 
   const { severity } = await searchParams;
   const filter =
@@ -62,24 +64,13 @@ export default async function AuditPage({
   const rows = await getAuditTrail({ ...(filter ? { severity: filter } : {}), limit: 300 });
 
   return (
-    <div className="app">
-      <main className="main">
-        <div className="topbar">
-          <div>
-            <h2>Audit trail</h2>
-            <div className="sub">Who did what, when, and from where</div>
-          </div>
-        </div>
-
-        <div className="content">
-          <Link
-            href="/admin"
-            className="tiny"
-            style={{ display: 'inline-block', marginBottom: 13, textDecoration: 'none' }}
-          >
-            ← Back to admin
-          </Link>
-
+    <AdminShell
+      active="audit"
+      email={profile.email}
+      badges={badges}
+      title="Audit trail"
+      subtitle="Who did what, when, and from where"
+    >
           <div className="toolbar" style={{ marginBottom: 16 }}>
             <div className="seg">
               {/* Ordered by how often they are wanted. Successful sign-ins are
@@ -155,12 +146,10 @@ export default async function AuditPage({
             )}
           </div>
 
-          <p className="tiny muted" style={{ marginTop: 14 }}>
-            Showing the most recent {rows.length}. This record cannot be edited or
-            deleted by anyone, including Proven staff.
-          </p>
-        </div>
-      </main>
-    </div>
+      <p className="tiny muted" style={{ marginTop: 14 }}>
+        Showing the most recent {rows.length}. This record cannot be edited or
+        deleted by anyone, including Proven staff.
+      </p>
+    </AdminShell>
   );
 }

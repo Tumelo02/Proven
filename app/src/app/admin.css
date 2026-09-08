@@ -1,0 +1,424 @@
+/* ===========================================================================
+   The staff panel.
+
+   Layout is a slide-out drawer rather than the fixed sidebar the entrepreneur
+   and funder sides use. Those are workspaces someone lives in, where a
+   permanent nav earns its width. This is a panel of wide tables and charts
+   that staff move between between tasks, so the width goes to the content and
+   the nav arrives when asked for.
+   =========================================================================== */
+
+.adm {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ---------------------------------------------------------------------------
+   The drawer
+   --------------------------------------------------------------------------- */
+
+.adm-drawer {
+  --drawer-w: 268px;
+  width: var(--drawer-w);
+  flex: 0 0 var(--drawer-w);
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+
+  /* Closed is the resting state. Margin rather than transform, so the closed
+     drawer takes no layout width at all and the content genuinely reclaims it,
+     instead of sitting under a shifted element. */
+  margin-left: calc(var(--drawer-w) * -1);
+  transition: margin-left 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-open .adm-drawer {
+  margin-left: 0;
+}
+
+/* Someone who asked for less motion gets the drawer without the slide. */
+@media (prefers-reduced-motion: reduce) {
+  .adm-drawer {
+    transition: none;
+  }
+}
+
+.adm-drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.adm-drawer-head img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex: 0 0 32px;
+}
+
+.adm-drawer-name {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.adm-drawer-role {
+  font-size: 11px;
+  color: #8ba0bb;
+  font-weight: 600;
+}
+
+.adm-nav {
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.adm-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  color: #b9c9dd;
+  text-decoration: none;
+  transition: background 120ms, color 120ms;
+}
+
+.adm-nav-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.adm-nav-item.active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.adm-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.adm-nav-label {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+/* The second line is what makes aseven-item menu readable at a glance: the label
+   names the screen, this says what it is for. */
+.adm-nav-hint {
+  font-size: 10.5px;
+  color: #7e93af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adm-nav-item.active .adm-nav-hint,
+.adm-nav-item:hover .adm-nav-hint {
+  color: #9fb3ca;
+}
+
+/* A count only appears when there is something to do, so any badge on screen
+   is work rather than decoration. */
+.adm-nav-count {
+  flex: 0 0 auto;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: #2a1a00;
+  font-size: 11px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.adm-drawer-foot {
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 11.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adm-drawer-foot a {
+  color: #b9c9dd;
+  text-decoration: none;
+}
+
+.adm-drawer-foot a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.adm-drawer-email {
+  color: #7e93af;
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------------------
+   Content
+   --------------------------------------------------------------------------- */
+
+.adm-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.adm-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.adm-burger {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.adm-burger:hover {
+  background: var(--grey-soft);
+  border-color: var(--grey);
+}
+
+.adm-burger svg {
+  width: 18px;
+  height: 18px;
+}
+
+.adm-scrim {
+  display: none;
+}
+
+/* Below this width there is not enough room to push the content aside, so the
+   drawer floats over it and a scrim takes the click that closes it. */
+@media (max-width: 1100px) {
+  /* Taken out of the flow entirely and slid with a transform rather than a
+     negative margin. A fixed element is positioned against the viewport, so
+     the margin trick that reclaims layout width on a wide screen has nothing
+     to reclaim here and only complicates the offset. */
+  .adm-drawer {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    margin-left: 0;
+    transform: translateX(-100%);
+    transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .drawer-open .adm-drawer {
+    transform: translateX(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .adm-drawer {
+      transition: none;
+    }
+  }
+
+  .adm-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    border: 0;
+    padding: 0;
+    background: rgba(10, 37, 64, 0.42);
+    cursor: pointer;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Insights
+   --------------------------------------------------------------------------- */
+
+.adm-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.adm-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+  flex: 1 1 150px;
+}
+
+.adm-filter > span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.adm-filter select {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.adm-filter select:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+/* A horizontal bar per group. Deliberately not a pie: comparing lengths along
+   a shared baseline is something people read accurately, and comparing angles
+   is not. */
+.adm-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.adm-bar-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 168px) 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.adm-bar-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adm-bar-track {
+  min-width: 0;
+}
+
+.adm-bar {
+  display: flex;
+  height: 20px;
+  border-radius: 5px;
+  overflow: hidden;
+  min-width: 3px;
+  transition: width 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.adm-bar .seg {
+  display: block;
+  min-width: 2px;
+}
+
+.adm-bar .seg.green { background: var(--green); }
+.adm-bar .seg.yellow { background: var(--yellow); }
+.adm-bar .seg.red { background: var(--red); }
+/* Unscored is a hatch rather than a colour, so it cannot be mistaken for a
+   fourth health tier. */
+.adm-bar .seg.none {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--grey-soft),
+    var(--grey-soft) 4px,
+    #dfe6ef 4px,
+    #dfe6ef 8px
+  );
+}
+
+.adm-bar-value {
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.adm-legend {
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 14px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.legend-dot.green { background: var(--green); }
+.legend-dot.yellow { background: var(--yellow); }
+.legend-dot.red { background: var(--red); }
+.legend-dot.none {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--grey-soft),
+    var(--grey-soft) 3px,
+    #dfe6ef 3px,
+    #dfe6ef 6px
+  );
+}
+
+/* One quiet line on the dashboard, where a full work-queue card would put a
+   to-do list back on the front door. */
+.adm-note {
+  background: var(--yellow-soft);
+  border: 1px solid #f0d59b;
+  color: #7a4e00;
+  border-radius: 11px;
+  padding: 11px 14px;
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.adm-note a {
+  color: inherit;
+  font-weight: 700;
+}
+
+@media (max-width: 620px) {
+  .adm-bar-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .adm-bar-track {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
