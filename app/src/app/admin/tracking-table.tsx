@@ -89,7 +89,14 @@ export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]
                     </td>
                     <td className="muted tiny">{business.created_at.slice(0, 10)}</td>
                     <td>
-                      <div className="row" style={{ gap: 6, alignItems: 'center', flexWrap: 'wrap', padding: '6px 0' }}>
+                      {/* Does not wrap. When this column is squeezed — which
+                          happens on whichever page holds the longest business
+                          names, since the browser sizes columns from the rows
+                          currently on screen — wrapping pushed Summary and
+                          Disable onto separate lines and made every row on that
+                          page taller than the same rows elsewhere. The optional
+                          reason box gives up its width instead. */}
+                      <div className="access-cell">
                         <Link className="btn ghost sm" href={`/admin/business/${business.id}`}>
                           Summary
                         </Link>
