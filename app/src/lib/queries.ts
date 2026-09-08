@@ -44,6 +44,7 @@ import type {
   ReportingPeriod,
   ReviewStatus,
   StaffCount,
+  StaffRole,
   TeamMember,
   Transaction,
 } from '@/lib/database.types';
@@ -1012,4 +1013,144 @@ export async function getAdminIntelligence(): Promise<AdminIntelligence> {
     documentsRejected: docs.filter((d) => d.review_status === 'rejected').length,
     pendingLinks: links.filter((l) => l.status === 'pending').length,
   };
+}
+
+/* ---------------------------------------------------------------------------
+   Staff roles
+   --------------------------------------------------------------------------- */
+
+export interface StaffMember {
+  profile: Profile;
+  role: StaffRole;
+  capabilities: {
+    review_evidence: boolean;
+    manage_businesses: boolean;
+    manage_organisations: boolean;
+    view_commercial: boolean;
+    view_audit: boolean;
+  };
+  note: string;
+  createdAt: string | null;
+}
+
+/**
+ * What the signed-in staff account may do.
+ *
+ * Read from the database rather than worked out here, so the answer the
+ * interface uses to hide a control is the same answer the database gives when
+ * that control is used anyway. Hiding a button is a courtesy; `staff_can` and
+ * the SECURITY DEFINER functions are the actual boundary.
+ *
+ * A staff account with no roster row is an owner, which is what keeps an
+ * existing single-admin install working after the roles migration.
+ */
+export async function getMyStaffAccess(): Promise<{
+  isOwner: boolean;
+  role: StaffRole;
+  can: StaffMember['capabilities'];
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const allow = {
+    review_evidence: true,
+    manage_businesses: true,
+    manage_organisations: true,
+    view_commercial: true,
+    view_audit: true,
+  };
+
+  if (!user) {
+    return { isOwner: false, role: 'analyst', can: { ...allow, review_evidence: false } };
+  }
+
+  const { data } = await supabase
+    .from('staff_roles')
+    .select('*')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (!data || data.role === 'owner') {
+    return { isOwner: true, role: 'owner', can: allow };
+  }
+
+  return {
+    isOwner: false,
+    role: data.role,
+    can: {
+      review_evidence: data.can_review_evidence,
+      manage_businesses: data.can_manage_businesses,
+      manage_organisations: data.can_manage_organisations,
+      view_commercial: data.can_view_commercial,
+      view_audit: data.can_view_audit,
+    },
+  };
+}
+
+/** Everyone with staff access, for the roster screen. */
+export async function getStaffMembers(): Promise<StaffMember[]> {
+  const supabase = await createClient();
+
+  const [profilesRes, rolesRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('is_platform_admin', true).order('email'),
+    supabase.from('staff_roles').select('*'),
+  ]);
+
+  const roles = new Map((rolesRes.data ?? []).map((r) => [r.user_id, r]));
+
+  return (profilesRes.data ?? []).map((profile) => {
+    const row = roles.get(profile.id);
+
+    /* No row means an account that predates the roles migration, which
+       `is_staff_owner` treats as an owner. Shown that way here too, rather
+       than as some lesser role the database would not actually enforce. */
+    if (!row) {
+      return {
+        profile,
+        role: 'owner' as StaffRole,
+        capabilities: {
+          review_evidence: true,
+          manage_businesses: true,
+          manage_organisations: true,
+          view_commercial: true,
+          view_audit: true,
+        },
+        note: '',
+        createdAt: null,
+      };
+    }
+
+    return {
+      profile,
+      role: row.role,
+      capabilities: {
+        review_evidence: row.can_review_evidence,
+        manage_businesses: row.can_manage_businesses,
+        manage_organisations: row.can_manage_organisations,
+        view_commercial: row.can_view_commercial,
+        view_audit: row.can_view_audit,
+      },
+      note: row.note,
+      createdAt: row.created_at,
+    };
+  });
+}
+
+/** Accounts that could be given staff access, for the add-someone picker. */
+export async function findProfilesByEmail(term: string): Promise<Profile[]> {
+  const trimmed = term.trim();
+  if (trimmed.length < 3) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .ilike('email', `%${trimmed}%`)
+    .eq('is_platform_admin', false)
+    .order('email')
+    .limit(10);
+
+  return data ?? [];
 }

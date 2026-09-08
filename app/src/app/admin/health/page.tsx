@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { monthLabel } from '@proven/engine';
 import { requireAdmin } from '../guard';
 import { AdminShell } from '../admin-shell';
+import { Paged } from '@/components/Paged';
 import type { AdminInsightRow } from '@/lib/queries';
 import '../../workspace.css';
 import '../../admin.css';
@@ -34,7 +35,12 @@ function HealthTable({
     );
   }
 
+  /* Paged, because these lists are unbounded: every business on the platform
+     lands in exactly one of them, so a thousand businesses is a thousand rows
+     to scroll past. */
   return (
+    <Paged items={rows} label="businesses">
+      {(pageRows) => (
     <div className="table-wrap">
       <table>
         <thead>
@@ -49,7 +55,7 @@ function HealthTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {pageRows.map((r) => (
             <tr key={r.business.id}>
               <td>
                 <Link
@@ -98,11 +104,13 @@ function HealthTable({
         </tbody>
       </table>
     </div>
+      )}
+    </Paged>
   );
 }
 
 export default async function AdminHealthPage() {
-  const { profile, intel, badges } = await requireAdmin();
+  const { profile, intel, badges, hide } = await requireAdmin();
 
   const scored = intel.rows.filter((r) => r.score !== null);
   const byScore = [...scored].sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
@@ -129,6 +137,7 @@ export default async function AdminHealthPage() {
       active="health"
       email={profile.email}
       badges={badges}
+      hide={hide}
       title="Portfolio health"
       subtitle="The same scores the businesses and their funders see"
     >

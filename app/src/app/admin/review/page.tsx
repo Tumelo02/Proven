@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { fmtDate, money } from '@proven/engine';
 import { getReviewQueue } from '@/lib/queries';
 import { requireAdmin } from '../guard';
@@ -20,7 +21,12 @@ export default async function ReviewPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  const { profile, badges } = await requireAdmin();
+  const { profile, badges, hide, access } = await requireAdmin();
+
+  /* Hiding the tab is not enough: the route can still be typed. A staff
+     account without this capability should not be able to reach the queue at
+     all, and the document UPDATE itself is refused by the database anyway. */
+  if (!access.can.review_evidence) notFound();
 
   const { status } = await searchParams;
   const filter =
@@ -33,6 +39,7 @@ export default async function ReviewPage({
       active="evidence"
       email={profile.email}
       badges={badges}
+      hide={hide}
       title="Evidence review"
       subtitle="Proven checks whether a document matches what was logged"
     >

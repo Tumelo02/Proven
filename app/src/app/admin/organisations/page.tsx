@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { getOrgSummaries } from '@/lib/queries';
 import { requireAdmin } from '../guard';
 import { AdminShell } from '../admin-shell';
 import { NewOrganisation } from '../new-org';
+import { Paged } from '@/components/Paged';
 import type { AccountStatus } from '@/lib/database.types';
 import '../../workspace.css';
 import '../../admin.css';
@@ -31,7 +33,8 @@ const ACCOUNT_CHIP: Record<AccountStatus, string> = {
  * checking who is enrolled and reporting.
  */
 export default async function AdminOrganisationsPage() {
-  const { profile, badges } = await requireAdmin();
+  const { profile, badges, hide, access } = await requireAdmin();
+  if (!access.can.manage_organisations) notFound();
   const orgs = await getOrgSummaries();
 
   const pending = orgs.reduce((s, o) => s + o.pending, 0);
@@ -44,6 +47,7 @@ export default async function AdminOrganisationsPage() {
       active="organisations"
       email={profile.email}
       badges={badges}
+      hide={hide}
       title="Organisations"
       subtitle="Funders, incubators and licensees"
     >
@@ -51,7 +55,9 @@ export default async function AdminOrganisationsPage() {
         <div className="s">
           <div className="l">Organisations</div>
           <div className="v">{orgs.length}</div>
-          <div className="f">{paying} paying</div>
+          <div className="f">
+            {access.can.view_commercial ? `${paying} paying` : 'Funders and licensees'}
+          </div>
         </div>
         <div className="s">
           <div className="l">Staff accounts</div>
@@ -89,12 +95,14 @@ export default async function AdminOrganisationsPage() {
             </p>
           </div>
         ) : (
-          <div className="table-wrap">
+          <Paged items={orgs} label="organisations">
+            {(pageOrgs) => (
+            <div className="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>Organisation</th>
-                  <th>Standing</th>
+                  {access.can.view_commercial && <th>Standing</th>}
                   <th>Code</th>
                   <th className="num">People</th>
                   <th className="num">Businesses</th>
@@ -102,7 +110,7 @@ export default async function AdminOrganisationsPage() {
                 </tr>
               </thead>
               <tbody>
-                {orgs.map(({ org, members: memberCount, confirmed: confirmedCount, pending: pendingCount }) => (
+                {pageOrgs.map(({ org, members: memberCount, confirmed: confirmedCount, pending: pendingCount }) => (
                   <tr key={org.id}>
                     <td>
                       {/* Opens the organisation rather than showing every
@@ -115,18 +123,22 @@ export default async function AdminOrganisationsPage() {
                         <strong>{org.name}</strong>
                       </Link>
                     </td>
-                    {/* Commercial standing, staff-side only. It changes who gets
-                        chased and who gets a renewal conversation. */}
-                    <td>
-                      <span className={`chip ${ACCOUNT_CHIP[org.account_status]}`}>
-                        {ACCOUNT_LABEL[org.account_status]}
-                      </span>
-                      {org.account_until && (
-                        <div className="tiny muted" style={{ marginTop: 2 }}>
-                          to {org.account_until}
-                        </div>
-                      )}
-                    </td>
+                    {/* Commercial standing, staff-side only, and only for a
+                        staff account granted it: whether a funder is paying or
+                        lapsed is not something a reviewer brought in to check
+                        receipts needs to see. */}
+                    {access.can.view_commercial && (
+                      <td>
+                        <span className={`chip ${ACCOUNT_CHIP[org.account_status]}`}>
+                          {ACCOUNT_LABEL[org.account_status]}
+                        </span>
+                        {org.account_until && (
+                          <div className="tiny muted" style={{ marginTop: 2 }}>
+                            to {org.account_until}
+                          </div>
+                        )}
+                      </td>
+                    )}
                     <td className="muted mono">{org.slug}</td>
                     <td className="num mono">{memberCount}</td>
                     <td className="num mono">{confirmedCount}</td>
@@ -144,7 +156,9 @@ export default async function AdminOrganisationsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+            )}
+          </Paged>
         )}
       </div>
     </AdminShell>

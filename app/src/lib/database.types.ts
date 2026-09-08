@@ -91,6 +91,38 @@ export type OrgType = 'funder' | 'incubator' | 'accelerator' | 'government' | 'o
  */
 export type AccountStatus = 'pilot' | 'paying' | 'internal' | 'lapsed';
 
+/**
+ * What a Proven staff account may do.
+ *
+ * `owner` is the only role that can manage other staff, and that is not
+ * expressible as a capability grant on purpose: see the staff_roles migration.
+ */
+export type StaffRole = 'owner' | 'manager' | 'reviewer' | 'analyst';
+
+/** The capabilities a staff account can be granted individually. */
+export type StaffCapability =
+  | 'review_evidence'
+  | 'manage_businesses'
+  | 'manage_organisations'
+  | 'view_commercial'
+  | 'view_audit'
+  /* Always denied by `staff_can`; held by the owner role alone. */
+  | 'manage_staff';
+
+export type StaffRoleRow = {
+  user_id: string;
+  role: StaffRole;
+  can_review_evidence: boolean;
+  can_manage_businesses: boolean;
+  can_manage_organisations: boolean;
+  can_view_commercial: boolean;
+  can_view_audit: boolean;
+  note: string;
+  created_at: string;
+  created_by: string | null;
+  updated_at: string;
+};
+
 export type Organisation = {
   id: string;
   name: string;
@@ -477,6 +509,11 @@ export type Database = {
           Partial<Pick<FundingLink, 'support_kind' | 'committed_amount' | 'released_amount' | 'support_starts_on' | 'support_ends_on'>>,
         Partial<FundingLink>
       >;
+      /* Read-only to every client: the table has no INSERT, UPDATE or DELETE
+         policy, so writes go through `set_staff_role` and
+         `remove_staff_member`. Both write shapes are `never` here, so a direct
+         call from the app is a compile error rather than a silent no-op. */
+      staff_roles: Table<StaffRoleRow, never, never>;
       reporting_periods: Table<ReportingPeriod, Omit<ReportingPeriod, 'id' | 'created_at'>, Partial<ReportingPeriod>>;
       transactions: Table<Transaction, Omit<Transaction, 'id' | 'created_at'>, Partial<Transaction>>;
       documents: Table<Document, Omit<Document, 'id' | 'uploaded_at'>, Partial<Document>>;
@@ -560,6 +597,30 @@ export type Database = {
         Args: { p_key: string; p_max_attempts: number; p_window_seconds: number };
         Returns: boolean;
       };
+      /* Staff roles. All three are SECURITY DEFINER and check the caller is an
+         owner themselves, so calling them directly from a limited admin's
+         session changes nothing. */
+      is_staff_owner: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      set_staff_role: {
+        Args: {
+          target: string;
+          new_role: StaffRole;
+          review_evidence?: boolean;
+          manage_businesses?: boolean;
+          manage_organisations?: boolean;
+          view_commercial?: boolean;
+          view_audit?: boolean;
+          new_note?: string;
+        };
+        Returns: undefined;
+      };
+      remove_staff_member: {
+        Args: { target: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       report_status: ReportStatus;
@@ -575,6 +636,7 @@ export type Database = {
       org_type: OrgType;
       account_status: AccountStatus;
       support_kind: SupportKind;
+      staff_role: StaffRole;
     };
     CompositeTypes: Record<string, never>;
   };

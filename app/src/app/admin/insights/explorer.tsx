@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Paged } from '@/components/Paged';
 
 /** The slice of an insight row this component needs, kept serialisable. */
 export interface ExplorerRow {
@@ -101,6 +102,13 @@ export function InsightsExplorer({ rows }: { rows: ExplorerRow[] }) {
   const reporting = filtered.filter((r) => r.months > 0).length;
 
   const anyFilter = industry !== '' || region !== '' || tier !== '';
+
+  /* Sorted once here rather than inside the table, so paging slices an order
+     that is already settled. */
+  const ranked = useMemo(
+    () => [...filtered].sort((a, b) => (b.score ?? -1) - (a.score ?? -1)),
+    [filtered],
+  );
 
   return (
     <>
@@ -275,6 +283,8 @@ export function InsightsExplorer({ rows }: { rows: ExplorerRow[] }) {
             Best score first
           </span>
         </div>
+        <Paged items={ranked} label="businesses">
+          {(pageRows) => (
         <div className="table-wrap">
           <table>
             <thead>
@@ -288,42 +298,42 @@ export function InsightsExplorer({ rows }: { rows: ExplorerRow[] }) {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {pageRows.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="muted" style={{ textAlign: 'center', padding: '18px 8px' }}>
                     Nothing matches these filters.
                   </td>
                 </tr>
               ) : (
-                [...filtered]
-                  .sort((a, b) => (b.score ?? -1) - (a.score ?? -1))
-                  .map((r) => (
-                    <tr key={r.id}>
-                      <td>
-                        <Link
-                          href={`/admin/business/${r.id}`}
-                          style={{ textDecoration: 'none', color: 'var(--ink)' }}
-                        >
-                          <strong>{r.name}</strong>
-                        </Link>
-                      </td>
-                      <td className="muted">{r.industry || '—'}</td>
-                      <td className="muted">{r.region || '—'}</td>
-                      <td className="muted">{r.funderName || '—'}</td>
-                      <td className="num mono">{r.months || <span className="muted">None</span>}</td>
-                      <td className="num">
-                        {r.score === null ? (
-                          <span className="muted">—</span>
-                        ) : (
-                          <span className={`chip ${r.tier}`}>{r.score}</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
+                pageRows.map((r) => (
+                  <tr key={r.id}>
+                    <td>
+                      <Link
+                        href={`/admin/business/${r.id}`}
+                        style={{ textDecoration: 'none', color: 'var(--ink)' }}
+                      >
+                        <strong>{r.name}</strong>
+                      </Link>
+                    </td>
+                    <td className="muted">{r.industry || '—'}</td>
+                    <td className="muted">{r.region || '—'}</td>
+                    <td className="muted">{r.funderName || '—'}</td>
+                    <td className="num mono">{r.months || <span className="muted">None</span>}</td>
+                    <td className="num">
+                      {r.score === null ? (
+                        <span className="muted">—</span>
+                      ) : (
+                        <span className={`chip ${r.tier}`}>{r.score}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
+          )}
+        </Paged>
       </div>
     </>
   );

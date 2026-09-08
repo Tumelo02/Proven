@@ -1,11 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
 import { LogoPreview } from '@/components/logo-preview';
+import { Paged } from '@/components/Paged';
 import { setBusinessAccess } from './actions';
-
-const PAGE_SIZE = 5;
 
 function initials(name: string): string {
   return name
@@ -16,21 +14,12 @@ function initials(name: string): string {
 }
 
 export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]; logoUrls?: Record<string, string> }) {
-  const [page, setPage] = useState(1);
-  const totalPages = Math.max(1, Math.ceil(businesses.length / PAGE_SIZE));
-  const safePage = Math.min(Math.max(1, page), totalPages);
-
-  const pageBusinesses = useMemo(
-    () => businesses.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
-    [businesses, safePage],
-  );
-
   return (
     <div className="panel">
       <div className="panel-head">
         <h3>Tracking independently</h3>
         <span className="hint" style={{ marginLeft: 'auto' }}>
-          {businesses.length} of {businesses.length} businesses have no funder
+          {businesses.length} business{businesses.length === 1 ? '' : 'es'} with no funder
         </span>
       </div>
 
@@ -41,7 +30,8 @@ export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]
           </p>
         </div>
       ) : (
-        <>
+        <Paged items={businesses} label="businesses">
+          {(pageBusinesses) => (
           <div className="table-wrap">
             <table>
               <thead>
@@ -132,58 +122,8 @@ export function TrackingTable({ businesses, logoUrls = {} }: { businesses: any[]
             </table>
           </div>
 
-          {businesses.length > PAGE_SIZE && (
-            <div
-              className="table-pager"
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginTop: 18,
-                gap: 8,
-                paddingBottom: 4,
-              }}
-            >
-              <button
-                type="button"
-                className="btn ghost sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={safePage <= 1}
-                aria-label="Previous page"
-                style={{
-                  ...(safePage <= 1 ? { pointerEvents: 'none', opacity: 0.5 } : {}),
-                  padding: '6px 12px',
-                  fontSize: 12,
-                  minHeight: 34,
-                }}
-              >
-                <span aria-hidden="true">&lt;</span>
-                <span>Previous</span>
-              </button>
-
-              <div className="tiny muted" style={{ minWidth: 90, textAlign: 'center', fontSize: 11.5 }}>
-                Page {safePage} of {totalPages}
-              </div>
-
-              <button
-                type="button"
-                className="btn ghost sm"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={safePage >= totalPages}
-                aria-label="Next page"
-                style={{
-                  ...(safePage >= totalPages ? { pointerEvents: 'none', opacity: 0.5 } : {}),
-                  padding: '6px 12px',
-                  fontSize: 12,
-                  minHeight: 34,
-                }}
-              >
-                <span>Next</span>
-                <span aria-hidden="true">&gt;</span>
-              </button>
-            </div>
           )}
-        </>
+        </Paged>
       )}
     </div>
   );

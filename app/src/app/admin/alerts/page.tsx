@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { monthLabel } from '@proven/engine';
 import { requireAdmin } from '../guard';
 import { AdminShell } from '../admin-shell';
+import { Paged } from '@/components/Paged';
 import '../../workspace.css';
 import '../../admin.css';
 
@@ -19,7 +20,7 @@ import '../../admin.css';
  * broken.
  */
 export default async function AdminAlertsPage() {
-  const { profile, intel, badges } = await requireAdmin();
+  const { profile, intel, badges, hide } = await requireAdmin();
 
   const silent = intel.rows.filter((r) => r.months === 0);
   const late = intel.rows.filter((r) => r.months > 0 && r.reportingState === 'overdue');
@@ -35,6 +36,7 @@ export default async function AdminAlertsPage() {
       active="alerts"
       email={profile.email}
       badges={badges}
+      hide={hide}
       title="Needs attention"
       subtitle="Everything waiting on Proven, and everyone worth chasing"
     >
@@ -111,7 +113,9 @@ export default async function AdminAlertsPage() {
             </p>
           </div>
         ) : (
-          <div className="table-wrap">
+          <Paged items={silent} label="businesses">
+            {(pageRows) => (
+            <div className="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -123,7 +127,7 @@ export default async function AdminAlertsPage() {
                 </tr>
               </thead>
               <tbody>
-                {silent.map((r) => (
+                {pageRows.map((r) => (
                   <tr key={r.business.id}>
                     <td>
                       <Link
@@ -152,7 +156,9 @@ export default async function AdminAlertsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+            )}
+          </Paged>
         )}
       </div>
 
@@ -170,7 +176,9 @@ export default async function AdminAlertsPage() {
             </p>
           </div>
         ) : (
-          <div className="table-wrap">
+          <Paged items={lapsed} label="businesses">
+            {(pageRows) => (
+            <div className="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -182,7 +190,7 @@ export default async function AdminAlertsPage() {
                 </tr>
               </thead>
               <tbody>
-                {lapsed.map((r) => (
+                {pageRows.map((r) => (
                   <tr key={r.business.id}>
                     <td>
                       <Link
@@ -204,7 +212,9 @@ export default async function AdminAlertsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+            )}
+          </Paged>
         )}
       </div>
 
@@ -216,7 +226,9 @@ export default async function AdminAlertsPage() {
               {rejected.length} business{rejected.length === 1 ? '' : 'es'}
             </span>
           </div>
-          <div className="table-wrap">
+          <Paged items={rejected} label="businesses">
+            {(pageRows) => (
+            <div className="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -227,7 +239,7 @@ export default async function AdminAlertsPage() {
                 </tr>
               </thead>
               <tbody>
-                {rejected.map((r) => (
+                {pageRows.map((r) => (
                   <tr key={r.business.id}>
                     <td>
                       <Link
@@ -244,7 +256,9 @@ export default async function AdminAlertsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+            )}
+          </Paged>
           <div className="panel-body">
             <p className="tiny muted" style={{ margin: 0 }}>
               A rejected document leaves the entry unbacked, so evidence

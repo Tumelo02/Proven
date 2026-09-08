@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { getAuditTrail } from '@/lib/queries';
 import { requireAdmin } from '../guard';
 import { AdminShell } from '../admin-shell';
+import { Paged } from '@/components/Paged';
 import type { AuditSeverity } from '@/lib/database.types';
 import '../../workspace.css';
 import '../../admin.css';
@@ -53,7 +55,8 @@ export default async function AuditPage({
 }: {
   searchParams: Promise<{ severity?: string }>;
 }) {
-  const { profile, badges } = await requireAdmin();
+  const { profile, badges, hide, access } = await requireAdmin();
+  if (!access.can.view_audit) notFound();
 
   const { severity } = await searchParams;
   const filter =
@@ -68,6 +71,7 @@ export default async function AuditPage({
       active="audit"
       email={profile.email}
       badges={badges}
+      hide={hide}
       title="Audit trail"
       subtitle="Who did what, when, and from where"
     >
@@ -103,7 +107,9 @@ export default async function AuditPage({
                 </p>
               </div>
             ) : (
-              <div className="table-wrap">
+              <Paged items={rows} label="entries">
+                {(pageRows) => (
+                <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
@@ -115,7 +121,7 @@ export default async function AuditPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((r) => (
+                    {pageRows.map((r) => (
                       <tr key={r.id}>
                         <td className="tiny muted" style={{ whiteSpace: 'nowrap' }}>
                           {when(r.created_at)}
@@ -142,7 +148,9 @@ export default async function AuditPage({
                     ))}
                   </tbody>
                 </table>
-              </div>
+                </div>
+                )}
+              </Paged>
             )}
           </div>
 

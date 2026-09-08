@@ -78,8 +78,8 @@ For **each** file, in numeric order:
 6. You should see **Success. No rows returned.** That is the expected result:
    these files create tables, they do not fetch anything.
 
-Repeat for files 2 and 3. File 4, the demo data, is optional and covered
-further down.
+Repeat for every numbered file in order. File 4, the demo data, is optional
+and covered further down.
 
 ### If you see an error
 
@@ -229,14 +229,41 @@ set is_platform_admin = true
 where email = 'your-email@example.com';
 ```
 
-This is the one thing that cannot be done through the app, deliberately.
-`is_platform_admin` grants visibility across every organisation, so it is set
-here by hand and nowhere else. There is no form anywhere in Proven that can
-grant it, which means it cannot be obtained by anyone who has not been given
-your database password.
+The **first** staff account has to be made here, deliberately.
+`is_platform_admin` grants visibility across every organisation, so there is no
+form anywhere in Proven that can grant it to a platform with no staff yet: it
+cannot be obtained by anyone who has not been given your database password.
 
 **Then sign out and back in**, and you will land on the Proven admin panel at
 **`/admin`**. See [Your admin panel](#your-admin-panel) below for what it shows.
+
+### Adding more staff
+
+After the first one, use **Staff and access** in the admin panel rather than
+SQL. That screen grants a role, and the role decides what the account may do:
+
+| Role | What it can do |
+|---|---|
+| **Owner** | Everything, including adding and removing other staff |
+| **Manager** | The day-to-day panel: evidence, businesses, organisations, audit |
+| **Reviewer** | Check evidence, and little else |
+| **Analyst** | Read the numbers, change nothing |
+
+Individual capabilities can be ticked on top of a role where one nearly fits.
+Managing staff is the exception: it belongs to **Owner** and cannot be granted
+as a capability, because an account that could hand it out could hand it to
+itself.
+
+Roles are enforced by the database, not by the screen. `set_staff_role` and
+`remove_staff_member` are `SECURITY DEFINER` functions that check the caller is
+an owner before changing anything, so a limited admin calling the API directly
+changes nothing. `staff_roles` has no INSERT, UPDATE or DELETE policy at all,
+and the role deliberately does **not** live on `profiles`, because
+`profiles_update_self` would otherwise let an account raise its own role.
+
+An existing staff account from before this migration keeps full access: a
+staff row with no role is treated as an owner, and the migration writes an
+explicit owner row for everyone who already had `is_platform_admin`.
 
 To make someone an admin of a specific organisation instead:
 

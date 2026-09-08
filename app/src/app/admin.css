@@ -9,7 +9,7 @@
    =========================================================================== */
 
 .adm {
-  display: flex;
+  --drawer-w: 264px;
   min-height: 100vh;
   background: var(--bg);
 }
@@ -19,31 +19,57 @@
    --------------------------------------------------------------------------- */
 
 .adm-drawer {
-  --drawer-w: 268px;
+  /* Fixed to the viewport, so the ONLY thing that animates is its own
+     transform. An earlier version slid it with `margin-left`, which forces the
+     browser to re-lay-out the page on every frame — the main column reflows,
+     the tables inside re-measure, and the slide stutters. A transform on a
+     fixed element is composited: nothing is re-measured, so the motion is
+     even. The content it uncovers is moved by a margin transition instead,
+     which is cheap because the column has no siblings to push around. */
+  position: fixed;
+  inset: 0 auto 0 0;
   width: var(--drawer-w);
-  flex: 0 0 var(--drawer-w);
   background: var(--navy);
   color: #fff;
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
   overflow-y: auto;
+  z-index: 60;
 
-  /* Closed is the resting state. Margin rather than transform, so the closed
-     drawer takes no layout width at all and the content genuinely reclaims it,
-     instead of sitting under a shifted element. */
-  margin-left: calc(var(--drawer-w) * -1);
-  transition: margin-left 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-100%);
+  transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
 }
 
 .drawer-open .adm-drawer {
+  transform: translateX(0);
+}
+
+/* The content simply starts further across when the drawer is open.
+
+   `container-type: inline-size` makes this the yardstick the panels below
+   measure against, rather than the window: opening the drawer takes 264px away
+   from this column, and tiles laid out on viewport breakpoints would keep four
+   across a space that can no longer hold them. */
+.adm-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   margin-left: 0;
+  transition: margin-left 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  container-type: inline-size;
+  container-name: admmain;
+}
+
+@media (min-width: 1101px) {
+  .drawer-open .adm-main {
+    margin-left: var(--drawer-w);
+  }
 }
 
 /* Someone who asked for less motion gets the drawer without the slide. */
 @media (prefers-reduced-motion: reduce) {
+  .adm-main,
   .adm-drawer {
     transition: none;
   }
@@ -178,13 +204,6 @@
    Content
    --------------------------------------------------------------------------- */
 
-.adm-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 .adm-topbar-left {
   display: flex;
   align-items: center;
@@ -222,29 +241,13 @@
 
 /* Below this width there is not enough room to push the content aside, so the
    drawer floats over it and a scrim takes the click that closes it. */
+/* Below this width the content is not pushed across at all — there is no room
+   to give a drawer 264px and still show a table — so the drawer overlays and a
+   scrim takes the click that closes it. The rule above already limits the
+   margin to wide screens; this adds the scrim and the shadow. */
 @media (max-width: 1100px) {
-  /* Taken out of the flow entirely and slid with a transform rather than a
-     negative margin. A fixed element is positioned against the viewport, so
-     the margin trick that reclaims layout width on a wide screen has nothing
-     to reclaim here and only complicates the offset. */
   .adm-drawer {
-    position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 60;
-    margin-left: 0;
-    transform: translateX(-100%);
-    transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--shadow-lg);
-  }
-
-  .drawer-open .adm-drawer {
-    transform: translateX(0);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .adm-drawer {
-      transition: none;
-    }
   }
 
   .adm-scrim {
@@ -256,7 +259,42 @@
     padding: 0;
     background: rgba(10, 37, 64, 0.42);
     cursor: pointer;
+    animation: adm-fade 160ms ease-out;
   }
+}
+
+@keyframes adm-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---------------------------------------------------------------------------
+   Sizing
+
+   Measured against the content column (see `.adm-main` above), not the window,
+   so the tiles reflow when the drawer takes space from them rather than
+   stretching to fill a width that is no longer there.
+   --------------------------------------------------------------------------- */
+
+@container admmain (max-width: 1080px) {
+  .adm-main .statstrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container admmain (max-width: 560px) {
+  .adm-main .statstrip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* A ceiling on the reading width. Beyond this the tables stop growing and
+   centre instead: a row stretched across a 32-inch monitor puts the business
+   name and its status so far apart they cannot be read as one line. */
+.adm-main .content {
+  max-width: 1500px;
+  width: 100%;
+  margin-inline: auto;
 }
 
 /* ---------------------------------------------------------------------------
@@ -421,4 +459,266 @@
     grid-column: 1 / -1;
     order: 3;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Pagination
+
+   Shared by every long table on the staff side. Sits inside the panel, below
+   the table, so it reads as part of that table rather than as a page control.
+   --------------------------------------------------------------------------- */
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line-2);
+}
+
+.pager-count {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pager-count b {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.pager-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.pager-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 650;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms, color 120ms;
+}
+
+.pager-btn:hover:not(:disabled):not(.on) {
+  background: var(--grey-soft);
+  border-color: var(--grey);
+}
+
+.pager-btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+/* The current page is filled rather than merely tinted: on a row of eight
+   near-identical buttons, a weak highlight is easy to lose. */
+.pager-btn.on {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+  cursor: default;
+}
+
+/* Kept in the flow at reduced contrast rather than hidden, so the row does not
+   change width as it is paged through. */
+.pager-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pager-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pager-gap {
+  padding: 0 2px;
+  color: var(--faint);
+  font-size: 12.5px;
+  user-select: none;
+}
+
+@media (max-width: 620px) {
+  .pager {
+    justify-content: center;
+  }
+
+  .pager-count {
+    width: 100%;
+    text-align: center;
+  }
+
+  .pager-controls {
+    margin-left: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Staff and access
+   --------------------------------------------------------------------------- */
+
+.staff-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A <details> per person: the roster reads as a list at a glance, and the
+   controls for one account are one click away rather than fifteen forms
+   competing on one screen. */
+.staff-row {
+  border-bottom: 1px solid var(--line-2);
+}
+
+.staff-row:last-child {
+  border-bottom: 0;
+}
+
+.staff-row > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+}
+
+.staff-row > summary::-webkit-details-marker {
+  display: none;
+}
+
+.staff-row > summary::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--faint);
+  border-bottom: 2px solid var(--faint);
+  transform: rotate(-45deg);
+  transition: transform 140ms ease-out;
+  flex: 0 0 auto;
+}
+
+.staff-row[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.staff-row > summary:hover {
+  background: var(--grey-soft);
+}
+
+.staff-row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Pushed to the end and allowed to disappear first: it is a summary of the
+   role chip beside it, so losing it on a narrow screen costs nothing. */
+.staff-row-caps {
+  margin-left: auto;
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .staff-row-caps {
+    display: none;
+  }
+}
+
+.staff-row-body {
+  padding: 4px 16px 18px 33px;
+  background: var(--grey-soft);
+}
+
+.staff-form {
+  max-width: 520px;
+}
+
+.staff-form-who {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.staff-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.staff-check input {
+  margin-top: 2px;
+  flex: 0 0 auto;
+  width: auto;
+  cursor: pointer;
+}
+
+.staff-caps {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 4px 0 12px;
+  background: var(--card);
+}
+
+/* Set apart from the rest of the form, because removing someone's access is
+   not a variation on editing it. */
+.staff-row-danger {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.staff-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.staff-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms, background 120ms;
+}
+
+.staff-result:hover {
+  border-color: var(--blue);
+  background: var(--blue-soft);
 }

@@ -12,6 +12,7 @@ export type AdminTab =
   | 'evidence'
   | 'insights'
   | 'organisations'
+  | 'staff'
   | 'audit';
 
 /** One badge count per tab, so the drawer carries the work, not just the names. */
@@ -34,6 +35,7 @@ const NAV: { key: AdminTab; label: string; href: string; hint: string }[] = [
     hint: 'Funders and licensees',
   },
   { key: 'audit', label: 'Audit trail', href: '/admin/audit', hint: 'Every recorded action' },
+  { key: 'staff', label: 'Staff and access', href: '/admin/staff', hint: 'Who works on Proven' },
 ];
 
 /**
@@ -57,6 +59,7 @@ export function AdminShell({
   active,
   email,
   badges,
+  hide,
   title,
   subtitle,
   actions,
@@ -65,6 +68,8 @@ export function AdminShell({
   active: AdminTab;
   email: string;
   badges?: Partial<AdminBadges>;
+  /** Tabs this staff account may not use, hidden from the menu. */
+  hide?: AdminTab[];
   title: string;
   subtitle: string;
   /** Page-specific controls, shown beside Sign out. */
@@ -135,7 +140,7 @@ export function AdminShell({
         </div>
 
         <nav className="adm-nav">
-          {NAV.map((item) => {
+          {NAV.filter((item) => !hide?.includes(item.key)).map((item) => {
             const badge = badgeFor(item.key);
             return (
               <Link

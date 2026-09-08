@@ -23,7 +23,7 @@ import '../admin.css';
  * security rules underneath return nothing to a non-admin anyway.
  */
 export default async function AdminPage() {
-  const { profile, intel, badges } = await requireAdmin();
+  const { profile, intel, badges, hide } = await requireAdmin();
 
   const stats = await getPlatformStats();
 
@@ -44,6 +44,7 @@ export default async function AdminPage() {
       active="overview"
       email={profile.email}
       badges={badges}
+      hide={hide}
       title="Proven admin"
       subtitle="Everything across every organisation"
     >

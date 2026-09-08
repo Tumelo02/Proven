@@ -14,7 +14,7 @@ import '../../admin.css';
  * is that question asked of a province, an industry, or the businesses at risk.
  */
 export default async function AdminInsightsPage() {
-  const { profile, intel, badges } = await requireAdmin();
+  const { profile, intel, badges, hide } = await requireAdmin();
 
   const rows: ExplorerRow[] = intel.rows.map((r) => ({
     id: r.business.id,
@@ -44,6 +44,7 @@ export default async function AdminInsightsPage() {
       active="insights"
       email={profile.email}
       badges={badges}
+      hide={hide}
       title="Insights"
       subtitle="How the platform is growing, and what is inside it"
     >
