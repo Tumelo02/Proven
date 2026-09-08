@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { healthAt, fmtDate, money, moneyShort, monthLabel, tierOf } from '@proven/engine';
-import { getMyOrganisations, getScoredBusiness } from '@/lib/queries';
+import { getBusinessShell, getMyOrganisations, getScoredBusiness } from '@/lib/queries';
 import { EntrepreneurShell } from '../shell';
 import { Panel } from '@/components/workspace';
 import { LineChart } from '@/components/LineChart';
@@ -8,9 +8,23 @@ import '../../../workspace.css';
 
 export default async function HistoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [scored, orgs] = await Promise.all([getScoredBusiness(id), getMyOrganisations()]);
+  const [shell, scored, orgs] = await Promise.all([
+    getBusinessShell(id),
+    getScoredBusiness(id),
+    getMyOrganisations(),
+  ]);
 
-  if (!scored) notFound();
+  /* No such business, or not one this user may see. */
+  if (!shell) notFound();
+
+  /* A business that exists but has never reported cannot be scored, so
+     `getScoredBusiness` returns null for it. That is an ordinary state for
+     someone who signed up and has not sent their first month yet, not a
+     missing page: send them to the overview, which is where the form to
+     report a month lives. Calling notFound() here, as this page used to,
+     showed a dead end to a user whose only mistake was not having reported
+     yet. */
+  if (!scored) redirect(`/business/${id}`);
 
   const { input, guidance, periods } = scored;
   const hist = input.history;
@@ -18,7 +32,14 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
   const totIn = hist.reduce((s, p) => s + p.revenue, 0);
   const totOut = hist.reduce((s, p) => s + p.expenses, 0);
   const kept = totIn - totOut;
-  const best = hist.reduce((a, b) => (b.revenue > a.revenue ? b : a), hist[0]!);
+  /* Seeded with the first month rather than an assertion that one exists:
+     `reduce` on an empty array with an `undefined` seed returns undefined, and
+     reading `.date` off it further down is what turned an empty history into a
+     blank page. `scored` being non-null means there is at least one month, so
+     this is belt and braces — but it is the belt that failed before. */
+  const best = hist.length
+    ? hist.reduce((a, b) => (b.revenue > a.revenue ? b : a), hist[0]!)
+    : null;
 
   const monthShort = (iso: string) =>
     new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-ZA', {
@@ -81,8 +102,10 @@ export default async function HistoryPage({ params }: { params: Promise<{ id: st
             </div>
             <div className="ms">
               <div className="l">Best month</div>
-              <div className="v">{monthShort(best.date)}</div>
-              <div className="tiny muted">{money(best.revenue)} in</div>
+              <div className="v">{best ? monthShort(best.date) : '—'}</div>
+              <div className="tiny muted">
+                {best ? `${money(best.revenue)} in` : 'No months reported yet'}
+              </div>
             </div>
           </div>
 

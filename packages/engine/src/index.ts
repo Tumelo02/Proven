@@ -34,6 +34,13 @@ export {
 } from './credit.ts';
 export { getGuidance } from './guidance.ts';
 export {
+  IDLE_LIMIT_MS,
+  IDLE_WARNING_MS,
+  ACTIVITY_COOKIE,
+  readLastSeen,
+  isIdleExpired,
+} from './idle.ts';
+export {
   monthLabel,
   fmtDate,
   fundingUtilisation,

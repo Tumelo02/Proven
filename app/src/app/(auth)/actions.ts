@@ -9,13 +9,14 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { recordEvent, recordFailedSignIn } from '@/lib/audit';
 import { POLICY_VERSION } from '@/lib/policy';
 import { validatePasswordStrength } from '@/lib/password';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rateLimit';
 import { emailSchema } from '@/lib/validation';
+import { ACTIVITY_COOKIE, activityCookieOptions } from '@/lib/idle';
 import { z } from 'zod';
 
 export interface AuthState {
@@ -32,6 +33,19 @@ function siteOrigin(requestHeaders: Headers): string {
   const forwardedProto = requestHeaders.get('x-forwarded-proto');
   const protocol = forwardedProto?.split(',')[0]?.trim() || 'http';
   return host ? `${protocol}://${host}` : 'http://localhost:3000';
+}
+
+/**
+ * Start the idle clock for a session that has just begun.
+ *
+ * Without this, the very first request after signing in would find no activity
+ * cookie, and the proxy — which reads a missing marker as "stale" — would sign
+ * the user straight back out again. Signing in IS activity, so it is stamped
+ * here at the moment the session is created.
+ */
+async function markSessionActive(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(ACTIVITY_COOKIE, String(Date.now()), activityCookieOptions());
 }
 
 /** Only allow relative paths, so `?next=` cannot bounce a user to another site. */
@@ -133,6 +147,8 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
     entityId: data.user?.id ?? null,
     severity: staffSignIn ? 'alert' : 'info',
   });
+
+  await markSessionActive();
 
   revalidatePath('/', 'layout');
   redirect(safeNext(formData.get('next')));
@@ -321,6 +337,8 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     };
   }
 
+  await markSessionActive();
+
   revalidatePath('/', 'layout');
   redirect('/dashboard');
 }
@@ -328,6 +346,12 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
+
+  /* Clear the idle marker too, so nothing is left behind that a later visit
+     could read as a still-live session. */
+  const cookieStore = await cookies();
+  cookieStore.delete(ACTIVITY_COOKIE);
+
   revalidatePath('/', 'layout');
   redirect('/sign-in');
 }

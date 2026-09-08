@@ -6,6 +6,7 @@ import {
   fundingUtilisation,
   milestoneProgress,
   money,
+  monthLabel,
   pct,
   reportingStatus,
 } from '@proven/engine';
@@ -34,11 +35,43 @@ export default async function BusinessOverviewPage({
   if (!shell) notFound();
 
   /* A business with no months logged cannot be scored, so it gets the setup
-     screen rather than a dashboard full of zeroes that would read as failure. */
+     screen rather than a dashboard full of zeroes that would read as failure.
+
+     This is the screen someone lands on when they signed up, did not report,
+     and came back later — the case that used to leave them stranded. So it
+     names the month that is actually owed and opens with the form already
+     pointing at it, rather than showing an empty dashboard or a dead end. It
+     also says plainly that nothing has been sent to their funder yet, because
+     that is what the funder's side is showing about them, and finding that
+     out here is better than finding it out from the funder. */
   if (!shell.periods.length) {
+    const rep = reportingStatus({ history: [] });
+    const owed = new Date(
+      Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() - 1, 1),
+    )
+      .toISOString()
+      .slice(0, 10);
+
     return (
       <EntrepreneurShell businessId={id} active="overview" showSwitchRole={orgs.length > 0}>
-        <Panel title="Add your first month of figures">
+        <div className={`duebar ${rep.state}`} style={{ marginBottom: 16 }}>
+          <span className="dueicon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+              strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3.5" y="5" width="17" height="16" rx="2.5" />
+              <path d="M3.5 10h17M8 3v4M16 3v4" />
+            </svg>
+          </span>
+          <div>
+            <div className="duetitle">You have not reported a month yet</div>
+            <div className="duesub">
+              Until you send figures, anyone supporting you sees nothing to go
+              on. Start with {monthLabel(owed)} below.
+            </div>
+          </div>
+        </div>
+
+        <Panel title={`Add your figures for ${monthLabel(owed)}`}>
           <p style={{ maxWidth: 460, marginTop: 0, color: 'var(--muted)', fontSize: 13.5 }}>
             Your score is worked out from what you report each month. Add one
             month to get started, and add the months before it if you have

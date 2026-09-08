@@ -17,6 +17,12 @@
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import {
+  ACTIVITY_COOKIE,
+  activityCookieOptions,
+  isIdleExpired,
+  readLastSeen,
+} from '@/lib/idle';
 
 /**
  * Pages reachable without signing in.
@@ -84,6 +90,42 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  /* Idle expiry, checked before anything else this session could reach.
+
+     A Supabase session outlives the tab it was created in, so closing the
+     browser and coming back later would otherwise resume it — on a shared
+     phone that hands the previous person's business to whoever opens the link
+     next. The activity cookie records when this session was last actually
+     used; if that was too long ago, the session ends here rather than being
+     silently restored.
+
+     Public pages are left alone: there is nothing to protect on them, and
+     signing a visitor out of the story page would be nonsense. */
+  if (user && !isPublic(pathname)) {
+    const lastSeen = readLastSeen(request.cookies.get(ACTIVITY_COOKIE)?.value);
+
+    if (isIdleExpired(lastSeen)) {
+      /* Sign out for real. Clearing the cookie alone would leave a valid
+         refresh token in the browser, which is the flaw being closed, so the
+         token is revoked at Supabase as well. */
+      await supabase.auth.signOut();
+
+      const url = request.nextUrl.clone();
+      url.pathname = '/sign-in';
+      url.search = '';
+      url.searchParams.set('timeout', '1');
+
+      const redirectResponse = NextResponse.redirect(url);
+      /* Carry over whatever cookie clearing `signOut` queued, then drop the
+         activity marker itself. */
+      for (const cookie of response.cookies.getAll()) {
+        redirectResponse.cookies.set(cookie);
+      }
+      redirectResponse.cookies.delete(ACTIVITY_COOKIE);
+      return redirectResponse;
+    }
+  }
+
   if (user && pathname !== '/access-disabled') {
     const { data: disabledBusiness, error } = await supabase
       .from('businesses')
@@ -118,6 +160,26 @@ export default async function proxy(request: NextRequest) {
     url.pathname = '/dashboard';
     url.search = '';
     return NextResponse.redirect(url);
+  }
+
+  /* Navigating a page is itself activity, so the window moves with the user
+     and someone working steadily is never interrupted. The client-side timer
+     refreshes this too, which covers the long stretches where a person is
+     typing into one page without navigating.
+
+     `maxAge` matches the idle limit, so the browser drops the cookie at
+     roughly the moment it stops being valid. The check above does not depend
+     on that — an absent cookie reads as expired either way — it simply avoids
+     leaving a stale marker lying around. */
+  /* Only on the pages the check above actually guards. Refreshing the marker
+     on public pages too would be a hole rather than a courtesy: a signed-in
+     person sitting on the story page skips the idle check, so renewing their
+     clock there would keep an otherwise dead session alive indefinitely. */
+  if (user && !isPublic(pathname)) {
+    /* Not httpOnly, by design: the browser-side idle timer has to write this
+       on real user activity. It carries only a timestamp, and forging it can
+       only shorten a session, never extend one. */
+    response.cookies.set(ACTIVITY_COOKIE, String(Date.now()), activityCookieOptions());
   }
 
   return response;

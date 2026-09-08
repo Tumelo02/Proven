@@ -23,6 +23,9 @@ function SignInForm() {
   const next = params.get('next') ?? '/dashboard';
   const callbackError = params.get('error');
   const passwordUpdated = params.get('password') === 'updated';
+  /* Set by the proxy when it ends an idle session, so the person is told why
+     they are back here rather than being left to wonder. */
+  const timedOut = params.get('timeout') === '1';
 
   const roleParam = params.get('role');
   const role = roleParam === 'funder' ? 'funder' : roleParam === 'entrepreneur' ? 'entrepreneur' : null;
@@ -34,6 +37,11 @@ function SignInForm() {
   return (
     <>
       <form action={formAction}>
+        {timedOut && (
+          <div className="notice info">
+            You were signed out because the session had been inactive. Please sign in again.
+          </div>
+        )}
         {passwordUpdated && <div className="notice ok">Your password was updated. Sign in with your new password.</div>}
         {callbackError === 'invalid-link' && <div className="notice error">That sign-in link is invalid.</div>}
         {callbackError === 'expired-link' && <div className="notice error">That sign-in link has expired. Request a new one.</div>}

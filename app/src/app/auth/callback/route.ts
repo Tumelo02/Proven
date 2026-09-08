@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { ACTIVITY_COOKIE, activityCookieOptions } from '@/lib/idle';
 
 function safeNext(value: string | null): string {
   if (value?.startsWith('/') && !value.startsWith('//')) return value;
@@ -22,5 +23,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/sign-in?error=expired-link', requestUrl.origin));
   }
 
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  /* Confirming a link is activity, and it has just created a session. Stamp
+     the idle marker so the proxy does not read the very next request as a
+     session resumed from nowhere and sign the user back out. */
+  const response = NextResponse.redirect(new URL(next, requestUrl.origin));
+  response.cookies.set(ACTIVITY_COOKIE, String(Date.now()), activityCookieOptions());
+  return response;
 }
