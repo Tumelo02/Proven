@@ -1864,3 +1864,46 @@
   height: 100%;
   object-fit: contain;
 }
+
+/* A business that has never reported has no score, which is a different
+   statement from a score of zero. Zero is a real, very bad measurement; this is
+   the absence of one, so it gets a dash rather than a number and none of the
+   tier colour that would imply a judgement has been made.
+
+   Sized to match `.ring` exactly, so a summary with no figures lays out
+   identically to one with them and the panels beside it do not shift. */
+.score-ring-empty {
+  width: 96px;
+  height: 96px;
+  flex: 0 0 96px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: var(--grey-soft);
+  border: 1px dashed var(--line);
+  color: var(--muted);
+}
+
+.score-ring-empty .sre-dash {
+  font-size: 26px;
+  font-weight: 800;
+  height: 27px;
+  line-height: 27px;
+}
+
+.score-ring-empty .sre-note {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* For a state that is genuinely neutral: not good news, not bad news, simply
+   nothing reported yet. Kept off the green/yellow/red scale on purpose. */
+.chip.muted-chip {
+  background: var(--grey-soft);
+  color: var(--grey);
+}

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import {
   CR_BANDS,
   currentMilestone,
+  healthAt,
   milestoneProgress,
   money,
   monthLabel,
@@ -10,7 +11,12 @@ import {
   reportingStatus,
   tierLabel,
 } from '@proven/engine';
-import { getBusinessProfile, getCurrentProfile, getScoredBusiness } from '@/lib/queries';
+import {
+  getBusinessProfile,
+  getBusinessShell,
+  getCurrentProfile,
+  getScoredBusiness,
+} from '@/lib/queries';
 import { Chip, Kpi, ScoreRing } from '@/components/workspace';
 import { LogoPreview } from '@/components/logo-preview';
 import '../../../workspace.css';
@@ -29,18 +35,32 @@ export default async function AdminBusinessSummaryPage({
   const profile = await getCurrentProfile();
   if (!profile?.is_platform_admin) notFound();
 
-  const [scored, businessProfile] = await Promise.all([
+  const [shell, scored, businessProfile] = await Promise.all([
+    getBusinessShell(id),
     getScoredBusiness(id),
     getBusinessProfile(id),
   ]);
 
-  if (!scored || !businessProfile) notFound();
+  /* Only a business that genuinely does not exist, or that this admin may not
+     read, is a 404. */
+  if (!businessProfile || !shell) notFound();
 
-  const { business, health, readiness, input, decision, guidance, delta, trend } = scored;
+  /* A business that has never reported a month cannot be scored, so
+     `getScoredBusiness` returns null for it. That is an ordinary state — it is
+     the "None" in the tracking list — not a missing page, and 404ing on it hid
+     every business an admin most needs to look at: the ones that enrolled and
+     then went quiet.
+
+     So the summary is still rendered, with the same panels in the same places,
+     and the figures simply left empty. An admin should see who this business
+     is and how to reach them; what they must not see is a fabricated score or
+     a zero that reads as a real, badly performing measurement. */
+  const business = businessProfile.business;
+  const input = scored?.input ?? { history: [], milestones: [], ledger: [] };
   const rep = reportingStatus(input);
-  const progress = milestoneProgress(input.milestones);
-  const currentStage = currentMilestone(input.milestones);
-  const bandIndex = CR_BANDS.indexOf(readiness.status);
+  const progress = scored ? milestoneProgress(input.milestones) : 0;
+  const currentStage = scored ? currentMilestone(input.milestones) : '';
+  const bandIndex = scored ? CR_BANDS.indexOf(scored.readiness.status) : -1;
   const last = input.history[input.history.length - 1];
 
   return (
@@ -70,7 +90,17 @@ export default async function AdminBusinessSummaryPage({
               fallback={business.name.slice(0, 2).toUpperCase() || 'B'}
             />
 
-            <ScoreRing score={health.score} tier={health.tier} />
+            {/* No ring at all rather than a ring reading zero: a score of 0 is
+                a real, very bad measurement, and this business has not been
+                measured. */}
+            {scored ? (
+              <ScoreRing score={scored.health.score} tier={scored.health.tier} />
+            ) : (
+              <div className="score-ring-empty" aria-label="No score yet">
+                <span className="sre-dash">—</span>
+                <span className="sre-note">No score</span>
+              </div>
+            )}
 
             <div className="hero-detail">
               <div className="tiny muted">
@@ -78,33 +108,78 @@ export default async function AdminBusinessSummaryPage({
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, marginTop: 4 }}>{business.name}</div>
               <div style={{ marginTop: 8, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                <Chip tier={health.tier}>{tierLabel(health.tier)}</Chip>
-                <span className={`chip ${readiness.color}`}>{readiness.status}</span>
+                {scored ? (
+                  <>
+                    <Chip tier={scored.health.tier}>{tierLabel(scored.health.tier)}</Chip>
+                    <span className={`chip ${scored.readiness.color}`}>
+                      {scored.readiness.status}
+                    </span>
+                  </>
+                ) : (
+                  <span className="chip muted-chip">Not yet reported</span>
+                )}
                 <span className={`due-pill ${rep.state}`}>{rep.label}</span>
               </div>
             </div>
 
-            <div className={`decision decision-hero ${decision.kind}`} style={{ margin: 0 }}>
-              <div className="glyph">
-                {decision.kind === 'release' ? '✔' : decision.kind === 'hold' ? '⏸' : '⚠'}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div className="lbl">Current action</div>
-                <div className="act">{decision.action}</div>
-                <div className="tiny muted" style={{ marginTop: 4 }}>
-                  {decision.why}
+            {scored ? (
+              <div
+                className={`decision decision-hero ${scored.decision.kind}`}
+                style={{ margin: 0 }}
+              >
+                <div className="glyph">
+                  {scored.decision.kind === 'release'
+                    ? '✔'
+                    : scored.decision.kind === 'hold'
+                      ? '⏸'
+                      : '⚠'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div className="lbl">Current action</div>
+                  <div className="act">{scored.decision.action}</div>
+                  <div className="tiny muted" style={{ marginTop: 4 }}>
+                    {scored.decision.why}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              /* Deliberately not a decision. Nothing has been reported, so
+                 there is nothing to release, hold or flag on — saying so is the
+                 honest answer, and it points at the one thing that would
+                 change it. */
+              <div className="decision decision-hero" style={{ margin: 0 }}>
+                <div className="glyph">•</div>
+                <div style={{ flex: 1 }}>
+                  <div className="lbl">Current action</div>
+                  <div className="act">Nothing to assess yet</div>
+                  <div className="tiny muted" style={{ marginTop: 4 }}>
+                    This business has not reported a month, so there are no
+                    figures to judge.
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
+          {/* Same four tiles in the same order whether or not there are
+              figures, so an admin reads the page the same way every time. An
+              em dash marks a measurement that does not exist yet; it is not the
+              same statement as a zero. */}
           <div className="kpis">
-            <Kpi label="Health score" value={`${health.score}/100`} foot={tierLabel(health.tier)} />
-            <Kpi label="Current stage" value={currentStage || 'Not started'} foot={`${progress}% complete`} />
+            <Kpi
+              label="Health score"
+              value={scored ? `${scored.health.score}/100` : '—'}
+              foot={scored ? tierLabel(scored.health.tier) : 'No months reported'}
+            />
+            <Kpi
+              label="Current stage"
+              value={currentStage || 'Not started'}
+              foot={scored ? `${progress}% complete` : 'Starts with the first report'}
+            />
             <Kpi label="Reporting status" value={rep.title} foot={rep.detail} />
             <Kpi
               label="Latest month"
-              value={last ? monthLabel(last.date) : 'No data'}
+              value={last ? monthLabel(last.date) : '—'}
               foot={last ? `${fmtMoney(last.revenue - last.expenses)} cash left` : 'Awaiting first report'}
             />
           </div>
@@ -165,15 +240,22 @@ export default async function AdminBusinessSummaryPage({
 
                 <div style={{ marginTop: 16 }}>
                   <div className="tiny muted">Credit readiness</div>
-                  <div className="status" style={{ marginTop: 4 }}>{readiness.status}</div>
-                  <div className="tiny" style={{ color: 'var(--muted)', marginTop: 6 }}>
-                    {readiness.plain}
+                  <div className="status" style={{ marginTop: 4 }}>
+                    {scored ? scored.readiness.status : '—'}
                   </div>
+                  <div className="tiny" style={{ color: 'var(--muted)', marginTop: 6 }}>
+                    {scored
+                      ? scored.readiness.plain
+                      : 'Readiness is earned by reporting. Nothing has been reported yet.'}
+                  </div>
+                  {/* Every dot unlit and no "n of 4" count: an unmeasured
+                      business is not standing at the bottom band, it is not on
+                      the scale at all. */}
                   <div className="crs-dots" style={{ marginTop: 12 }}>
                     {CR_BANDS.map((b, i) => (
                       <span key={b} className={`crs-dot${i <= bandIndex ? ' on' : ''}`} title={b} />
                     ))}
-                    <span className="crs-of">{bandIndex + 1} of 4</span>
+                    {scored && <span className="crs-of">{bandIndex + 1} of 4</span>}
                   </div>
                 </div>
               </div>
@@ -188,33 +270,46 @@ export default async function AdminBusinessSummaryPage({
               <div className="grid2">
                 <div>
                   <div className="tiny muted">Score</div>
-                  <div style={{ fontSize: 28, fontWeight: 800 }}>{health.score}</div>
+                  <div style={{ fontSize: 28, fontWeight: 800 }}>
+                    {scored ? scored.health.score : '—'}
+                  </div>
                 </div>
                 <div>
                   <div className="tiny muted">Trend</div>
                   <div style={{ fontSize: 18, fontWeight: 700 }}>
-                    {trend === 'up' ? '▲' : trend === 'down' ? '▼' : '•'} {delta > 0 ? '+' : ''}
-                    {delta.toFixed(1)} vs last month
+                    {scored ? (
+                      <>
+                        {scored.trend === 'up' ? '▲' : scored.trend === 'down' ? '▼' : '•'}{' '}
+                        {scored.delta > 0 ? '+' : ''}
+                        {scored.delta.toFixed(1)} vs last month
+                      </>
+                    ) : (
+                      '—'
+                    )}
                   </div>
                 </div>
               </div>
 
+              {/* Growth and averages are all divisions over reported months.
+                  With no months they would print as 0% and R0, which reads as a
+                  business that earned nothing rather than one that has told us
+                  nothing. */}
               <div className="about-grid" style={{ marginTop: 12 }}>
                 <div className="ab">
                   <div className="l">Revenue growth</div>
-                  <div className="v">{pct(health.revGrowth)}</div>
+                  <div className="v">{scored ? pct(scored.health.revGrowth) : '—'}</div>
                 </div>
                 <div className="ab">
                   <div className="l">Expense growth</div>
-                  <div className="v">{pct(health.expGrowth)}</div>
+                  <div className="v">{scored ? pct(scored.health.expGrowth) : '—'}</div>
                 </div>
                 <div className="ab">
                   <div className="l">Average revenue</div>
-                  <div className="v">{money(health.avgRevenue)}</div>
+                  <div className="v">{scored ? money(scored.health.avgRevenue) : '—'}</div>
                 </div>
                 <div className="ab">
                   <div className="l">Average expenses</div>
-                  <div className="v">{money(health.avgExpenses)}</div>
+                  <div className="v">{scored ? money(scored.health.avgExpenses) : '—'}</div>
                 </div>
               </div>
             </div>
@@ -237,33 +332,41 @@ export default async function AdminBusinessSummaryPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {input.history.map((period, index) => {
-                      const score = input.history.slice(0, index + 1).length > 0 ? 0 : 0;
-                      const periodScore = score;
-
-                      return (
+                    {input.history.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="muted" style={{ textAlign: 'center', padding: '18px 8px' }}>
+                          No months reported yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      input.history.map((period, index) => (
                         <tr key={period.date}>
                           <td>{monthLabel(period.date)}</td>
                           <td className="num mono">{money(period.revenue)}</td>
                           <td className="num mono">{money(period.expenses)}</td>
                           <td className="num mono">{money(period.revenue - period.expenses)}</td>
-                          <td className="num mono">{periodScore}</td>
+                          {/* The score as it stood that month, so the column
+                              shows the record forming rather than today's
+                              number applied backwards. It previously printed a
+                              hard-coded 0 in every row, from a leftover
+                              expression that could only ever evaluate to 0. */}
+                          <td className="num mono">{healthAt(input, index).score}</td>
                         </tr>
-                      );
-                    })}
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
 
-          {guidance.length > 0 && (
+          {scored && scored.guidance.length > 0 && (
             <div className="panel" style={{ marginTop: 16 }}>
               <div className="panel-head">
                 <h3>Recommendations</h3>
               </div>
               <div className="panel-body">
-                {guidance.map((g, i) => (
+                {scored.guidance.map((g, i) => (
                   <div key={i} className={`rec-card ${g.sev}`} style={{ marginBottom: 10 }}>
                     <div className="issue">{g.issue}</div>
                     <div className="rec">

@@ -2,29 +2,42 @@
 
 **Turning Potential into Proof.**
 
-**A shared evidence and growth platform for funded businesses, not a surveillance tool.**
+**A business can be working perfectly and still be invisible to a lender.**
 
-Proven helps funders monitor funded businesses while helping entrepreneurs
-understand and improve their own performance. Both sides see the same score,
-the same explanation, and the same next step. Entrepreneurs see how to
-improve; funders see whether improvement is happening.
+It is not a lack of customers or income that closes the door. It is a lack of
+proof. A spaza shop with real customers, steady income and people employed
+applies for credit and is denied — not because the business is not viable, but
+because nothing on paper proves that it is. The business folds, and the jobs go
+with it.
 
-**We don't just track where funding went. We help determine whether the
-funding is helping build a sustainable business, and create the evidence to
-prove it.**
+Proven breaks that invisibility, turning everyday cash activity into verifiable
+proof from day one.
 
 *Funding creates potential. Performance creates evidence. Proven turns that
 evidence into proof.*
+
+The record belongs to the entrepreneur. A funder or incubator sees it only
+where a business has a confirmed link to them, and sees exactly the same score,
+the same explanation and the same next step the entrepreneur sees. This is a
+shared evidence platform, not a surveillance tool: the entrepreneur is building
+something they keep, and the visibility a funder gets is a consequence of that
+record existing, not the purpose of it.
 
 Proven is a web application, in [`app/`](app/), backed by Postgres through
 Supabase.
 
 | Route | For | What it is |
 |---|---|---|
-| **`/`** | Judges, mentors, anyone seeing this for the first time | A short guided walkthrough of the four-step loop: Track, Detect, Guide, Prove. |
-| **`/platform`** | Anyone going further | The two entry points, **Enter as Entrepreneur** and **Enter as Funder**. |
+| **`/`** | Anyone seeing this for the first time | The problem, told as a story: four beats of one viable business failing while nobody can see it. |
+| **`/platform`** | Anyone going further | The five-step journey — Record Activity, Visibility, Guidance, Verified Track Record, Credit Readiness — and the way in. |
 | **`/business/[id]`** | An entrepreneur | Their workspace: figures, transactions, evidence, stages, guidance, profile. |
 | **`/funder/[orgId]`** | A funder, incubator or accelerator | The portfolio, worst first, with the same scores the entrepreneurs see. |
+
+The pitch leads SMME-first: `/platform` shows the entrepreneur entry point
+only. Nothing is gated by that — `?role=` changes the sign-in heading and
+nothing else, and a funder signing in at `/sign-in` still reaches their own
+portfolio, because routing comes from the account's role rather than from the
+door it walked through.
 
 > **The standalone HTML prototype has been retired.** It served its purpose
 > through the pitch and its every feature now lives in the app, which is the
@@ -77,8 +90,8 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:3000>. You land on the guided walkthrough; **Open the
-platform** takes you to the two entry points.
+Open <http://localhost:3000>. You land on the story of why Proven exists;
+**Open the platform** takes you to the five-step journey and the way in.
 
 This needs a database. If you have not set one up yet, follow
 [`supabase/SETUP.md`](supabase/SETUP.md) first, it takes about fifteen minutes
@@ -91,19 +104,27 @@ screen.
 
 ---
 
-## The loop: Track → Detect → Guide → Prove
+## The journey: Record → Visibility → Guidance → Track Record → Readiness
+
+The five steps shown on `/platform`, in order. It starts at everyday trading,
+not at funding: a business earns its record first, and credit is what that
+record eventually unlocks.
 
 | Step | What it means |
 |---|---|
-| **Track** | Entrepreneur logs revenue, expenses and customers each period. Funder sees the same numbers, live. |
-| **Detect** | A transparent, rules-based score flags whether the business is Healthy, on Watch, or At Risk, and why. |
-| **Guide** | A guidance engine turns a bad number into a specific, practical recommendation, not just a red flag. |
-| **Prove** | A verified track record accumulates into a Credit Readiness rating that can support a real funding decision. |
+| **Record Activity** | The entrepreneur logs revenue, expenses and customers each month, and attaches receipts or invoices to the entries that matter. |
+| **Visibility** | Those figures become a picture the business can actually see: a health score, a trend, and where the money is going. |
+| **Guidance** | A rules-based engine turns a bad number into a specific, practical next step, not just a red flag. |
+| **Verified Track Record** | Months accumulate into a record backed by reviewed evidence — the thing that did not exist when the door was closed. |
+| **Credit Readiness** | That record resolves into a rating a lender can act on, earned rather than asserted. |
 
-The impact pathway behind the loop: **Funding → Visibility → Early Detection
-→ Guidance → Stronger Business Performance → Verified Track Record → Greater
-Financial Readiness.** This is the seven-step journey shown on the
-`/platform` screen.
+Inside the product, the same idea runs as a loop the platform repeats every
+month — **Track → Detect → Guide → Prove** — which is the phrase used in the
+workspace sidebar and throughout the engine.
+
+**One system. Two views. The same evidence.** An entrepreneur sees how to
+improve; a linked funder sees whether improvement is happening. Neither sees a
+different number from the other.
 
 ---
 
@@ -139,7 +160,9 @@ same event land on their side.
    openly, no black box.
 6. **Open What to do next** and read a guidance card aloud: a specific next
    step, not just a red flag.
-7. **Switch role** and enter as the funder, `funder@demo.proven.co.za`.
+7. **Switch role** and sign in as the funder, `funder@demo.proven.co.za`.
+   The funder door is hidden on `/platform` while the pitch leads SMME-first,
+   so reach this side by signing in with a funder account.
 8. **Show the same three businesses**, worst first, with the same scores the
    entrepreneurs see.
 9. **Open Zola Deliveries** to close on the at-risk case: a missed update, a
@@ -416,7 +439,7 @@ The database must exist first, see **[supabase/SETUP.md](supabase/SETUP.md)**.
 | Route | For | What it does |
 |---|---|---|
 | `/` | Everyone | The home page: why Proven exists, told as four clickable beats of one business failing unseen |
-| `/platform` | Everyone | The landing screen: the seven-step journey, and **Enter as Entrepreneur** / **Enter as Funder** |
+| `/platform` | Everyone | The landing screen: the five-step journey, and the **Enter as Entrepreneur** entry point |
 | `/sign-in` | Everyone | Reached from either role button, and shows the demo accounts for that role with a **Use** button that fills the form in |
 | `/sign-up` | Entrepreneurs | Create a real account, funded or not |
 | `/businesses/new` | Entrepreneurs | Enrol a business, funded or not; if funded, name the organisation |
@@ -451,7 +474,11 @@ Three things worth knowing about how it behaves:
   lands on it directly; only a user who is both an entrepreneur and a funder
   sees a choice, and that is the screen **Switch role** returns them to.
 - **A business with no figures yet gets a setup screen**, not a dashboard of
-  zeroes that would read as failure.
+  zeroes that would read as failure. It names the month that is owed and opens
+  the form pointed at it, so someone returning after a gap can report straight
+  away. The same is true on the admin and funder side: an unreported business
+  still gets its summary, with the figures left as em dashes rather than
+  zeroes, because "not measured" and "measured badly" are different claims.
 - **Not being allowed to see a business and it not existing look identical.**
   A different message for "exists, but not yours" would confirm which
   businesses are real.
