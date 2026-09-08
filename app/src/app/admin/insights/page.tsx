@@ -34,9 +34,15 @@ export default async function AdminInsightsPage() {
     createdAt: r.business.created_at,
   }));
 
-  const latest = intel.enrolment[intel.enrolment.length - 1];
-  const reportingRate = latest?.businesses
-    ? Math.round((latest.reporting / latest.businesses) * 100)
+  /* Counted from the businesses themselves, not from the last point on the
+     chart. The chart's final month is the month being reported ON, and this
+     month's figures are not due until the middle of next month — so its
+     `reporting` value is legitimately low, and reading the headline rate off
+     it would say nobody had ever reported. This is the real answer: how many
+     businesses have ever sent a month. */
+  const everReported = intel.rows.filter((r) => r.months > 0).length;
+  const reportingRate = intel.rows.length
+    ? Math.round((everReported / intel.rows.length) * 100)
     : 0;
 
   return (
@@ -61,9 +67,11 @@ export default async function AdminInsightsPage() {
           {/* The single number worth stating outright. Enrolment on its own
               flatters the platform; this is the share of it that is real. */}
           <p className="tiny muted" style={{ marginTop: 12, marginBottom: 0 }}>
-            <b>{reportingRate}%</b> of enrolled businesses have reported at least
-            one month. Enrolment counts sign-ups; only reporting builds the
-            record a business can eventually borrow against.
+            <b>{reportingRate}%</b> of enrolled businesses ({everReported} of{' '}
+            {intel.rows.length}) have reported at least one month. The chart is
+            plotted against the month being reported on, so the newest month
+            sits low until its figures fall due. Enrolment counts sign-ups;
+            only reporting builds the record a business can borrow against.
           </p>
         </div>
       </div>

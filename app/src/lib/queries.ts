@@ -977,55 +977,60 @@ export async function getAdminIntelligence(): Promise<AdminIntelligence> {
     };
   });
 
-  /* Platform growth, by the month the figures COVER.
+  /* Platform growth, month by month.
 
-     Both series are cumulative and both are measured the same way, which is
-     the part that matters. An earlier version counted enrolment by sign-up
-     date and reporting by the month reported on — two different clocks — and
-     the reporting line ran years ahead of the enrolment one, showing more
-     businesses reporting than had ever joined. Measuring both against the
-     reported month makes that impossible by construction: a business is only
-     counted as enrolled once its own record starts.
+     Two things are being counted, and both belong on the same axis:
 
-     The reported month is the right axis for this chart. Every business here
-     signed up in the same week, so a sign-up axis collapses the whole platform
-     into a single point and says nothing; what the platform actually holds is
-     ten months of trading history, and that is the growth worth plotting.
+       `businesses` — how many are on the platform by that month. A business
+         counts from whichever came first, the month it signed up or the
+         earliest month it has figures for. A business that joined this week
+         and back-filled 2024 has genuinely been trading since 2024, and its
+         record proves it.
 
-     `businesses` is how many have a record covering that month or earlier —
-     the platform's reach. `reporting` is how many had actually sent that month
-     by then. The gap between them is the businesses whose record has gone
-     quiet, which is the number the caption calls out. */
+       `reporting` — how many of those actually have figures for that month.
+
+     The gap between them is the record that is not being kept: businesses on
+     the platform with nothing filed for that month. That is the number the
+     caption calls out, so the chart has to be able to show it.
+
+     Two earlier versions each got half of this. Counting both series on
+     sign-up date collapsed every business into one week and drew a single
+     point. Counting both on the reported month dropped the twelve businesses
+     that have never reported anything, so the chart contradicted its own
+     caption by leaving them out entirely. The months axis now spans both
+     sources, which is why September appears with everyone enrolled even though
+     nobody has filed September figures yet — they are not due until October. */
   const monthKey = (iso: string) => iso.slice(0, 7);
 
-  /* The earliest month each business has any figures for: the point its record
-     begins, and so the point it starts counting toward the platform. */
-  const recordStart = new Map<string, string>();
   const reportedMonths = new Map<string, Set<string>>();
   for (const [businessId, own] of periodsBy) {
-    let earliest: string | null = null;
-    const covered = new Set<string>();
-    for (const period of own) {
-      const key = monthKey(period.period_month);
-      covered.add(key);
-      if (earliest === null || key < earliest) earliest = key;
-    }
-    if (earliest) recordStart.set(businessId, earliest);
-    reportedMonths.set(businessId, covered);
+    reportedMonths.set(businessId, new Set(own.map((r) => monthKey(r.period_month))));
   }
 
-  const months = [...new Set([...recordStart.values()])].sort();
+  /* When each business starts counting: the earlier of signing up and its
+     oldest reported month. */
+  const startedBy = new Map<string, string>();
+  for (const business of businesses) {
+    const signup = monthKey(business.created_at);
+    const covered = reportedMonths.get(business.id);
+    const earliest = covered && covered.size ? [...covered].sort()[0]! : signup;
+    startedBy.set(business.id, earliest < signup ? earliest : signup);
+  }
 
-  const starts = [...recordStart.values()];
+  /* Every month either timeline touches, so a sign-up with no figures yet is
+     still a month on the chart. */
+  const months = [
+    ...new Set([
+      ...startedBy.values(),
+      ...[...reportedMonths.values()].flatMap((set) => [...set]),
+    ]),
+  ].sort();
+
   const enrolment = months.map((month) => ({
     month: `${month}-01`,
-    /* Businesses whose record had begun by this month. */
-    businesses: starts.filter((m) => m <= month).length,
-    /* Of those, the ones that actually reported this particular month, so a
-       business that stops sending figures pulls the lower line away from the
-       upper one exactly when it goes quiet. */
+    businesses: [...startedBy.values()].filter((m) => m <= month).length,
     reporting: [...reportedMonths.entries()].filter(
-      ([id, covered]) => (recordStart.get(id) ?? '9999') <= month && covered.has(month),
+      ([id, covered]) => (startedBy.get(id) ?? '9999') <= month && covered.has(month),
     ).length,
   }));
 
