@@ -83,11 +83,17 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* The same halo the platform page gives the mark: a tight white edge to keep
+   the dark leaf readable against the navy, then a wider cyan bloom in the
+   logo's own colour. `--cyan` is the raw logo cyan, which the token warns is
+   only safe on navy — this drawer is navy, so it is the right place for it. */
 .adm-drawer-head img {
   width: 32px;
   height: 32px;
   object-fit: contain;
   flex: 0 0 32px;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.5))
+    drop-shadow(0 0 7px rgba(34, 223, 245, 0.28));
 }
 
 .adm-drawer-name {
@@ -719,6 +725,115 @@
 }
 
 .staff-result:hover {
-  border-color: var(--blue);
-  background: var(--blue-soft);
+  background: var(--accent-soft);
+}
+
+/* ===========================================================================
+   Clickable glow
+
+   Everything that can be clicked lights up in the logo's colour under the
+   pointer, and again on keyboard focus.
+
+   Deliberately a glow on the ELEMENT, not a custom cursor image. Replacing the
+   pointer with a picture costs the OS cursor its crispness at every DPI, drops
+   the platform's own affordances (the text caret, the resize arrows), ignores
+   whatever pointer size or contrast the person has configured for their own
+   accessibility, and shows nothing at all to anyone navigating by keyboard.
+   Lighting the target instead says the same thing, is legible to everyone, and
+   works on touch as well as on a mouse.
+
+   Two colours, because the panel has two backgrounds. `--cyan` is the raw logo
+   cyan and its token warns it fails on white, so it is used only inside the
+   navy drawer; `--accent` is the same colour darkened to pass contrast, and is
+   what the white content area uses.
+   =========================================================================== */
+
+/* --- inside the navy drawer --------------------------------------------- */
+
+.adm-nav-item,
+.adm-drawer-foot a {
+  transition:
+    background 140ms ease-out,
+    color 140ms ease-out,
+    box-shadow 140ms ease-out;
+}
+
+.adm-nav-item:hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(34, 223, 245, 0.35),
+    0 0 12px rgba(34, 223, 245, 0.18);
+}
+
+/* The current page is already filled, so it glows without the inset outline
+   fighting its background. */
+.adm-nav-item.active:hover {
+  box-shadow: 0 0 14px rgba(34, 223, 245, 0.24);
+}
+
+.adm-nav-item:focus-visible,
+.adm-drawer-foot a:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  box-shadow: 0 0 14px rgba(34, 223, 245, 0.3);
+}
+
+.adm-drawer-foot a:hover {
+  text-shadow: 0 0 10px rgba(34, 223, 245, 0.55);
+}
+
+/* --- on the white content area ------------------------------------------ */
+
+.adm-burger,
+.pager-btn,
+.staff-result {
+  transition:
+    background 140ms ease-out,
+    border-color 140ms ease-out,
+    color 140ms ease-out,
+    box-shadow 140ms ease-out;
+}
+
+.adm-burger:hover,
+.pager-btn:hover:not(:disabled):not(.on),
+.staff-result:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* The current page button is filled navy, so it takes the glow without the
+   ring, which would read as a second selection. */
+.pager-btn.on {
+  box-shadow: 0 0 10px rgba(11, 124, 140, 0.35);
+}
+
+.adm-burger:focus-visible,
+.pager-btn:focus-visible,
+.staff-result:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Rows that open a business or an organisation. A link inside a table is easy
+   to miss until the pointer is already on it. */
+.adm-main td a:hover strong,
+.adm-main td a:hover {
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(11, 124, 140, 0.22);
+}
+
+.staff-row > summary:hover {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* Nobody who asked for less motion loses the signal: the colour still changes,
+   only the fade is dropped. */
+@media (prefers-reduced-motion: reduce) {
+  .adm-nav-item,
+  .adm-drawer-foot a,
+  .adm-burger,
+  .pager-btn,
+  .staff-result {
+    transition: none;
+  }
 }
