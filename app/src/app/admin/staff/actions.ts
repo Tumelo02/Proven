@@ -14,7 +14,10 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { headers } from 'next/headers';
+import { z } from 'zod';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { siteOrigin } from '@/lib/site-origin';
 import { recordEvent } from '@/lib/audit';
 import type { StaffRole } from '@/lib/database.types';
 
@@ -114,4 +117,101 @@ export async function removeStaff(_prev: StaffState, formData: FormData): Promis
 
   revalidatePath('/admin/staff');
   return { message: 'Staff access removed.' };
+}
+
+/**
+ * Invite somebody who does not have a Proven account yet.
+ *
+ * The picker above can only promote an account that already exists, which
+ * meant telling a new colleague to go and register on their own first, then
+ * report back. This closes that gap: Supabase sends them an invitation, they
+ * set their own password from the link, and the role chosen here is waiting
+ * when they arrive.
+ *
+ * Two things are deliberately NOT done here.
+ *
+ * No password is set on their behalf. An invite link the person redeems
+ * themselves means nobody, including the owner sending it, ever knows their
+ * password — which is the whole point of them having their own account.
+ *
+ * The role is applied through `set_staff_role` like every other change, rather
+ * than by writing `is_platform_admin` directly with the service key. The
+ * database check that the caller is an owner therefore still runs, so this
+ * path cannot be used to grant access the caller could not grant anyway.
+ */
+export async function inviteStaff(_prev: StaffState, formData: FormData): Promise<StaffState> {
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const rawRole = String(formData.get('role') ?? '');
+  const note = String(formData.get('note') ?? '').trim().slice(0, 300);
+
+  if (!email) return { error: 'Enter an email address.' };
+  if (!z.string().email().safeParse(email).success) {
+    return { error: 'Enter a valid email address.' };
+  }
+  if (!ROLES.includes(rawRole as StaffRole)) return { error: 'Choose a role.' };
+  const role = rawRole as StaffRole;
+
+  /* Checked before the invitation is sent, so a caller who is not an owner
+     cannot use this to find out whether an address has an account, nor make
+     Proven send mail on their behalf. The database refuses the role change
+     below regardless; this refuses the email too. */
+  const supabase = await createClient();
+  const { data: isOwner } = await supabase.rpc('is_staff_owner');
+  if (!isOwner) return { error: 'Only a Proven owner can invite staff.' };
+
+  const admin = createAdminClient();
+  const requestHeaders = await headers();
+
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${siteOrigin(requestHeaders)}/auth/callback?next=/admin`,
+  });
+
+  if (error) {
+    /* The common case by far: they already have an account, so the picker
+       above is the right tool and saying so is more useful than the raw
+       message from the auth server. */
+    if (/already|exists|registered/i.test(error.message)) {
+      return {
+        error:
+          'That address already has a Proven account. Search for it above and give it a role instead.',
+      };
+    }
+    return { error: `Could not send the invitation: ${error.message}` };
+  }
+
+  const invited = data.user;
+  if (!invited) return { error: 'The invitation was not created. Try again.' };
+
+  /* Through the same guarded function as every other role change. */
+  const { error: roleError } = await supabase.rpc('set_staff_role', {
+    target: invited.id,
+    new_role: role,
+    review_evidence: ROLE_DEFAULTS[role].includes('review_evidence'),
+    manage_businesses: ROLE_DEFAULTS[role].includes('manage_businesses'),
+    manage_organisations: ROLE_DEFAULTS[role].includes('manage_organisations'),
+    view_commercial: ROLE_DEFAULTS[role].includes('view_commercial'),
+    view_audit: ROLE_DEFAULTS[role].includes('view_audit'),
+    new_note: note,
+  });
+
+  if (roleError) {
+    /* The account exists but holds no role, so it has no staff access. Worth
+       saying plainly rather than reporting a success that is only half true. */
+    return {
+      error: `They were invited, but the role could not be set: ${roleError.message}. Find them in the list and set it by hand.`,
+    };
+  }
+
+  await recordEvent({
+    action: 'staff.invited',
+    entityType: 'profile',
+    entityId: invited.id,
+    severity: 'alert',
+    detail: { email, role },
+  });
+
+  revalidatePath('/admin/staff');
+  return {
+    message: `Invitation sent to ${email}. They will set their own password from the link, and land here as ${role}.`,
+  };
 }

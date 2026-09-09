@@ -902,3 +902,18 @@
   min-width: 0;
   flex: 1 1 70px;
 }
+
+/* The invite form, folded out from under the search. Set apart so it reads as
+   a second route in rather than more of the same form. */
+.staff-invite {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--grey-soft);
+  max-width: 460px;
+}
+
+.staff-invite .field:last-of-type {
+  margin-bottom: 12px;
+}

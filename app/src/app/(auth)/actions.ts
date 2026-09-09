@@ -16,23 +16,13 @@ import { POLICY_VERSION } from '@/lib/policy';
 import { validatePasswordStrength } from '@/lib/password';
 import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rateLimit';
 import { emailSchema } from '@/lib/validation';
+import { siteOrigin } from '@/lib/site-origin';
 import { ACTIVITY_COOKIE, activityCookieOptions } from '@/lib/idle';
 import { z } from 'zod';
 
 export interface AuthState {
   error?: string;
   message?: string;
-}
-
-function siteOrigin(requestHeaders: Headers): string {
-  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, '');
-  if (configuredOrigin) return configuredOrigin;
-
-  const forwardedHost = requestHeaders.get('x-forwarded-host');
-  const host = forwardedHost ?? requestHeaders.get('host');
-  const forwardedProto = requestHeaders.get('x-forwarded-proto');
-  const protocol = forwardedProto?.split(',')[0]?.trim() || 'http';
-  return host ? `${protocol}://${host}` : 'http://localhost:3000';
 }
 
 /**

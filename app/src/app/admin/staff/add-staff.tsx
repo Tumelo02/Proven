@@ -2,14 +2,16 @@
 
 import { useState } from 'react';
 import { StaffRoleForm } from './staff-form';
+import { InviteStaff } from './invite-staff';
 import { searchAccounts, type FoundAccount } from './search';
 
 /**
  * Adding someone to the staff.
  *
- * Searches accounts that already exist rather than inviting by email, because
- * staff access is granted to a person who has already signed up, and creating
- * an account on someone's behalf would mean setting a password for them.
+ * Two ways in. Searching finds someone who already has a Proven account, which
+ * is the commoner case and stays the obvious one. Inviting covers the person
+ * who has never signed up: they get a link and set their own password, so an
+ * account is never created with a password somebody else chose.
  *
  * Deliberately requires three characters before searching, and never lists
  * every account on the platform: this screen is for granting access to a
@@ -61,7 +63,7 @@ export function AddStaff() {
       <div className="panel-head">
         <h3>Add someone to the staff</h3>
         <span className="hint" style={{ marginLeft: 'auto' }}>
-          They need a Proven account first
+          Search an existing account, or invite by email
         </span>
       </div>
       <div className="panel-body">
@@ -81,9 +83,10 @@ export function AddStaff() {
         {results !== null && results.length === 0 && (
           <p className="muted" style={{ fontSize: 13, marginBottom: 0, marginTop: 12 }}>
             No account matches that, among people who are not already staff.
-            They need to sign up first.
           </p>
         )}
+
+        <InviteStaff />
 
         {results !== null && results.length > 0 && (
           <div className="staff-results">
