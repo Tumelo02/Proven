@@ -1,36 +1,68 @@
 import { NextResponse } from 'next/server';
 import { getBusinessReport, defaultRange, rangeLabel } from '../report-data';
 import { recordEvent } from '@/lib/audit';
+import { buildWorkbook, XLSX_CONTENT_TYPE, type Cell, type SheetStyle } from '@/lib/xlsx';
 
 /**
- * The financial report as a styled Excel workbook.
+ * The financial report as a real Excel workbook.
  *
- * SpreadsheetML 2003 rather than CSV, matching the funder export: it carries
- * the title block, the totals, column widths and the colours, so what opens is
- * a report a bank would accept rather than a wall of commas. Excel, Google
- * Sheets and Numbers all read it, and it needs no library to write.
+ * Genuinely `.xlsx`, not SpreadsheetML wearing an `.xls` name. The previous
+ * version served XML under a `.xls` extension, so Excel checked the bytes,
+ * found `<?xml` where the old binary format's signature should be, and warned
+ * that the file "could be corrupted or unsafe" before it would open. A
+ * business sending its financials to a bank should never have to talk somebody
+ * past a security warning.
  *
- * Row-level security does the access check. The query runs as the signed-in
+ * Laid out as the statement on screen is — months across, lines of the account
+ * down — so the download and the page say the same thing in the same shape.
+ *
+ * Row-level security does the access check: the query runs as the signed-in
  * user, so asking for a business they may not see returns nothing and this
- * answers 404 — the same answer a business that does not exist gives, which is
- * deliberate.
+ * answers 404, the same answer a business that does not exist gives.
  */
 
-function esc(value: string | number | null | undefined): string {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+/* Styles, referenced by index. Kept few on purpose: a report needs a handful
+   of looks, not one per cell. */
+const S = {
+  title: 0,
+  subtitle: 1,
+  head: 2,
+  line: 3,
+  indent: 4,
+  group: 5,
+  money: 6,
+  moneyGood: 7,
+  moneyBad: 8,
+  percent: 9,
+  number: 10,
+  totalMoney: 11,
+  totalText: 12,
+  result: 13,
+};
+
+const STYLES: SheetStyle[] = [
+  { bold: true, size: 16, colour: '0A2540' }, // title
+  { size: 10, colour: '5D6F88' }, // subtitle
+  { bold: true, colour: 'FFFFFF', fill: '0A2540' }, // head
+  { bold: true, colour: '0A2540' }, // line
+  { colour: '5D6F88' }, // indent
+  { bold: true, colour: '0A2540', fill: 'EEF2F8' }, // group
+  { format: 'money' }, // money
+  { format: 'money', colour: '12805C' }, // moneyGood
+  { format: 'money', colour: 'C0322B' }, // moneyBad
+  { format: 'percent' }, // percent
+  {}, // number
+  { bold: true, format: 'money', fill: 'EEF2F8' }, // totalMoney
+  { bold: true, fill: 'EEF2F8' }, // totalText
+  { bold: true, format: 'money', border: 'both' }, // result
+];
+
+function text(value: string, style?: number): Cell {
+  return { value, ...(style === undefined ? {} : { style }) };
 }
 
-function cell(value: string | number, style: string, type: 'String' | 'Number' = 'String') {
-  return `<Cell ss:StyleID="${style}"><Data ss:Type="${type}">${esc(value)}</Data></Cell>`;
-}
-
-function row(cells: string): string {
-  return `<Row>${cells}</Row>`;
+function num(value: number | null, style: number): Cell {
+  return value === null ? { value: null } : { value, style };
 }
 
 export async function GET(
@@ -53,160 +85,115 @@ export async function GET(
   }
 
   const t = report.totals;
+  const lines = report.lines;
+  const rows: Cell[][] = [];
 
-  const header = row(
-    [
-      'Month',
-      'Money in',
-      'Money out',
-      'Left over',
-      'Margin',
-      'Customers',
-      'Closing balance',
-      'Available',
-    ]
-      .map((h) => cell(h, 'head'))
-      .join(''),
-  );
+  rows.push([text(report.businessName, S.title)]);
+  rows.push([text(`Financial report · ${rangeLabel(from, to)}`, S.subtitle)]);
+  rows.push([text(`Generated ${report.generatedOn} · Proven`, S.subtitle)]);
+  rows.push([]);
 
-  const body = report.lines
-    .map((l) =>
-      row(
-        cell(l.label, 'text') +
-          cell(l.revenue, 'money', 'Number') +
-          cell(l.expenses, 'money', 'Number') +
-          cell(l.profit, l.profit >= 0 ? 'moneyGood' : 'moneyBad', 'Number') +
-          cell(l.revenue > 0 ? l.margin : '', l.revenue > 0 ? 'pct' : 'text', l.revenue > 0 ? 'Number' : 'String') +
-          cell(l.customers, 'text', 'Number') +
-          /* Blank rather than zero when no balance was reported: a bank
-             reading this must not be told the account was empty. */
-          cell(
-            l.closingBalance ?? '',
-            l.closingBalance === null ? 'text' : 'money',
-            l.closingBalance === null ? 'String' : 'Number',
-          ) +
-          cell(
-            l.availableBalance ?? '',
-            l.availableBalance === null ? 'text' : 'money',
-            l.availableBalance === null ? 'String' : 'Number',
-          ),
-      ),
-    )
-    .join('');
+  /* Months across the top, matching the statement on screen. */
+  rows.push([
+    text('Line', S.head),
+    ...lines.map((l) => text(l.label, S.head)),
+    text('Total', S.head),
+  ]);
 
-  const totalRow = row(
-    cell('Total', 'head') +
-      cell(t.revenue, 'totalMoney', 'Number') +
-      cell(t.expenses, 'totalMoney', 'Number') +
-      cell(t.profit, t.profit >= 0 ? 'totalGood' : 'totalBad', 'Number') +
-      cell(t.revenue > 0 ? t.margin : '', t.revenue > 0 ? 'totalPct' : 'head', t.revenue > 0 ? 'Number' : 'String') +
-      cell(t.customers, 'head', 'Number') +
-      cell(
-        report.latestBalance ? report.latestBalance.closing : '',
-        report.latestBalance ? 'totalMoney' : 'head',
-        report.latestBalance ? 'Number' : 'String',
-      ) +
-      cell(
-        report.latestBalance?.available ?? '',
-        report.latestBalance?.available != null ? 'totalMoney' : 'head',
-        report.latestBalance?.available != null ? 'Number' : 'String',
-      ),
-  );
+  const blanks = lines.map(() => text(''));
 
-  const spendRows = report.spending.length
-    ? row(cell('Where the money went', 'section') + cell('', 'section') + cell('', 'section')) +
-      row(['Category', 'Total', 'Share'].map((h) => cell(h, 'head')).join('')) +
-      report.spending
-        .map((s) =>
-          row(
-            cell(s.category, 'text') +
-              cell(s.total, 'money', 'Number') +
-              cell(s.share, 'pct', 'Number'),
-          ),
-        )
-        .join('')
-    : '';
+  rows.push([text('Income', S.group), ...blanks, text('', S.group)]);
+  rows.push([
+    text('Money in', S.indent),
+    ...lines.map((l) => num(l.revenue, S.money)),
+    num(t.revenue, S.totalMoney),
+  ]);
 
-  const summary =
-    row(cell('Summary', 'section') + cell('', 'section')) +
-    row(cell('Months reported', 'text') + cell(t.months, 'text', 'Number')) +
-    row(cell('Profitable months', 'text') + cell(t.profitableMonths, 'text', 'Number')) +
-    row(cell('Months at a loss', 'text') + cell(t.lossMonths, 'text', 'Number')) +
-    row(cell('Average money in', 'text') + cell(t.averageRevenue, 'money', 'Number')) +
-    row(cell('Average money out', 'text') + cell(t.averageExpenses, 'money', 'Number')) +
-    row(
-      cell('Best month', 'text') +
-        cell(t.bestMonth ? `${t.bestMonth.label}` : '—', 'text'),
-    ) +
-    row(
-      cell('Hardest month', 'text') +
-        cell(t.worstMonth ? `${t.worstMonth.label}` : '—', 'text'),
-    ) +
-    row(cell('Health score', 'text') + cell(report.score ?? '—', 'text')) +
-    row(cell('Credit readiness', 'text') + cell(report.readiness ?? '—', 'text')) +
-    row(cell('Backed by evidence', 'text') + cell(`${report.evidencePct}%`, 'text')) +
-    row(
-      cell('Closing balance', 'text') +
-        (report.latestBalance
-          ? cell(report.latestBalance.closing, 'money', 'Number')
-          : cell('—', 'text')),
-    ) +
-    row(
-      cell('Available balance', 'text') +
-        (report.latestBalance?.available != null
-          ? cell(report.latestBalance.available, 'money', 'Number')
-          : cell('—', 'text')),
-    );
+  rows.push([text('Costs', S.group), ...blanks, text('', S.group)]);
+  for (const s of report.spending) {
+    rows.push([
+      text(s.category, S.indent),
+      ...lines.map((l) => {
+        const v = s.byMonth[l.month.slice(0, 7)] ?? 0;
+        /* Blank, not zero: a month with no cost in this line is not a month
+           that spent nothing on it. */
+        return v > 0 ? num(v, S.money) : text('');
+      }),
+      num(s.total, S.money),
+    ]);
+  }
+  rows.push([
+    text('Total costs', S.line),
+    ...lines.map((l) => num(l.expenses, S.money)),
+    num(t.expenses, S.totalMoney),
+  ]);
 
-  const xml = `<?xml version="1.0"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="title"><Font ss:Size="15" ss:Bold="1" ss:Color="#0A2540"/></Style>
-  <Style ss:ID="sub"><Font ss:Size="10" ss:Color="#5D6F88"/></Style>
-  <Style ss:ID="section"><Font ss:Size="11" ss:Bold="1" ss:Color="#0A2540"/>
-   <Interior ss:Color="#EEF2F8" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="head"><Font ss:Bold="1" ss:Color="#FFFFFF"/>
-   <Interior ss:Color="#0A2540" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="text"><Alignment ss:Vertical="Center"/></Style>
-  <Style ss:ID="money"><NumberFormat ss:Format="&quot;R&quot;#,##0.00"/></Style>
-  <Style ss:ID="moneyGood"><NumberFormat ss:Format="&quot;R&quot;#,##0.00"/>
-   <Font ss:Color="#12805C"/></Style>
-  <Style ss:ID="moneyBad"><NumberFormat ss:Format="&quot;R&quot;#,##0.00"/>
-   <Font ss:Color="#C0322B"/></Style>
-  <Style ss:ID="pct"><NumberFormat ss:Format="0.0%"/></Style>
-  <Style ss:ID="totalMoney"><Font ss:Bold="1"/><NumberFormat ss:Format="&quot;R&quot;#,##0.00"/>
-   <Interior ss:Color="#EEF2F8" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="totalGood"><Font ss:Bold="1" ss:Color="#12805C"/>
-   <NumberFormat ss:Format="&quot;R&quot;#,##0.00"/>
-   <Interior ss:Color="#EEF2F8" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="totalBad"><Font ss:Bold="1" ss:Color="#C0322B"/>
-   <NumberFormat ss:Format="&quot;R&quot;#,##0.00"/>
-   <Interior ss:Color="#EEF2F8" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="totalPct"><Font ss:Bold="1"/><NumberFormat ss:Format="0.0%"/>
-   <Interior ss:Color="#EEF2F8" ss:Pattern="Solid"/></Style>
- </Styles>
- <Worksheet ss:Name="Financial report">
-  <Table>
-   <Column ss:Width="130"/><Column ss:Width="95"/><Column ss:Width="95"/>
-   <Column ss:Width="95"/><Column ss:Width="70"/><Column ss:Width="80"/>
-   <Column ss:Width="105"/><Column ss:Width="95"/>
-   ${row(cell(report.businessName, 'title'))}
-   ${row(cell(`Financial report · ${rangeLabel(from, to)}`, 'sub'))}
-   ${row(cell(`Generated ${report.generatedOn} · Proven`, 'sub'))}
-   ${row('')}
-   ${header}
-   ${body}
-   ${totalRow}
-   ${row('')}
-   ${summary}
-   ${row('')}
-   ${spendRows}
-   ${row('')}
-   ${row(cell('Every figure comes from the months this business reported. Nothing is estimated.', 'sub'))}
-  </Table>
- </Worksheet>
-</Workbook>`;
+  rows.push([
+    text('Left over', S.line),
+    ...lines.map((l) => num(l.profit, l.profit >= 0 ? S.moneyGood : S.moneyBad)),
+    num(t.profit, S.result),
+  ]);
+  rows.push([
+    text('Margin', S.indent),
+    ...lines.map((l) => (l.revenue > 0 ? num(l.margin, S.percent) : text(''))),
+    t.revenue > 0 ? num(t.margin, S.percent) : text(''),
+  ]);
+
+  /* The cash position. Profit says how the month went; this says what is
+     actually in the account, and a loan or a big purchase pulls them apart. */
+  rows.push([text('In the bank', S.group), ...blanks, text('', S.group)]);
+  rows.push([
+    text('Closing balance', S.indent),
+    ...lines.map((l) => num(l.closingBalance, S.money)),
+    report.latestBalance ? num(report.latestBalance.closing, S.totalMoney) : text(''),
+  ]);
+  rows.push([
+    text('Available balance', S.indent),
+    ...lines.map((l) => num(l.availableBalance, S.money)),
+    report.latestBalance?.available != null
+      ? num(report.latestBalance.available, S.totalMoney)
+      : text(''),
+  ]);
+
+  rows.push([
+    text('Customers', S.indent),
+    ...lines.map((l) => num(l.customers, S.number)),
+    num(t.customers, S.totalText),
+  ]);
+
+  rows.push([]);
+  rows.push([text('Summary', S.group)]);
+  rows.push([text('Months reported', S.indent), num(t.months, S.number)]);
+  rows.push([text('Profitable months', S.indent), num(t.profitableMonths, S.number)]);
+  rows.push([text('Months at a loss', S.indent), num(t.lossMonths, S.number)]);
+  rows.push([text('Average money in', S.indent), num(t.averageRevenue, S.money)]);
+  rows.push([text('Average money out', S.indent), num(t.averageExpenses, S.money)]);
+  rows.push([
+    text('Best month', S.indent),
+    text(t.bestMonth ? t.bestMonth.label : '—'),
+  ]);
+  rows.push([
+    text('Hardest month', S.indent),
+    text(t.worstMonth ? t.worstMonth.label : '—'),
+  ]);
+  rows.push([text('Health score', S.indent), text(String(report.score ?? '—'))]);
+  rows.push([text('Credit readiness', S.indent), text(report.readiness ?? '—')]);
+  rows.push([text('Backed by evidence', S.indent), text(`${report.evidencePct}%`)]);
+
+  rows.push([]);
+  rows.push([
+    text(
+      'Every figure comes from the months this business reported. Nothing is estimated.',
+      S.subtitle,
+    ),
+  ]);
+
+  const workbook = buildWorkbook({
+    sheetName: 'Financial report',
+    rows,
+    styles: STYLES,
+    columnWidths: [24, ...lines.map(() => 14), 15],
+  });
 
   /* Who downloaded their own figures, and for what period. A business reading
      its own record is unremarkable, so this is `info` rather than an alert —
@@ -216,15 +203,15 @@ export async function GET(
     entityType: 'business',
     entityId: id,
     severity: 'info',
-    detail: { from, to, months: report.lines.length },
+    detail: { from, to, months: lines.length },
   });
 
   const safeName = report.businessName.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
 
-  return new NextResponse(xml, {
+  return new NextResponse(new Uint8Array(workbook), {
     headers: {
-      'Content-Type': 'application/vnd.ms-excel; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${safeName}-report-${from}-to-${to}.xls"`,
+      'Content-Type': XLSX_CONTENT_TYPE,
+      'Content-Disposition': `attachment; filename="${safeName}-report-${from}-to-${to}.xlsx"`,
       'Cache-Control': 'no-store',
     },
   });

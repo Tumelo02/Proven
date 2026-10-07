@@ -179,10 +179,23 @@ export async function GET(
 
   const stamp = new Date().toISOString().slice(0, 10);
 
+  /* Named `.xml`, because that is what SpreadsheetML is.
+  
+     It used to be served as `.xls`, and Excel reads the bytes rather than the
+     name: finding `<?xml` where the old binary format's signature belongs, it
+     warned the file "could be corrupted or unsafe" before it would open. A
+     funder forwarding this to their board should not have to talk anybody past
+     a security warning.
+  
+     The business report is written as a true `.xlsx` instead. This sheet is
+     not, yet: it uses merged cells, frozen panes and sheet protection, which
+     the minimal writer in `lib/xlsx.ts` does not implement, and quietly
+     dropping them would make the file worse to use. Matching the extension to
+     the content removes the warning today without losing any of that. */
   return new NextResponse(xml, {
     headers: {
       'Content-Type': 'application/vnd.ms-excel; charset=utf-8',
-      'Content-Disposition': `attachment; filename="proven-portfolio-${stamp}.xls"`,
+      'Content-Disposition': `attachment; filename="proven-portfolio-${stamp}.xml"`,
       'Cache-Control': 'no-store, max-age=0',
     },
   });
