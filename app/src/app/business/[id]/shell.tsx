@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getMyBusinesses } from '@/lib/queries';
+import { getMyBusinesses, getMyBusinessAccess } from '@/lib/queries';
 import { signOut } from '@/app/(auth)/actions';
 import { BusinessPicker } from './business-picker';
 
@@ -10,6 +10,7 @@ export type EntTab =
   | 'guidance'
   | 'history'
   | 'report'
+  | 'team'
   | 'profile';
 
 /**
@@ -34,7 +35,10 @@ export async function EntrepreneurShell({
   guidanceAlarm?: boolean;
   children: React.ReactNode;
 }) {
-  const businesses = await getMyBusinesses();
+  const [businesses, access] = await Promise.all([
+    getMyBusinesses(),
+    getMyBusinessAccess(businessId),
+  ]);
   const current = businesses.find((b) => b.id === businessId);
 
   const nav: { key: EntTab; label: string; href: string }[] = [
@@ -46,6 +50,12 @@ export async function EntrepreneurShell({
     { key: 'report', label: 'Financial report', href: `/business/${businessId}/report` },
     { key: 'profile', label: 'Business profile', href: `/business/${businessId}/profile` },
   ];
+
+  /* Only the owner can manage the team, and the page itself 404s for anybody
+     else, so offering the tab to a team member would be a link to a dead end. */
+  if (access.canManageTeam) {
+    nav.push({ key: 'team', label: 'People', href: `/business/${businessId}/team` });
+  }
 
   return (
     <div className="app">

@@ -237,6 +237,33 @@ cannot be obtained by anyone who has not been given your database password.
 **Then sign out and back in**, and you will land on the Proven admin panel at
 **`/admin`**. See [Your admin panel](#your-admin-panel) below for what it shows.
 
+### Letting more than one person run a business
+
+A business is rarely one person, and sharing the owner's password makes the
+audit trail a work of fiction: every entry then says the owner did it. The
+**People** tab inside a business adds someone properly, under their own
+account.
+
+| Role | What they can do |
+|---|---|
+| **Viewer** | See the figures and the report. Changes nothing. |
+| **Editor** | Log transactions and report months. The day-to-day. |
+| **Manager** | The above, plus the business profile and funding requests. |
+
+Someone without a Proven account can be invited by email; they set their own
+password from the link, exactly as staff invitations work.
+
+**Ownership is not a role.** It stays on `businesses.owner_id` and cannot be
+granted through the team, because a member who could grant it could take the
+business. Only the owner sees the People tab, and `set_business_member` and
+`remove_business_member` check `businesses.owner_id` directly rather than
+through `owns_business` — which now also covers editors and managers, so a
+manager calling those functions changes nothing.
+
+The roles reach the whole schema through its two existing chokepoints,
+`can_see_business` and `owns_business`, rather than by editing every policy
+one at a time.
+
 ### Adding more staff
 
 After the first one, use **Staff and access** in the admin panel rather than

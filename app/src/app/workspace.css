@@ -2122,3 +2122,14 @@
     margin-left: 0;
   }
 }
+
+/* The owner's row on the team screen. Laid out like the expandable rows beside
+   it, but it does not expand: ownership is not a role the team can change. */
+.team-owner-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  font-size: 13px;
+}

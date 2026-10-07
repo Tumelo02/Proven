@@ -99,6 +99,25 @@ export type AccountStatus = 'pilot' | 'paying' | 'internal' | 'lapsed';
  */
 export type StaffRole = 'owner' | 'manager' | 'reviewer' | 'analyst';
 
+/**
+ * What somebody other than the owner may do with a business.
+ *
+ * Ownership is deliberately not on this list: it lives on
+ * `businesses.owner_id` and cannot be granted through the team, because a
+ * member who could grant it could take the business.
+ */
+export type BusinessRole = 'viewer' | 'editor' | 'manager';
+
+export type BusinessMember = {
+  id: string;
+  business_id: string;
+  user_id: string;
+  role: BusinessRole;
+  note: string;
+  created_at: string;
+  created_by: string | null;
+};
+
 /** The capabilities a staff account can be granted individually. */
 export type StaffCapability =
   | 'review_evidence'
@@ -514,6 +533,11 @@ export type Database = {
          `remove_staff_member`. Both write shapes are `never` here, so a direct
          call from the app is a compile error rather than a silent no-op. */
       staff_roles: Table<StaffRoleRow, never, never>;
+      /* Read-only to clients, like staff_roles: the table has no INSERT,
+         UPDATE or DELETE policy, so writes go through the owner-checked
+         functions and a direct call is a compile error rather than a silent
+         no-op. */
+      business_members: Table<BusinessMember, never, never>;
       reporting_periods: Table<ReportingPeriod, Omit<ReportingPeriod, 'id' | 'created_at'>, Partial<ReportingPeriod>>;
       transactions: Table<Transaction, Omit<Transaction, 'id' | 'created_at'>, Partial<Transaction>>;
       documents: Table<Document, Omit<Document, 'id' | 'uploaded_at'>, Partial<Document>>;
@@ -621,6 +645,21 @@ export type Database = {
         Args: { target: string };
         Returns: undefined;
       };
+      /* Business teams. Both check `businesses.owner_id` directly, so a
+         manager calling them changes nothing. */
+      set_business_member: {
+        Args: {
+          target_business_id: string;
+          target_user: string;
+          new_role: BusinessRole;
+          new_note?: string;
+        };
+        Returns: undefined;
+      };
+      remove_business_member: {
+        Args: { target_business_id: string; target_user: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       report_status: ReportStatus;
@@ -637,6 +676,7 @@ export type Database = {
       account_status: AccountStatus;
       support_kind: SupportKind;
       staff_role: StaffRole;
+      business_role: BusinessRole;
     };
     CompositeTypes: Record<string, never>;
   };

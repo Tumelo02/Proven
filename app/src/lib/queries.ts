@@ -32,6 +32,7 @@ import type {
   AuditSeverity,
   AuditTrailRow,
   Business,
+  BusinessRole,
   Database,
   Document,
   FollowUp,
@@ -1182,4 +1183,124 @@ export async function findProfilesByEmail(term: string): Promise<Profile[]> {
     .limit(10);
 
   return data ?? [];
+}
+
+/* ---------------------------------------------------------------------------
+   Business teams
+   --------------------------------------------------------------------------- */
+
+export interface BusinessTeamMember {
+  profile: Profile;
+  role: BusinessRole;
+  note: string;
+  createdAt: string;
+}
+
+/**
+ * Everyone who may use a business, besides its owner.
+ *
+ * The owner is not in this list, and deliberately not: ownership lives on the
+ * business row, not in the team, so it cannot be granted or revoked here. The
+ * screen shows the owner separately.
+ */
+export async function getBusinessTeam(businessId: string): Promise<BusinessTeamMember[]> {
+  const supabase = await createClient();
+
+  const { data: members } = await supabase
+    .from('business_members')
+    .select('*')
+    .eq('business_id', businessId)
+    .order('created_at');
+
+  if (!members?.length) return [];
+
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('*')
+    .in(
+      'id',
+      members.map((m) => m.user_id),
+    );
+
+  const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+  return members
+    .map((m) => {
+      const profile = byId.get(m.user_id);
+      if (!profile) return null;
+      return {
+        profile,
+        role: m.role,
+        note: m.note,
+        createdAt: m.created_at,
+      };
+    })
+    .filter((m): m is BusinessTeamMember => m !== null);
+}
+
+/**
+ * What the signed-in account may do with one business.
+ *
+ * Read rather than inferred, so the answer the interface uses to hide a
+ * control is the same answer the database gives when the control is used
+ * anyway. Hiding a button is a courtesy; the policies are the boundary.
+ */
+export async function getMyBusinessAccess(businessId: string): Promise<{
+  isOwner: boolean;
+  role: BusinessRole | null;
+  canEdit: boolean;
+  canManageTeam: boolean;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { isOwner: false, role: null, canEdit: false, canManageTeam: false };
+  }
+
+  const [bizRes, memberRes] = await Promise.all([
+    supabase.from('businesses').select('owner_id').eq('id', businessId).maybeSingle(),
+    supabase
+      .from('business_members')
+      .select('role')
+      .eq('business_id', businessId)
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ]);
+
+  const isOwner = bizRes.data?.owner_id === user.id;
+  const role = memberRes.data?.role ?? null;
+
+  return {
+    isOwner,
+    role,
+    canEdit: isOwner || role === 'editor' || role === 'manager',
+    /* Only the owner, and not expressible as a role: see the migration. */
+    canManageTeam: isOwner,
+  };
+}
+
+/** Accounts that could be added to a business team. */
+export async function findTeamCandidates(
+  businessId: string,
+  term: string,
+): Promise<Profile[]> {
+  const trimmed = term.trim();
+  if (trimmed.length < 3) return [];
+
+  const supabase = await createClient();
+
+  const [profilesRes, membersRes, bizRes] = await Promise.all([
+    supabase.from('profiles').select('*').ilike('email', `%${trimmed}%`).order('email').limit(10),
+    supabase.from('business_members').select('user_id').eq('business_id', businessId),
+    supabase.from('businesses').select('owner_id').eq('id', businessId).maybeSingle(),
+  ]);
+
+  /* Already on the team, or the owner: offering either would be a dead end. */
+  const taken = new Set((membersRes.data ?? []).map((m) => m.user_id));
+  if (bizRes.data?.owner_id) taken.add(bizRes.data.owner_id);
+
+  return (profilesRes.data ?? []).filter((p) => !taken.has(p.id));
 }
