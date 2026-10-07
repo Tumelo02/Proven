@@ -189,6 +189,12 @@ export async function GET(
     sheetName: 'Financial report',
     rows,
     styles: STYLES,
+    /* Wide enough to read. Excel's default column is about eight characters,
+       which is narrower than "R14 797,18" — so without this every money cell
+       renders as ######## and the sheet is unreadable until somebody drags
+       each column out by hand. The first column holds the line names, the
+       middle ones a month each, and the last the totals. */
+    columnWidths: [26, ...lines.map(() => 15), 16],
   });
 
   /* Who downloaded their own figures, and for what period. A business reading
