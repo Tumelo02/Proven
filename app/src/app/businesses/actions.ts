@@ -139,6 +139,11 @@ export async function saveMonth(_prev: FormState, formData: FormData): Promise<F
   const customers = Number.parseInt(String(formData.get('customers') ?? '0'), 10) || 0;
   const status = String(formData.get('status') ?? 'on-time') as ReportStatus;
 
+  /* Optional, and blank stays blank: a month reported without a statement to
+     hand has no balance, which is not the same as an empty account. */
+  const rawBalance = String(formData.get('available_balance') ?? '').trim();
+  const availableBalance = rawBalance === '' ? null : toMoney(rawBalance);
+
   const supabase = await createClient();
 
   /* One row per business per month, so re-submitting a month corrects it
@@ -150,6 +155,7 @@ export async function saveMonth(_prev: FormState, formData: FormData): Promise<F
       revenue: String(revenue),
       expenses: String(expenses),
       customers,
+      available_balance: availableBalance === null ? null : String(availableBalance),
       status,
       submitted_at: new Date().toISOString(),
     },
@@ -245,6 +251,12 @@ export async function submitMonth(_prev: FormState, formData: FormData): Promise
   const customers = Number.parseInt(String(formData.get('customers') ?? '0'), 10) || 0;
   const stageUpdate = String(formData.get('stage_update') ?? 'unchanged');
 
+  /* Left blank stays blank. A business checking in without its statement to
+     hand has no balance to give, and writing zero would tell a funder the
+     account was empty. */
+  const rawBalance = String(formData.get('available_balance') ?? '').trim();
+  const availableBalance = rawBalance === '' ? null : toMoney(rawBalance);
+
   const supabase = await createClient();
 
   /* Everything logged in that calendar month, whether or not it was attached
@@ -279,6 +291,7 @@ export async function submitMonth(_prev: FormState, formData: FormData): Promise
       revenue: String(revenue),
       expenses: String(expenses),
       customers,
+      available_balance: availableBalance === null ? null : String(availableBalance),
       status,
       submitted_at: new Date().toISOString(),
     },
@@ -475,7 +488,11 @@ export async function backfillMonths(
       revenue: String(r.revenue),
       expenses: String(r.expenses),
       customers: r.customers,
-      closing_balance: r.closing === null ? null : String(r.closing),
+      /* `available_balance`, which is the figure the report shows. This wrote
+         `closing_balance` before, so a business could backfill a year of
+         balances and see an empty row — the number went in, just not where
+         anything reads it from. */
+      available_balance: r.closing === null ? null : String(r.closing),
       status: 'late' as ReportStatus,
       submitted_at: new Date().toISOString(),
     })),

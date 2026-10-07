@@ -24,12 +24,15 @@ export function SubmitMonthForm({
   businessId,
   monthValue,
   customers,
+  availableBalance,
 }: {
   businessId: string;
   /** `YYYY-MM`, the month this check-in covers. */
   monthValue: string;
   /** Last known customer count, as a starting point rather than a blank box. */
   customers: number;
+  /** Whatever balance this month already carries, so re-submitting keeps it. */
+  availableBalance?: number | null;
 }) {
   const [state, formAction] = useActionState<FormState, FormData>(submitMonth, {});
 
@@ -42,7 +45,7 @@ export function SubmitMonthForm({
         <input type="hidden" name="business_id" value={businessId} />
         <input type="hidden" name="period_month" value={monthValue} />
 
-        <div className="txn-form" style={{ gridTemplateColumns: '1fr 1fr 1fr auto' }}>
+        <div className="txn-form" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr auto' }}>
           <div className="f">
             <label htmlFor="customers">Customers this period</label>
             <input
@@ -51,6 +54,24 @@ export function SubmitMonthForm({
               type="number"
               min={0}
               defaultValue={customers}
+            />
+          </div>
+
+          {/* The one figure the transactions cannot produce. Revenue and costs
+              are the sum of what was logged; what is actually left in the
+              account is only on the bank statement, and it is what a lender
+              looks at after the profit. Optional, because a person checking in
+              from a phone may not have the statement to hand. */}
+          <div className="f">
+            <label htmlFor="available_balance">In the bank (R)</label>
+            <input
+              id="available_balance"
+              name="available_balance"
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="optional"
+              defaultValue={availableBalance ?? ''}
             />
           </div>
 

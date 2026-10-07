@@ -70,6 +70,14 @@ export default async function TransactionsPage({
   const lastCustomers =
     scored?.input.history[scored.input.history.length - 1]?.customers ?? 0;
 
+  /* Whatever balance the month being reported already carries, so re-submitting
+     a check-in keeps it rather than quietly clearing it. */
+  const draftPeriod = shell.periods.find(
+    (p) => p.period_month.slice(0, 7) === draftMonth,
+  );
+  const draftBalance =
+    draftPeriod?.available_balance == null ? null : Number(draftPeriod.available_balance);
+
   /* Short-lived links for whatever is already attached. Signed rather than
      public: a receipt is a private business record, and a public URL would
      stay readable by anyone who ever saw the path. */
@@ -185,6 +193,7 @@ export default async function TransactionsPage({
             businessId={id}
             monthValue={draftMonth}
             customers={lastCustomers}
+            availableBalance={draftBalance}
           />
         </Panel>
       </div>

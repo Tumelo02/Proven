@@ -62,6 +62,24 @@ export function MonthForm({ businessId }: { businessId: string }) {
         <input id="customers" name="customers" type="number" min={0} defaultValue={0} />
       </div>
 
+      {/* Optional, and blank is a real answer. Money in and money out say how
+          the month went; this says what is actually left, which is the figure a
+          lender reads next and the one no transaction can produce. */}
+      <div className="field">
+        <label htmlFor="available_balance">In the bank at month end (R)</label>
+        <input
+          id="available_balance"
+          name="available_balance"
+          type="number"
+          min={0}
+          step="0.01"
+          placeholder="Optional"
+        />
+        <p className="hint">
+          From your bank statement, if you have it. Leave blank if not.
+        </p>
+      </div>
+
       <input type="hidden" name="status" value="on-time" />
 
       <SubmitButton />
