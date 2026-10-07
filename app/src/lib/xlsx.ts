@@ -199,7 +199,9 @@ export function buildWorkbook({
       const body = cells
         .map((cell, c) => {
           if (cell.value === null || cell.value === '') return '';
-          const s = cell.style ? ` s="${cell.style}"` : '';
+          /* `!= null`, not truthiness: style 0 is a real style now, and `0` is
+             falsy — a plain check would silently drop it. */
+          const s = cell.style != null ? ` s="${cell.style}"` : '';
           if (typeof cell.value === 'number') {
             return `<c r="${ref(r, c)}"${s}><v>${cell.value}</v></c>`;
           }
@@ -255,8 +257,15 @@ export function buildWorkbook({
     }),
   ];
 
+  /* `styles[i]` must land at `cellXfs[i]`, so a cell asking for style 6 gets
+     style 6.
+
+     An earlier version prepended the built-in default here, which pushed every
+     style down by one: a cell asking for `number` rendered as `percent`, the
+     money columns lost their R, and the whole sheet was formatted as the style
+     before the one it asked for. Nothing refers to the default by index, so it
+     simply goes. */
   const cellXfs = [
-    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>',
     ...styles.map((s, i) => {
       const numFmtId = s.format === 'money' ? 164 : s.format === 'percent' ? 165 : 0;
       return `<xf numFmtId="${numFmtId}" fontId="${i + 1}" fillId="${i + 2}" borderId="${

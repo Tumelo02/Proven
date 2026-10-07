@@ -2310,3 +2310,15 @@
   margin: 0 0 4px;
   line-height: 1.6;
 }
+
+/* The business's mark beside its name in the workspace topbar. */
+.biz-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.biz-identity h2 {
+  margin: 0;
+}

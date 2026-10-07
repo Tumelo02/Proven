@@ -1,7 +1,19 @@
 import Link from 'next/link';
-import { getMyBusinesses, getMyBusinessAccess } from '@/lib/queries';
+import { getMyBusinesses, getMyBusinessAccess, getLogoUrl } from '@/lib/queries';
+import { LogoPreview } from '@/components/logo-preview';
 import { signOut } from '@/app/(auth)/actions';
 import { BusinessPicker } from './business-picker';
+
+/** Two letters to stand in until a logo is uploaded. */
+function initials(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? '')
+      .join('') || 'B'
+  );
+}
 
 export type EntTab =
   | 'overview'
@@ -39,8 +51,13 @@ export async function EntrepreneurShell({
     getMyBusinesses(),
     getMyBusinessAccess(businessId),
   ]);
+
   const current = businesses.find((b) => b.id === businessId);
 
+  /* Signed here rather than on every page: the shell already knows which
+     business is open, and a link that expires in an hour is plenty for a
+     workspace somebody is actively using. */
+  const logoUrl = await getLogoUrl(current?.logo_path ?? null);
   const nav: { key: EntTab; label: string; href: string }[] = [
     { key: 'overview', label: 'Overview', href: `/business/${businessId}` },
     { key: 'transactions', label: 'Transactions', href: `/business/${businessId}/transactions` },
@@ -139,10 +156,21 @@ export async function EntrepreneurShell({
 
       <main className="main">
         <div className="topbar">
-          <div>
-            <h2>{current?.name ?? 'Business'}</h2>
-            <div className="sub">
-              {[current?.industry, current?.region].filter(Boolean).join(' · ')}
+          {/* The business's own mark beside its name, so the workspace reads as
+              theirs rather than as a generic tool they happen to be logged
+              into. Falls back to initials when no logo has been uploaded, which
+              is the same treatment the admin and funder tables give it. */}
+          <div className="biz-identity">
+            <LogoPreview
+              logoUrl={logoUrl}
+              alt={`${current?.name ?? 'Business'} logo`}
+              fallback={initials(current?.name ?? 'B')}
+            />
+            <div>
+              <h2>{current?.name ?? 'Business'}</h2>
+              <div className="sub">
+                {[current?.industry, current?.region].filter(Boolean).join(' · ')}
+              </div>
             </div>
           </div>
         </div>

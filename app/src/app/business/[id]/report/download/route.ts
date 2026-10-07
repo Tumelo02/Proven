@@ -183,9 +183,11 @@ export async function GET(
     text('Hardest month', S.indent),
     text(t.worstMonth ? t.worstMonth.label : '—'),
   ]);
-  rows.push([text('Health score', S.indent), text(String(report.score ?? '—'))]);
-  rows.push([text('Credit readiness', S.indent), text(report.readiness ?? '—')]);
-  rows.push([text('Backed by evidence', S.indent), text(`${report.evidencePct}%`)]);
+  /* Health score, credit readiness and evidence coverage are deliberately not
+     here. They are Proven's reading of the figures rather than the figures
+     themselves, and this sheet goes to a bank that will form its own view from
+     the numbers above. They remain on the screen, where the business can see
+     what its record is earning. */
 
   rows.push([]);
   rows.push([
