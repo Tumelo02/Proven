@@ -226,15 +226,6 @@ export function StatementTable({
           </tbody>
         </table>
       </div>
-
-      <div className="panel-body">
-        <p className="tiny muted" style={{ margin: 0 }}>
-          Read across a row to follow one line through the year; read down a
-          column for a single month. The closing balance is what the account
-          held; the available balance is what could actually be spent, which is
-          lower whenever something has not cleared.
-        </p>
-      </div>
     </div>
   );
 }
