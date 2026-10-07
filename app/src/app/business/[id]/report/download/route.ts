@@ -55,7 +55,16 @@ export async function GET(
   const t = report.totals;
 
   const header = row(
-    ['Month', 'Money in', 'Money out', 'Left over', 'Margin', 'Customers']
+    [
+      'Month',
+      'Money in',
+      'Money out',
+      'Left over',
+      'Margin',
+      'Customers',
+      'Closing balance',
+      'Available',
+    ]
       .map((h) => cell(h, 'head'))
       .join(''),
   );
@@ -68,7 +77,19 @@ export async function GET(
           cell(l.expenses, 'money', 'Number') +
           cell(l.profit, l.profit >= 0 ? 'moneyGood' : 'moneyBad', 'Number') +
           cell(l.revenue > 0 ? l.margin : '', l.revenue > 0 ? 'pct' : 'text', l.revenue > 0 ? 'Number' : 'String') +
-          cell(l.customers, 'text', 'Number'),
+          cell(l.customers, 'text', 'Number') +
+          /* Blank rather than zero when no balance was reported: a bank
+             reading this must not be told the account was empty. */
+          cell(
+            l.closingBalance ?? '',
+            l.closingBalance === null ? 'text' : 'money',
+            l.closingBalance === null ? 'String' : 'Number',
+          ) +
+          cell(
+            l.availableBalance ?? '',
+            l.availableBalance === null ? 'text' : 'money',
+            l.availableBalance === null ? 'String' : 'Number',
+          ),
       ),
     )
     .join('');
@@ -79,7 +100,17 @@ export async function GET(
       cell(t.expenses, 'totalMoney', 'Number') +
       cell(t.profit, t.profit >= 0 ? 'totalGood' : 'totalBad', 'Number') +
       cell(t.revenue > 0 ? t.margin : '', t.revenue > 0 ? 'totalPct' : 'head', t.revenue > 0 ? 'Number' : 'String') +
-      cell(t.customers, 'head', 'Number'),
+      cell(t.customers, 'head', 'Number') +
+      cell(
+        report.latestBalance ? report.latestBalance.closing : '',
+        report.latestBalance ? 'totalMoney' : 'head',
+        report.latestBalance ? 'Number' : 'String',
+      ) +
+      cell(
+        report.latestBalance?.available ?? '',
+        report.latestBalance?.available != null ? 'totalMoney' : 'head',
+        report.latestBalance?.available != null ? 'Number' : 'String',
+      ),
   );
 
   const spendRows = report.spending.length
@@ -113,7 +144,19 @@ export async function GET(
     ) +
     row(cell('Health score', 'text') + cell(report.score ?? '—', 'text')) +
     row(cell('Credit readiness', 'text') + cell(report.readiness ?? '—', 'text')) +
-    row(cell('Backed by evidence', 'text') + cell(`${report.evidencePct}%`, 'text'));
+    row(cell('Backed by evidence', 'text') + cell(`${report.evidencePct}%`, 'text')) +
+    row(
+      cell('Closing balance', 'text') +
+        (report.latestBalance
+          ? cell(report.latestBalance.closing, 'money', 'Number')
+          : cell('—', 'text')),
+    ) +
+    row(
+      cell('Available balance', 'text') +
+        (report.latestBalance?.available != null
+          ? cell(report.latestBalance.available, 'money', 'Number')
+          : cell('—', 'text')),
+    );
 
   const xml = `<?xml version="1.0"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
@@ -147,6 +190,7 @@ export async function GET(
   <Table>
    <Column ss:Width="130"/><Column ss:Width="95"/><Column ss:Width="95"/>
    <Column ss:Width="95"/><Column ss:Width="70"/><Column ss:Width="80"/>
+   <Column ss:Width="105"/><Column ss:Width="95"/>
    ${row(cell(report.businessName, 'title'))}
    ${row(cell(`Financial report · ${rangeLabel(from, to)}`, 'sub'))}
    ${row(cell(`Generated ${report.generatedOn} · Proven`, 'sub'))}

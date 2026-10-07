@@ -346,6 +346,12 @@ export type ReportingPeriod = {
   status: ReportStatus;
   submitted_at: string | null;
   created_at: string;
+  /* What the account actually held at the end of the month, from a statement.
+     Null when none was reported, which is not the same as zero. */
+  closing_balance: string | null;
+  /* What could actually be spent: lower than the closing balance whenever
+     something has not cleared. */
+  available_balance: string | null;
 }
 
 export type Transaction = {
@@ -538,7 +544,15 @@ export type Database = {
          functions and a direct call is a compile error rather than a silent
          no-op. */
       business_members: Table<BusinessMember, never, never>;
-      reporting_periods: Table<ReportingPeriod, Omit<ReportingPeriod, 'id' | 'created_at'>, Partial<ReportingPeriod>>;
+      /* The balances are optional on insert: a business reporting figures
+         without a statement to hand has none to give, and the columns are
+         nullable for exactly that reason. */
+      reporting_periods: Table<
+        ReportingPeriod,
+        Omit<ReportingPeriod, 'id' | 'created_at' | 'closing_balance' | 'available_balance'> &
+          Partial<Pick<ReportingPeriod, 'closing_balance' | 'available_balance'>>,
+        Partial<ReportingPeriod>
+      >;
       transactions: Table<Transaction, Omit<Transaction, 'id' | 'created_at'>, Partial<Transaction>>;
       documents: Table<Document, Omit<Document, 'id' | 'uploaded_at'>, Partial<Document>>;
       milestones: Table<Milestone, Omit<Milestone, 'id' | 'created_at'>, Partial<Milestone>>;

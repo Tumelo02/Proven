@@ -19,6 +19,10 @@ export interface ReportLine {
   profit: number;
   margin: number;
   customers: number;
+  /** What the account held at month end, when a statement was reported. */
+  closingBalance: number | null;
+  /** What could actually be spent: lower when something has not cleared. */
+  availableBalance: number | null;
 }
 
 export interface BusinessReport {
@@ -40,8 +44,16 @@ export interface BusinessReport {
     profitableMonths: number;
     lossMonths: number;
   };
-  /** Where the money went, largest first. */
-  spending: { category: string; total: number; share: number }[];
+  /** Where the money went, largest first, with each month broken out so the
+      statement can show a category as a line across the year. */
+  spending: {
+    category: string;
+    total: number;
+    share: number;
+    byMonth: Record<string, number>;
+  }[];
+  /** The latest reported cash position in the range. */
+  latestBalance: { month: string; closing: number; available: number | null } | null;
   score: number | null;
   readiness: string | null;
   evidencePct: number;
@@ -92,6 +104,13 @@ export async function getBusinessReport(
          margin rather than a misleading 0%. */
       margin: revenue > 0 ? profit / revenue : 0,
       customers: p.customers ?? 0,
+      /* `== null` catches undefined as well as null, deliberately: before the
+         balance migration runs these columns are absent rather than null, and
+         `Number(undefined)` is NaN — which would render as "NaN" where a bank
+         balance should be. */
+      closingBalance: p.closing_balance == null ? null : Number(p.closing_balance),
+      availableBalance:
+        p.available_balance == null ? null : Number(p.available_balance),
     };
   });
 
@@ -112,19 +131,36 @@ export async function getBusinessReport(
     .gte('occurred_on', `${from}-01`)
     .lte('occurred_on', `${to}-31`);
 
-  const byCategory = new Map<string, number>();
+  const byCategory = new Map<string, { total: number; byMonth: Record<string, number> }>();
   for (const t of txns ?? []) {
     const key = (t.category || 'Uncategorised').trim() || 'Uncategorised';
-    byCategory.set(key, (byCategory.get(key) ?? 0) + (Number(t.amount) || 0));
+    const amount = Number(t.amount) || 0;
+    const month = t.occurred_on.slice(0, 7);
+    const entry = byCategory.get(key) ?? { total: 0, byMonth: {} };
+    entry.total += amount;
+    entry.byMonth[month] = (entry.byMonth[month] ?? 0) + amount;
+    byCategory.set(key, entry);
   }
-  const spendTotal = [...byCategory.values()].reduce((s, v) => s + v, 0);
+  const spendTotal = [...byCategory.values()].reduce((s, v) => s + v.total, 0);
   const spending = [...byCategory.entries()]
-    .map(([category, total]) => ({
+    .map(([category, v]) => ({
       category,
-      total,
-      share: spendTotal > 0 ? total / spendTotal : 0,
+      total: v.total,
+      share: spendTotal > 0 ? v.total / spendTotal : 0,
+      byMonth: v.byMonth,
     }))
     .sort((a, b) => b.total - a.total);
+
+  /* The newest month in the range that reported a balance. A business that has
+     not given one for the latest month should still see the last it did. */
+  const withBalance = [...lines].reverse().find((l) => l.closingBalance !== null);
+  const latestBalance = withBalance
+    ? {
+        month: withBalance.month,
+        closing: withBalance.closingBalance!,
+        available: withBalance.availableBalance,
+      }
+    : null;
 
   /* Scored on the range being reported, so a report for last year is scored on
      last year rather than on today. */
@@ -169,6 +205,7 @@ export async function getBusinessReport(
       lossMonths: lines.filter((l) => l.profit < 0).length,
     },
     spending,
+    latestBalance,
     score: history.length ? computeHealth({ history }).score : null,
     readiness: history.length
       ? creditReadiness({

@@ -48,7 +48,6 @@ export async function EntrepreneurShell({
     { key: 'guidance', label: 'What to do next', href: `/business/${businessId}/guidance` },
     { key: 'history', label: 'Month by month', href: `/business/${businessId}/history` },
     { key: 'report', label: 'Financial report', href: `/business/${businessId}/report` },
-    { key: 'profile', label: 'Business profile', href: `/business/${businessId}/profile` },
   ];
 
   /* Only the owner can manage the team, and the page itself 404s for anybody
@@ -56,6 +55,15 @@ export async function EntrepreneurShell({
   if (access.canManageTeam) {
     nav.push({ key: 'team', label: 'People', href: `/business/${businessId}/team` });
   }
+
+  /* The profile goes last, after whatever else was added above. It is the
+     screen a person visits once when setting up and rarely again, so it should
+     not sit among the ones they use every week. */
+  nav.push({
+    key: 'profile',
+    label: 'Business profile',
+    href: `/business/${businessId}/profile`,
+  });
 
   return (
     <div className="app">

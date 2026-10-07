@@ -147,6 +147,7 @@ export function BackfillHistory({
                   <th className="num">Money in (R)</th>
                   <th className="num">Money out (R)</th>
                   <th className="num">Customers</th>
+                  <th className="num">In the bank (R)</th>
                 </tr>
               </thead>
               <tbody>
@@ -191,6 +192,22 @@ export function BackfillHistory({
                         min={0}
                         placeholder="0"
                         className="backfill-input"
+                      />
+                    </td>
+                    {/* Optional, and left blank rather than zeroed when there
+                        is no statement to hand: "I do not know" and "the
+                        account was empty" are different answers. */}
+                    <td className="num">
+                      <input
+                        name={`balance_${m}`}
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        placeholder="optional"
+                        className="backfill-input"
+                        onChange={(e) =>
+                          setFilled((f) => ({ ...f, [m]: e.target.value.trim() !== '' || !!f[m] }))
+                        }
                       />
                     </td>
                   </tr>

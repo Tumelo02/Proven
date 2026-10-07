@@ -2133,3 +2133,180 @@
   padding: 12px 16px;
   font-size: 13px;
 }
+
+/* ---------------------------------------------------------------------------
+   The financial report
+
+   Dense on purpose. This is the screen somebody opens with a bank on the phone,
+   so the figures come first in one strip and the account below reads as a
+   ledger that scrolls sideways — not as a page to swipe down through.
+   --------------------------------------------------------------------------- */
+
+.rpt-figures {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.rpt-fig {
+  background: var(--card);
+  padding: 11px 13px;
+}
+
+.rpt-fig .l {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.rpt-fig .v {
+  font-size: 19px;
+  font-weight: 800;
+  margin-top: 2px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rpt-fig .f {
+  font-size: 10.5px;
+  color: var(--faint);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* The cash position is the one figure here that is not about trading, so it
+   is marked rather than left to blend into the row. */
+.rpt-fig-bank {
+  background: var(--accent-soft);
+}
+
+.rpt-fig-bank .v {
+  color: var(--accent-ink);
+}
+
+@media (max-width: 1100px) {
+  .rpt-figures {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .rpt-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* --- the ledger ---------------------------------------------------------- */
+
+.stmt-panel {
+  margin-bottom: 14px;
+}
+
+/* Sideways, not downwards: a year of months is a wide table, and scrolling a
+   table horizontally is better than making the page itself long. */
+.stmt-scroll {
+  overflow-x: auto;
+  border-top: 1px solid var(--line);
+}
+
+.stmt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.stmt th,
+.stmt td {
+  padding: 6px 12px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line-2);
+}
+
+.stmt thead th {
+  position: sticky;
+  top: 0;
+  background: var(--navy);
+  color: #fff;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* The line names stay put while the months scroll past, so a reader never
+   loses track of which row they are on. */
+.stmt-line {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--card);
+  text-align: left !important;
+  font-weight: 600;
+  min-width: 170px;
+}
+
+.stmt thead .stmt-line {
+  z-index: 2;
+  background: var(--navy);
+}
+
+.stmt-indent {
+  padding-left: 26px !important;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* A heading row inside the table: the section it opens, with no figures of
+   its own. */
+.stmt-group td {
+  background: var(--grey-soft);
+  font-weight: 800;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.stmt-group .stmt-line {
+  background: var(--grey-soft);
+}
+
+.stmt-subtotal td {
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.stmt-result td {
+  border-top: 2px solid var(--navy);
+  border-bottom: 2px solid var(--navy);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* The total column is the one a reader jumps to, so it is held apart from the
+   months rather than being just another cell at the end. */
+.stmt-total-col {
+  background: var(--grey-soft);
+  border-left: 1px solid var(--line);
+}
+
+/* A month with nothing in this line. A dash rather than R0,00, because no cost
+   and a cost of zero are different things. */
+.stmt-nil {
+  color: var(--faint);
+}
+
+.rpt-foot {
+  margin: 0 0 4px;
+  line-height: 1.6;
+}

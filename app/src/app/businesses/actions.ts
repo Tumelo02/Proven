@@ -451,12 +451,17 @@ export async function backfillMonths(
       const expenses = toMoney(formData.get(`expenses_${key}`));
       const customers =
         Number.parseInt(String(formData.get(`customers_${key}`) ?? '0'), 10) || 0;
-      return { month, revenue, expenses, customers };
+      /* Blank stays blank. A business reporting figures without a statement to
+         hand has no balance to give, and storing zero would claim the account
+         was empty. */
+      const rawBalance = String(formData.get(`balance_${key}`) ?? '').trim();
+      const closing = rawBalance === '' ? null : toMoney(rawBalance);
+      return { month, revenue, expenses, customers, closing };
     })
     /* A month left blank is a month the business has no figures for, which is
        different from a month of zero trading. Skipping it leaves no row, so
        the record does not claim knowledge it does not have. */
-    .filter((r) => r.revenue > 0 || r.expenses > 0 || r.customers > 0);
+    .filter((r) => r.revenue > 0 || r.expenses > 0 || r.customers > 0 || r.closing !== null);
 
   if (!rows.length) {
     return { error: 'Fill in at least one month before saving.' };
@@ -470,6 +475,7 @@ export async function backfillMonths(
       revenue: String(r.revenue),
       expenses: String(r.expenses),
       customers: r.customers,
+      closing_balance: r.closing === null ? null : String(r.closing),
       status: 'late' as ReportStatus,
       submitted_at: new Date().toISOString(),
     })),
