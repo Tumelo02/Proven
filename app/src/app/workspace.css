@@ -2033,3 +2033,92 @@
     align-self: flex-start;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Backfilling past months, and the financial report
+   --------------------------------------------------------------------------- */
+
+.backfill-invite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.backfill-range {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.backfill-range .f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.backfill-range .f > span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Narrow, because these are figures rather than sentences, and a row of
+   full-width boxes would make twelve months unreadable. */
+.backfill-input {
+  width: 110px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-range {
+  margin-bottom: 16px;
+}
+
+.report-range-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.report-range-custom {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.report-range-custom .f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-range-custom .f > span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Pushed to the end: it is the thing people come to this screen to do once
+   they have chosen the period. */
+.report-download {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .report-download {
+    margin-left: 0;
+  }
+}

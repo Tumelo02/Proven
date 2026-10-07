@@ -399,3 +399,88 @@ export async function requestFunderLink(
   revalidatePath(`/business/${businessId}`);
   return { message: 'Request sent. The organisation will confirm it.' };
 }
+
+/**
+ * Record several past months in one go.
+ *
+ * A business almost never arrives on Proven on its first day of trading. It
+ * has been running for a year or two, and until now there was no way to tell
+ * Proven about any of it: the figures form took one month at a time and the
+ * transaction form was pinned to today, so a year of history meant twelve
+ * separate visits or nothing at all. Nothing at all is what most chose, which
+ * is why so many businesses here show a single month.
+ *
+ * Takes a date range and the figures for each month inside it. Months are
+ * upserted exactly as `saveMonth` does, so re-running a range corrects it
+ * rather than doubling it, and a business can backfill in stages.
+ *
+ * Marked `late` rather than `on-time`, deliberately. These figures are being
+ * reported after the fact, and the reporting status is part of the record a
+ * funder reads; quietly stamping a year of catch-up as punctual would make the
+ * record say something that is not true.
+ */
+export async function backfillMonths(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const businessId = String(formData.get('business_id') ?? '');
+  if (!businessId) return { error: 'Missing business.' };
+
+  const fromMonth = String(formData.get('from_month') ?? '');
+  const toMonth = String(formData.get('to_month') ?? '');
+  if (!fromMonth || !toMonth) return { error: 'Choose the first and last month.' };
+  if (fromMonth > toMonth) return { error: 'The first month must come before the last.' };
+
+  /* A range is only as long as a person would actually fill in by hand, and
+     a cap keeps one submission from writing hundreds of rows. */
+  const months: string[] = [];
+  let cursor = `${fromMonth}-01`;
+  const end = `${toMonth}-01`;
+  while (cursor <= end && months.length <= 60) {
+    months.push(cursor);
+    const d = new Date(`${cursor}T00:00:00Z`);
+    d.setUTCMonth(d.getUTCMonth() + 1);
+    cursor = d.toISOString().slice(0, 10);
+  }
+  if (months.length > 60) return { error: 'That range is longer than five years.' };
+
+  const rows = months
+    .map((month) => {
+      const key = month.slice(0, 7);
+      const revenue = toMoney(formData.get(`revenue_${key}`));
+      const expenses = toMoney(formData.get(`expenses_${key}`));
+      const customers =
+        Number.parseInt(String(formData.get(`customers_${key}`) ?? '0'), 10) || 0;
+      return { month, revenue, expenses, customers };
+    })
+    /* A month left blank is a month the business has no figures for, which is
+       different from a month of zero trading. Skipping it leaves no row, so
+       the record does not claim knowledge it does not have. */
+    .filter((r) => r.revenue > 0 || r.expenses > 0 || r.customers > 0);
+
+  if (!rows.length) {
+    return { error: 'Fill in at least one month before saving.' };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from('reporting_periods').upsert(
+    rows.map((r) => ({
+      business_id: businessId,
+      period_month: r.month,
+      revenue: String(r.revenue),
+      expenses: String(r.expenses),
+      customers: r.customers,
+      status: 'late' as ReportStatus,
+      submitted_at: new Date().toISOString(),
+    })),
+    { onConflict: 'business_id,period_month' },
+  );
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/business/${businessId}`);
+  revalidatePath(`/business/${businessId}/history`);
+  return {
+    message: `Saved ${rows.length} month${rows.length === 1 ? '' : 's'} of history. Your score now reflects it.`,
+  };
+}

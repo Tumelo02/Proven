@@ -9,6 +9,7 @@ export type EntTab =
   | 'milestones'
   | 'guidance'
   | 'history'
+  | 'report'
   | 'profile';
 
 /**
@@ -42,6 +43,7 @@ export async function EntrepreneurShell({
     { key: 'milestones', label: 'Stages', href: `/business/${businessId}/milestones` },
     { key: 'guidance', label: 'What to do next', href: `/business/${businessId}/guidance` },
     { key: 'history', label: 'Month by month', href: `/business/${businessId}/history` },
+    { key: 'report', label: 'Financial report', href: `/business/${businessId}/report` },
     { key: 'profile', label: 'Business profile', href: `/business/${businessId}/profile` },
   ];
 

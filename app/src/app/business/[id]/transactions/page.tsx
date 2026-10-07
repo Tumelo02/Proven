@@ -17,6 +17,7 @@ import { EntrepreneurShell } from '../shell';
 import { Panel } from '@/components/workspace';
 import { TransactionForm } from './transaction-form';
 import { SubmitMonthForm } from './submit-month';
+import { BackfillHistory } from './backfill';
 import { AttachProof } from './attach-proof';
 import '../../../workspace.css';
 
@@ -130,6 +131,14 @@ export default async function TransactionsPage({
       </div>
 
       <div style={{ marginBottom: 16 }}>
+        {/* Before the day-to-day form, because a business arriving with
+            history should be told it can bring that history with it rather
+            than discovering months later that it could have. */}
+        <BackfillHistory
+          businessId={id}
+          existing={shell.periods.map((p) => p.period_month)}
+        />
+
         <Panel title="Add a transaction" hint="Builds this month's numbers below">
           <TransactionForm businessId={id} />
         </Panel>

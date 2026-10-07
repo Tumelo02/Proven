@@ -46,9 +46,27 @@ export function TransactionForm({ businessId }: { businessId: string }) {
 
       <form action={formAction}>
         <input type="hidden" name="business_id" value={businessId} />
-        <input type="hidden" name="occurred_on" value={today} />
 
         <div className="txn-form">
+          {/* A real field, not a hidden "today".
+
+              The date used to be fixed to the day the entry was typed, which
+              meant a business could only ever record what happened today —
+              there was no way to enter last week's takings, let alone catch up
+              on a year of trading before joining. Defaulting to today keeps the
+              common case one less thing to fill in. */}
+          <div className="f">
+            <label htmlFor="occurred_on">Date</label>
+            <input
+              id="occurred_on"
+              name="occurred_on"
+              type="date"
+              defaultValue={today}
+              max={today}
+              required
+            />
+          </div>
+
           <div className="f">
             <label htmlFor="description">Description</label>
             <input
