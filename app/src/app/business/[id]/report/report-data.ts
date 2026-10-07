@@ -19,8 +19,6 @@ export interface ReportLine {
   profit: number;
   margin: number;
   customers: number;
-  /** What the account held at month end, when a statement was reported. */
-  closingBalance: number | null;
   /** What could actually be spent: lower when something has not cleared. */
   availableBalance: number | null;
 }
@@ -53,7 +51,7 @@ export interface BusinessReport {
     byMonth: Record<string, number>;
   }[];
   /** The latest reported cash position in the range. */
-  latestBalance: { month: string; closing: number; available: number | null } | null;
+  latestBalance: { month: string; available: number } | null;
   score: number | null;
   readiness: string | null;
   evidencePct: number;
@@ -105,10 +103,9 @@ export async function getBusinessReport(
       margin: revenue > 0 ? profit / revenue : 0,
       customers: p.customers ?? 0,
       /* `== null` catches undefined as well as null, deliberately: before the
-         balance migration runs these columns are absent rather than null, and
+         balance migration runs the column is absent rather than null, and
          `Number(undefined)` is NaN — which would render as "NaN" where a bank
          balance should be. */
-      closingBalance: p.closing_balance == null ? null : Number(p.closing_balance),
       availableBalance:
         p.available_balance == null ? null : Number(p.available_balance),
     };
@@ -151,19 +148,11 @@ export async function getBusinessReport(
     }))
     .sort((a, b) => b.total - a.total);
 
-  /* The newest month in the range that reported a balance of either kind. A
-     business that has not given one for the latest month should still see the
-     last it did, and a month with only an available figure still counts —
-     looking for the closing balance alone would have skipped it. */
-  const withBalance = [...lines]
-    .reverse()
-    .find((l) => l.availableBalance !== null || l.closingBalance !== null);
+  /* The newest month in the range that reported a balance. A business that has
+     not given one for the latest month should still see the last it did. */
+  const withBalance = [...lines].reverse().find((l) => l.availableBalance !== null);
   const latestBalance = withBalance
-    ? {
-        month: withBalance.month,
-        closing: withBalance.closingBalance ?? withBalance.availableBalance!,
-        available: withBalance.availableBalance,
-      }
+    ? { month: withBalance.month, available: withBalance.availableBalance! }
     : null;
 
   /* Scored on the range being reported, so a report for last year is scored on

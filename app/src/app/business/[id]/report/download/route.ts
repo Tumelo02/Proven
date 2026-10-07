@@ -140,20 +140,8 @@ export async function GET(
   ]);
 
   /* The cash position. Profit says how the month went; this says what is
-     actually in the account, and a loan or a big purchase pulls them apart.
-
-     Both figures here, unlike the screen, which shows only the available
-     balance. The screen is read at a glance and the two are identical in most
-     months, so the second row was noise; a downloaded statement is read by a
-     lender reconciling against the bank's own paper, and there the difference
-     between what the account held and what could be spent is exactly the kind
-     of thing they are checking. */
+     actually in the account, and a loan or a big purchase pulls them apart. */
   rows.push([text('In the bank', S.group), ...blanks, text('', S.group)]);
-  rows.push([
-    text('Closing balance', S.indent),
-    ...lines.map((l) => num(l.closingBalance, S.money)),
-    report.latestBalance ? num(report.latestBalance.closing, S.totalMoney) : text(''),
-  ]);
   rows.push([
     text('Available balance', S.indent),
     ...lines.map((l) => num(l.availableBalance, S.money)),
@@ -201,7 +189,6 @@ export async function GET(
     sheetName: 'Financial report',
     rows,
     styles: STYLES,
-    columnWidths: [24, ...lines.map(() => 14), 15],
   });
 
   /* Who downloaded their own figures, and for what period. A business reading

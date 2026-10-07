@@ -11,7 +11,6 @@ export interface StatementRow {
   profit: number;
   margin: number;
   customers: number;
-  closingBalance: number | null;
   availableBalance: number | null;
 }
 
@@ -189,11 +188,6 @@ export function StatementTable({
               ))}
               <td />
             </tr>
-            {/* Only the available balance. The closing balance was shown
-                beside it and the two are the same in all but the occasional
-                month, so the second row was a near-duplicate that pushed the
-                real figure down the table. Available is also the more honest
-                of the two: it is what the business could actually spend. */}
             <tr>
               <td className="stmt-line stmt-indent">Available balance</td>
               {visible.map((r) => (

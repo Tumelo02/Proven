@@ -468,13 +468,13 @@ export async function backfillMonths(
          hand has no balance to give, and storing zero would claim the account
          was empty. */
       const rawBalance = String(formData.get(`balance_${key}`) ?? '').trim();
-      const closing = rawBalance === '' ? null : toMoney(rawBalance);
-      return { month, revenue, expenses, customers, closing };
+      const available = rawBalance === '' ? null : toMoney(rawBalance);
+      return { month, revenue, expenses, customers, available };
     })
     /* A month left blank is a month the business has no figures for, which is
        different from a month of zero trading. Skipping it leaves no row, so
        the record does not claim knowledge it does not have. */
-    .filter((r) => r.revenue > 0 || r.expenses > 0 || r.customers > 0 || r.closing !== null);
+    .filter((r) => r.revenue > 0 || r.expenses > 0 || r.customers > 0 || r.available !== null);
 
   if (!rows.length) {
     return { error: 'Fill in at least one month before saving.' };
@@ -488,11 +488,7 @@ export async function backfillMonths(
       revenue: String(r.revenue),
       expenses: String(r.expenses),
       customers: r.customers,
-      /* `available_balance`, which is the figure the report shows. This wrote
-         `closing_balance` before, so a business could backfill a year of
-         balances and see an empty row — the number went in, just not where
-         anything reads it from. */
-      available_balance: r.closing === null ? null : String(r.closing),
+      available_balance: r.available === null ? null : String(r.available),
       status: 'late' as ReportStatus,
       submitted_at: new Date().toISOString(),
     })),
