@@ -100,15 +100,17 @@ export default async function BusinessReportPage({
             {/* The cash position, which profit alone never shows. */}
             <div className="rpt-fig rpt-fig-bank">
               <div className="l">In the bank</div>
+              {/* The available balance, which is what the business could
+                  actually spend. Falls back to what the account held when no
+                  available figure was given, rather than showing nothing. */}
               <div className="v">
-                {latestBalance ? money(latestBalance.closing) : '—'}
+                {latestBalance
+                  ? money(latestBalance.available ?? latestBalance.closing)
+                  : '—'}
               </div>
               <div className="f">
                 {latestBalance
-                  ? latestBalance.available !== null &&
-                    latestBalance.available !== latestBalance.closing
-                    ? `${money(latestBalance.available)} available · ${monthLabel(latestBalance.month)}`
-                    : `at ${monthLabel(latestBalance.month)}`
+                  ? `available at ${monthLabel(latestBalance.month)}`
                   : 'no balance reported'}
               </div>
             </div>

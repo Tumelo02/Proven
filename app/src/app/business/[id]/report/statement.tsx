@@ -60,7 +60,7 @@ export function StatementTable({
   /* The newest month that actually reported a balance: a business that has not
      given one for the latest month should still see the last it did give,
      rather than a dash where its cash position ought to be. */
-  const latestBalance = [...visible].reverse().find((r) => r.closingBalance !== null);
+  const latestBalance = [...visible].reverse().find((r) => r.availableBalance !== null);
 
   return (
     <div className="panel stmt-panel">
@@ -189,25 +189,11 @@ export function StatementTable({
               ))}
               <td />
             </tr>
-            <tr>
-              <td className="stmt-line stmt-indent">Closing balance</td>
-              {visible.map((r) => (
-                <td key={r.month} className="num mono">
-                  {r.closingBalance === null ? (
-                    <span className="stmt-nil">–</span>
-                  ) : (
-                    money(r.closingBalance)
-                  )}
-                </td>
-              ))}
-              <td className="num mono stmt-total-col">
-                {latestBalance?.closingBalance != null ? (
-                  <b>{money(latestBalance.closingBalance)}</b>
-                ) : (
-                  '–'
-                )}
-              </td>
-            </tr>
+            {/* Only the available balance. The closing balance was shown
+                beside it and the two are the same in all but the occasional
+                month, so the second row was a near-duplicate that pushed the
+                real figure down the table. Available is also the more honest
+                of the two: it is what the business could actually spend. */}
             <tr>
               <td className="stmt-line stmt-indent">Available balance</td>
               {visible.map((r) => (

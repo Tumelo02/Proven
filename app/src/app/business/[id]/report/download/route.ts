@@ -140,7 +140,14 @@ export async function GET(
   ]);
 
   /* The cash position. Profit says how the month went; this says what is
-     actually in the account, and a loan or a big purchase pulls them apart. */
+     actually in the account, and a loan or a big purchase pulls them apart.
+
+     Both figures here, unlike the screen, which shows only the available
+     balance. The screen is read at a glance and the two are identical in most
+     months, so the second row was noise; a downloaded statement is read by a
+     lender reconciling against the bank's own paper, and there the difference
+     between what the account held and what could be spent is exactly the kind
+     of thing they are checking. */
   rows.push([text('In the bank', S.group), ...blanks, text('', S.group)]);
   rows.push([
     text('Closing balance', S.indent),

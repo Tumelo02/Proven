@@ -151,13 +151,17 @@ export async function getBusinessReport(
     }))
     .sort((a, b) => b.total - a.total);
 
-  /* The newest month in the range that reported a balance. A business that has
-     not given one for the latest month should still see the last it did. */
-  const withBalance = [...lines].reverse().find((l) => l.closingBalance !== null);
+  /* The newest month in the range that reported a balance of either kind. A
+     business that has not given one for the latest month should still see the
+     last it did, and a month with only an available figure still counts —
+     looking for the closing balance alone would have skipped it. */
+  const withBalance = [...lines]
+    .reverse()
+    .find((l) => l.availableBalance !== null || l.closingBalance !== null);
   const latestBalance = withBalance
     ? {
         month: withBalance.month,
-        closing: withBalance.closingBalance!,
+        closing: withBalance.closingBalance ?? withBalance.availableBalance!,
         available: withBalance.availableBalance,
       }
     : null;
